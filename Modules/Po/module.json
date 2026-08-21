@@ -1,0 +1,11 @@
+{
+    "name": "Po",
+    "alias": "po",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Po\\Providers\\PoServiceProvider"
+    ],
+    "files": []
+}

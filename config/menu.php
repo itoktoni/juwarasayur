@@ -28,6 +28,16 @@ return [
             ],
         ],
         [
+            'label' => 'Catalog',
+            'items' => [
+                ['route' => 'catalog-product.getTable', 'icon' => 'inventory_2', 'label' => 'Products', 'match' => ['catalog-product.*']],
+                ['route' => 'catalog-category.getTable', 'icon' => 'category', 'label' => 'Categories', 'match' => ['catalog-category.*']],
+                ['route' => 'catalog-brand.getTable', 'icon' => 'branding_watermark', 'label' => 'Brands', 'match' => ['catalog-brand.*']],
+                ['route' => 'catalog-satuan.getTable', 'icon' => 'straighten', 'label' => 'Satuan', 'match' => ['catalog-satuan.*']],
+                ['route' => 'catalog-tag.getTable', 'icon' => 'label', 'label' => 'Tags', 'match' => ['catalog-tag.*']],
+            ],
+        ],
+        [
             'label' => 'CMS',
             'items' => [
                 ['route' => 'cms-type.getTable', 'icon' => 'category', 'label' => 'Types', 'match' => ['cms-type.*']],

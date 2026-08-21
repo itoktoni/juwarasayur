@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CatalogPublicController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WebsiteSettingController;
 use App\Models\Notification;
@@ -84,5 +85,8 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
         });
     });
 });
+
+Route::get('/product', [CatalogPublicController::class, 'index'])->name('catalog.index');
+Route::get('/product/{slug}', [CatalogPublicController::class, 'show'])->name('catalog.show');
 
 require __DIR__.'/settings.php';

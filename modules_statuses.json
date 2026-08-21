@@ -1,3 +1,5 @@
 {
-    "Cms": true
+    "Cms": true,
+    "Catalog": true,
+    "Po": true
 }

@@ -111,8 +111,8 @@ class Product extends BaseModel
     protected $primaryKey = 'product_id';
 
     // Filterable & sortable columns (for laravel-purity)
-    public static $filterColumns = ['name', 'email', 'role'];
-    public static $sortColumns = ['name', 'email'];
+    public static $filterColumns = ['product_nama'];
+    public static $sortColumns = ['product_nama', 'product_id_satuan'];
 
     protected function casts(): array
     {
@@ -124,17 +124,14 @@ class Product extends BaseModel
     // REQUIRED: display name field for UI
     public static function field_name(): string
     {
-        return 'name';
+        return 'product_nama';
     }
 
     // REQUIRED: validation rules
     public function rules(): array
     {
         return [
-            'name' => 'required|string',
-            'email' => 'required|string',
-            'role' => 'string',
-            'avatar' => 'nullable|string|max:255',
+            'product_nama' => 'required|string',
         ];
     }
 
@@ -151,12 +148,12 @@ class Product extends BaseModel
     }
 
     // Relationships (always prefix with "has" so it's obvious: hasProducts, hasCategory)
-    public function hasProducts()
+    public function hasSatuan()
     {
-        return $this->hasMany(Product::class, 'category_id', 'id');
+        return $this->hasOne(Satuan::class, 'satuan_id', 'product_id_satuan');
     }
 
-    // Usage: $category->has_products (Laravel magic property)
+    // Usage: $category->has_satuan (Laravel magic property)
 }
 ```
 
@@ -206,9 +203,10 @@ class User extends Authenticatable
 
 **Convention:**
 - File: `app/Properties/{Model}Entity.php` (singular model name + `Entity` suffix)
-- Static method: `field_{table_column}` (snake_case) 
+- Static method: `field_{table_column}` (snake_case)
 - Accessor: `getField{ColumnName}Attribute()` (PascalCase after `getField`)
 - Usage: `User::field_email()` or `$user->field_email`
+- Naming: always use module_field (example for module product), product_id, product_nama, product_id_satuan,
 
 ### Orbit (Flat-File JSON) Model
 
