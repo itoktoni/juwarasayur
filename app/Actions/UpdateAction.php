@@ -19,10 +19,13 @@ class UpdateAction
     public function handle(Request $request, $id, $model)
     {
         $this->model = $model;
-        $data = $request->validate($this->rules());
 
         try {
+            // Ambil record dulu supaya validasi rules() jalan dengan id terisi
+            // (rule "unique:..." memakai ignore(id) agar tidak bentrok dengan dirinya)
             $response = $model->findOrFail($id);
+            $data = $request->validate($response->rules());
+
             $response->update($data);
 
             return $this->payload(TOAST_SUCCESS, $response);

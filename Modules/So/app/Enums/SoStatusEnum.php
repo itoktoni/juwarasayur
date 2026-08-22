@@ -11,6 +11,8 @@ final class SoStatusEnum extends Enum
 
     const PENDING = 'pending';
 
+    const PAID = 'paid';
+
     const CONFIRMED = 'confirmed';
 
     const SHIPPED = 'shipped';
@@ -23,6 +25,7 @@ final class SoStatusEnum extends Enum
     {
         return match ($value) {
             self::PENDING => 'Pending',
+            self::PAID => 'Dibayar',
             self::CONFIRMED => 'Confirmed',
             self::SHIPPED => 'Dikirim',
             self::DELIVERED => 'Diterima',

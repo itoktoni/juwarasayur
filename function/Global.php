@@ -458,18 +458,22 @@ function uploadFile($file, string $folder = 'uploads', array $options = []): str
         mkdir($targetDir, 0755, true);
     }
 
-    // Move file to storage
-    $path = $file->storeAs('public/'.$folder, $filename);
+    // Store explicitly on the "public" disk (root: storage/app/public).
+    // Jangan pakai disk default "local" — di Laravel 11+ root-nya storage/app/private.
+    $path = $file->storeAs($folder, $filename, 'public');
 
     if (! $path) {
         throw new InvalidArgumentException('Gagal menyimpan file.');
     }
 
     // Ensure file permissions are safe
-    chmod(storage_path('app/'.$path), 0644);
+    $fullPath = storage_path('app/public/'.$path);
+    if (is_file($fullPath)) {
+        @chmod($fullPath, 0644);
+    }
 
     // Return relative public path
-    return $folder.'/'.$filename;
+    return $path;
 }
 
 /**

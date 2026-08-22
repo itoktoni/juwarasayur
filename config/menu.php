@@ -18,7 +18,7 @@ return [
         [
             'label' => 'Toko',
             'items' => [
-                ['route' => 'catalog.index', 'icon' => 'storefront', 'label' => 'Belanja', 'match' => ['catalog.*']],
+                ['route' => 'shop.index', 'icon' => 'storefront', 'label' => 'Belanja', 'match' => ['shop.*']],
                 ['route' => 'cart.index', 'icon' => 'shopping_cart', 'label' => 'Keranjang', 'match' => ['cart.*', 'checkout.*']],
                 ['route' => 'ecommerce.orders.index', 'icon' => 'receipt_long', 'label' => 'Pesanan Saya', 'match' => ['ecommerce.orders.*']],
             ],

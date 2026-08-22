@@ -37,8 +37,8 @@
 </div>
 @if($isTomSelect)
 @once
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.3.1/css/tom-select.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.3.1/js/tom-select.complete.min.js"></script>
 <style>
     .ts-wrapper {
         display: block !important;
@@ -142,19 +142,25 @@
 </style>
 @endonce
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var el = document.getElementById('select-{{ $name }}');
-    if (!el) return;
-    var placeholderText = el.querySelector('option[value=""]');
-    var ts = new TomSelect(el, {
-        {!! $multiple ? 'create: true,' : 'create: false,' !!}
-        plugins: {!! $multiple ? json_encode(['remove_button']) : json_encode([]) !!},
-        {!! !$multiple && $placeholder !== false ? "placeholder: '" . addslashes($placeholder ?: '-- Silahkan Pilih --') . "'," : '' !!}
-        allowEmptyOption: true,
-    });
-    @if($hasError)
-    ts.wrapper.classList.add('has-error');
-    @endif
-});
+(function () {
+    function init() {
+        var el = document.getElementById('select-{{ $name }}');
+        if (!el || !window.TomSelect) return;
+        if (el.tomselect) return;
+        var ts = new TomSelect(el, {
+            {!! $multiple ? 'create: true,' : 'create: false,' !!}
+            plugins: {!! $multiple ? json_encode(['remove_button']) : json_encode([]) !!},
+            {!! !$multiple && $placeholder !== false ? "placeholder: '" . addslashes($placeholder ?: '-- Silahkan Pilih --') . "'," : '' !!}
+            allowEmptyOption: true,
+        });
+        @if($hasError)
+        ts.wrapper.classList.add('has-error');
+        @endif
+    }
+    // Load normal + navigasi wire:navigate (Livewire)
+    init();
+    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('livewire:navigated', init);
+})();
 </script>
 @endif

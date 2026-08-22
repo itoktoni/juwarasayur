@@ -11,7 +11,7 @@
         $trimVal = fn($v) => $v === '' || $v === null ? '' : rtrim(rtrim(number_format((float)$v, 2, ".", ""), "0"), ".");
         $shippingFeeVal = old('so_shipping_fee', $model?->so_shipping_fee ?? 0);
         $warehouseJson = json_encode($warehouse ?? []);
-        $codLocationsJson = json_encode(collect(config("so.shipping.cod_locations", []))->values()->all());
+        $codLocationsJson = json_encode(collect($codLocations ?? [])->values()->all());
     @endphp
 
     <x-form :model="$model">

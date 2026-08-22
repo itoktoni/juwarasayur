@@ -8,7 +8,8 @@
             @bind($model ?? null)
                 <x-input col="6" name="name" />
                 <x-input col="6" name="slug" />
-                <x-input col="6" name="location" placeholder="header, footer, sidebar" />
+                <x-select col="6" name="location" :options="['main' => 'Header / Navigasi Utama', 'footer' => 'Footer']"
+                    placeholder="-- Pilih Lokasi --" helper="Lokasi tampil: header navigasi publik atau footer website" />
                 <x-input col="3" name="sort_order" type="number" />
                 <x-select col="3" name="is_active" :options="['1' => 'Active', '0' => 'Inactive']" />
             @endbind

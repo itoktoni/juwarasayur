@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\WebsiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Modules\Ecommerce\Models\CodLocation;
 
 class WebsiteSettingController extends Controller
 {
@@ -110,11 +112,18 @@ class WebsiteSettingController extends Controller
                 continue;
             }
 
+            $lat = $validated['cod_lat'][$i] ?? null;
+            $lng = $validated['cod_lng'][$i] ?? null;
+
+            if ($lat === null || $lng === null || (float) $lat === 0.0 && (float) $lng === 0.0) {
+                continue;
+            }
+
             $cod[] = [
                 'name' => $name,
-                'lat' => (float) ($validated['cod_lat'][$i] ?? 0),
-                'lng' => (float) ($validated['cod_lng'][$i] ?? 0),
-                'fee' => (float) ($validated['cod_fee'][$i] ?? 0),
+                'lat' => (float) $lat,
+                'lng' => (float) $lng,
+                'fee' => isset($validated['cod_fee'][$i]) && $validated['cod_fee'][$i] !== '' ? (float) $validated['cod_fee'][$i] : null,
             ];
         }
 
@@ -125,6 +134,25 @@ class WebsiteSettingController extends Controller
             return Redirect::route('settings.website');
         }
 
+        // Sinkronkan titik COD ke tabel DB (sumber tunggal untuk ecommerce & SO)
+        DB::transaction(function () use ($cod) {
+            foreach ($cod as $row) {
+                CodLocation::updateOrCreate(
+                    ['location_name' => $row['name']],
+                    [
+                        'lat' => $row['lat'],
+                        'lng' => $row['lng'],
+                        'fee' => $row['fee'],
+                        'is_active' => true,
+                    ]
+                );
+            }
+
+            if (! empty($cod)) {
+                CodLocation::whereNotIn('location_name', array_column($cod, 'name'))->delete();
+            }
+        });
+
         $this->updateEnv($envPath, [
             'SO_WAREHOUSE_NAME' => $validated['warehouse_name'],
             'SO_WAREHOUSE_ADDRESS' => (string) $validated['warehouse_address'],
@@ -133,7 +161,6 @@ class WebsiteSettingController extends Controller
             'SO_SHIPPING_PRICE_PER_KM' => (string) $validated['price_per_km'],
             'SO_SHIPPING_MIN_FEE' => (string) $validated['min_fee'],
             'SO_SHIPPING_MAX_RADIUS_KM' => (string) $validated['max_radius_km'],
-            'SO_COD_LOCATIONS' => json_encode($cod),
             'SO_MAP_PROVIDER' => $validated['map_provider'],
             'SO_MAP_BASE_URL' => $validated['map_base_url'],
             'SO_MAP_API_KEY' => (string) ($validated['map_api_key'] ?? ''),
@@ -154,7 +181,17 @@ class WebsiteSettingController extends Controller
             'price_per_km' => config('so.shipping.price_per_km'),
             'min_fee' => config('so.shipping.min_fee'),
             'max_radius_km' => config('so.shipping.max_radius_km'),
-            'cod_locations' => collect(config('so.shipping.cod_locations', []))->values()->all(),
+            'cod_locations' => CodLocation::query()
+                ->orderBy('location_name')
+                ->get()
+                ->map(fn ($loc) => [
+                    'name' => $loc->location_name,
+                    'lat' => (float) $loc->lat,
+                    'lng' => (float) $loc->lng,
+                    'fee' => $loc->fee !== null ? (float) $loc->fee : '',
+                ])
+                ->values()
+                ->all(),
             'map_provider' => config('so.map.provider'),
             'map_base_url' => config('so.map.base_url'),
             'map_api_key' => config('so.map.api_key'),

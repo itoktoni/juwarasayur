@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Models\Product;
+use Modules\Ecommerce\Models\CodLocation;
 use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;
 use Modules\So\Models\So;
@@ -26,11 +27,13 @@ class SoController extends Controller
         $products = Product::where('is_active', true)->orderBy('product_nama')->get(['id', 'product_nama', 'product_harga']);
         $trim = fn ($v) => $v === null || $v === '' ? $v : rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
 
-        $codLocations = collect(config('so.shipping.cod_locations', []))
+        $codLocations = CodLocation::active()
             ->map(fn ($loc) => [
-                'name' => (string) ($loc['name'] ?? ''),
-                'fee' => (float) ($loc['fee'] ?? 0),
-            ])->values();
+                'name' => $loc->location_name,
+                'lat' => (float) $loc->lat,
+                'lng' => (float) $loc->lng,
+                'fee' => (float) ($loc->fee ?? 0),
+            ]);
 
         return array_merge([
             'model' => $this->model,
@@ -40,6 +43,7 @@ class SoController extends Controller
             'shippingMethodOptions' => ShippingMethodEnum::getOptions(),
             'discountTypeOptions' => ['nominal' => 'Nominal (Rp)', 'percent' => 'Persen (%)'],
             'codLocationOptions' => $codLocations->pluck('name', 'name')->all(),
+            'codLocations' => $codLocations->all(),
             'productOptions' => $products->pluck('product_nama', 'id')->all(),
             'productPrices' => $products->mapWithKeys(fn ($p) => [$p->id => $trim($p->product_harga)])->all(),
             'warehouse' => config('so.shipping.warehouse'),
@@ -101,8 +105,9 @@ class SoController extends Controller
     {
         $validated = $request->validate(['location' => ['required', 'string']]);
 
-        $locations = collect(config('so.shipping.cod_locations', []));
-        $location = $locations->firstWhere('name', $validated['location']);
+        $location = CodLocation::where('location_name', $validated['location'])
+            ->where('is_active', true)
+            ->first();
 
         if (! $location) {
             return response()->json(['status' => false, 'message' => 'Lokasi COD tidak ditemukan.'], 422);
@@ -110,8 +115,8 @@ class SoController extends Controller
 
         return response()->json([
             'status' => true,
-            'location' => $location['name'],
-            'shipping_fee' => (float) ($location['fee'] ?? 0),
+            'location' => $location->location_name,
+            'shipping_fee' => (float) ($location->fee ?? 0),
         ]);
     }
 
@@ -192,13 +197,15 @@ class SoController extends Controller
         $service = app(DistanceService::class);
 
         if ($method === ShippingMethodEnum::COD) {
-            $locations = collect(config('so.shipping.cod_locations', []));
-            $location = $locations->firstWhere('name', trim((string) ($data['so_cod_location'] ?? '')));
+            $location = CodLocation::where('location_name', trim((string) ($data['so_cod_location'] ?? '')))
+                ->where('is_active', true)
+                ->first();
+
             abort_if(! $location, 422, 'Lokasi COD tidak valid.');
-            $data['so_cod_location'] = $location['name'];
-            $data['so_lat'] = $location['lat'];
-            $data['so_lng'] = $location['lng'];
-            $data['so_shipping_fee'] = (float) ($location['fee'] ?? 0);
+            $data['so_cod_location'] = $location->location_name;
+            $data['so_lat'] = $location->lat;
+            $data['so_lng'] = $location->lng;
+            $data['so_shipping_fee'] = (float) ($location->fee ?? 0);
         } elseif ($method === ShippingMethodEnum::DELIVERY) {
             abort_if(empty($data['so_lat']) || empty($data['so_lng']), 422, 'Titik lokasi pengiriman wajib diisi.');
 

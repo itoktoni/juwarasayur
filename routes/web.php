@@ -7,6 +7,8 @@ use App\Services\CentrifugoService;
 use Buki\AutoRoute\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Modules\Ecommerce\Http\Controllers\HomeController;
+use Modules\Ecommerce\Http\Controllers\StorefrontController;
 
 Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {
     if (! config('langkahkecil.notification_enable')) {
@@ -86,9 +88,9 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
     });
 });
 
-Route::get('/', [\Modules\Ecommerce\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/product', [\Modules\Ecommerce\Http\Controllers\StorefrontController::class, 'index'])->name('shop.index');
-Route::get('/product/{slug}', [\Modules\Ecommerce\Http\Controllers\StorefrontController::class, 'show'])->name('shop.show');
+Route::get('/product', [StorefrontController::class, 'index'])->name('shop.index');
+Route::get('/product/{slug}', [StorefrontController::class, 'show'])->name('shop.show');
 
 require __DIR__.'/settings.php';

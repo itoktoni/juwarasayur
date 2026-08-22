@@ -8,6 +8,9 @@ class CmsDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(CompanyProfileSeeder::class);
+        $this->call([
+            CompanyProfileSeeder::class,
+            MenuSeeder::class,
+        ]);
     }
 }

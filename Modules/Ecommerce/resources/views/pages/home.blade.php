@@ -1,6 +1,6 @@
 @php
     $siteName = config('app.name', 'Mayur');
-    $cartCount = auth()->check() ? \Modules\Ecommerce\Models\CartItem::where('user_id', auth()->id())->sum('qty') : 0;
+    $cartCount = app(\Modules\Ecommerce\Services\CartService::class)->count();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -96,12 +96,10 @@
                             <a href="{{ route('shop.show', $p->product_slug) }}" class="text-xs font-medium leading-tight line-clamp-2 min-h-[2rem] hover:text-primary">{{ $p->product_nama }}</a>
                             <div class="mt-auto pt-1">
                                 <p class="font-bold text-sm text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
-                                @auth
                                     <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
                                         class="mt-1.5 w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary text-on-primary text-xs font-semibold py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none">
                                         <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
                                     </button>
-                                @endauth
                             </div>
                         </div>
                     </div>
@@ -109,6 +107,45 @@
             </div>
         @endif
     </section>
+
+    {{-- Paling Laris --}}
+    @if($bestSellingProducts->isNotEmpty())
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-warning text-2xl">local_fire_department</span>
+                    <h2 class="text-xl md:text-2xl font-bold">{{ $settings['best_selling_title'] }}</h2>
+                </div>
+                <a href="{{ route('shop.index') }}" class="text-sm text-primary hover:underline inline-flex items-center gap-1">
+                    Lihat Semua <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </a>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+                @foreach($bestSellingProducts as $p)
+                    <div class="card overflow-hidden border border-outline-variant bg-white rounded-xl flex flex-col hover:shadow-md transition-shadow">
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-square bg-surface-container overflow-hidden block relative">
+                            @if($p->product_gambar)
+                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300" loading="lazy">
+                            @else
+                                <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
+                            @endif
+                        </a>
+                        <div class="p-2.5 flex flex-col gap-1 flex-1">
+                            <a href="{{ route('shop.show', $p->product_slug) }}" class="text-xs font-medium leading-tight line-clamp-2 min-h-[2rem] hover:text-primary">{{ $p->product_nama }}</a>
+                            <p class="text-[10px] text-on-surface-variant">Terjual {{ (int) $p->total_sold }}</p>
+                            <div class="mt-auto pt-1 flex items-center justify-between gap-1">
+                                <p class="font-bold text-xs text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
+                                <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+                                    class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 disabled:pointer-events-none" title="Tambah ke keranjang">
+                                    <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     {{-- Produk Terbaru --}}
     @if($latestProducts->isNotEmpty())
@@ -133,12 +170,10 @@
                             <a href="{{ route('shop.show', $p->product_slug) }}" class="text-xs font-medium leading-tight line-clamp-2 min-h-[2rem] hover:text-primary">{{ $p->product_nama }}</a>
                             <div class="mt-auto pt-1 flex items-center justify-between gap-1">
                                 <p class="font-bold text-xs text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
-                                @auth
-                                    <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-                                        class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 disabled:pointer-events-none" title="Tambah ke keranjang">
-                                        <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
-                                    </button>
-                                @endauth
+                                <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+                                    class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 disabled:pointer-events-none" title="Tambah ke keranjang">
+                                    <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -148,21 +183,7 @@
     @endif
 
     {{-- Footer --}}
-    <footer class="border-t border-outline-variant py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.png') }}" alt="Juwara Sayur" class="h-9 w-auto">
-                <span class="text-xs text-on-surface-variant">Sayur & Sembako Segar</span>
-            </div>
-            <div class="flex items-center gap-5 text-sm text-on-surface-variant">
-                <a href="{{ route('shop.index') }}" class="hover:text-primary transition-colors">Belanja</a>
-                <a href="{{ route('blog') }}" class="hover:text-primary transition-colors">Blog</a>
-                <a href="{{ route('cart.index') }}" class="hover:text-primary transition-colors">Keranjang</a>
-                <a href="{{ route('contact') }}" class="hover:text-primary transition-colors">Kontak</a>
-            </div>
-        </div>
-        <p class="text-center text-[11px] text-on-surface-variant/70 mt-6">© {{ now()->year }} Juwara Sayur. All rights reserved.</p>
-    </footer>
+    @include('cms::frontend.layouts.footer')
 
     <script>
         // Countdown flash sale (server-time based)
@@ -185,8 +206,6 @@
         })();
     </script>
 
-    @auth
-        @include('ecommerce::components.cart-button')
-    @endauth
+    @include('ecommerce::components.cart-button')
 </body>
 </html>

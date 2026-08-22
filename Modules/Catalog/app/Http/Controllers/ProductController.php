@@ -37,6 +37,9 @@ class ProductController extends Controller
 
     public function postCreate(GeneralRequest $request)
     {
+        $this->normalizeTagIds($request);
+        $this->normalizeBooleans($request);
+
         $gambar = $this->handleGambar($request, null);
         if ($gambar !== null) {
             $request->merge(['product_gambar' => $gambar]);
@@ -56,6 +59,9 @@ class ProductController extends Controller
 
     public function postUpdate(GeneralRequest $request, $id)
     {
+        $this->normalizeTagIds($request);
+        $this->normalizeBooleans($request);
+
         $product = $this->model->findOrFail($id);
         $existing = $product->product_gambar ?? null;
 
@@ -74,6 +80,36 @@ class ProductController extends Controller
         }
 
         return $this->response($response);
+    }
+
+    /**
+     * Multiple select tanpa "[]" mengirim satu nilai string — paksa ke array
+     * agar rule validasi tag_ids (array) dan sync tags bekerja.
+     */
+    private function normalizeTagIds(GeneralRequest $request): void
+    {
+        if (! $request->has('tag_ids')) {
+            return;
+        }
+
+        $request->merge([
+            'tag_ids' => array_values(array_filter((array) $request->input('tag_ids'))),
+        ]);
+    }
+
+    /**
+     * Kolom boolean NOT NULL — string kosong diubah middleware jadi null
+     * dan lolos rule "nullable|boolean", padahal DB menolak null. Paksa ke 0/1.
+     */
+    private function normalizeBooleans(GeneralRequest $request): void
+    {
+        foreach (['is_featured', 'is_active'] as $field) {
+            if ($request->has($field)) {
+                $request->merge([
+                    $field => (int) filter_var($request->input($field), FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
+        }
     }
 
     private function handleGambar(GeneralRequest $request, ?string $existing): ?string
