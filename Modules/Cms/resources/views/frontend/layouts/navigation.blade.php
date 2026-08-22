@@ -1,8 +1,7 @@
 <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant/20" id="main-nav">
     <div class="flex justify-between items-center px-6 md:px-8 py-4 max-w-7xl mx-auto">
         <a href="{{ url('/') }}" class="flex items-center gap-3">
-            <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center font-headline-md text-sm font-bold">{{ Str::upper(Str::substr(config('app.name', 'CP'), 0, 2)) }}</span>
-            <span class="font-headline-md text-headline-md font-bold text-on-surface hidden sm:inline">{{ config('app.name', 'Company') }}</span>
+            <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Juwara Sayur') }}" class="h-10 w-auto">
         </a>
         <div class="hidden md:flex items-center gap-8">
             @if($menu && $menu->items)
@@ -30,14 +29,23 @@
                 @endforeach
             @else
                 <a href="{{ url('/') }}" class="font-label-md text-sm {{ request()->is('/') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }}">Beranda</a>
-                <a href="{{ url('/#produk') }}" class="font-label-md text-sm text-on-surface-variant hover:text-primary">Produk</a>
-                <a href="{{ url('/#tentang') }}" class="font-label-md text-sm text-on-surface-variant hover:text-primary">Tentang</a>
-                <a href="{{ route('contact') }}" class="font-label-md text-sm text-on-surface-variant hover:text-primary">Kontak</a>
+                <a href="{{ route('shop.index') }}" class="font-label-md text-sm {{ request()->is('product*') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }}">Belanja</a>
+                <a href="{{ route('blog') }}" class="font-label-md text-sm {{ request()->is('blog*') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }}">Blog</a>
+                <a href="{{ route('contact') }}" class="font-label-md text-sm {{ request()->is('contact') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }}">Kontak</a>
             @endif
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('search') }}" class="w-9 h-9 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/30 transition-colors" aria-label="Search"><span class="material-symbols-outlined text-xl">search</span></a>
-            <a href="{{ route('contact') }}" class="hidden sm:inline-flex bg-primary text-on-primary px-5 py-2.5 rounded-full font-label-md text-sm hover:opacity-90 active:scale-95 transition-all">Pesan Sekarang</a>
+            @auth
+                @php $cartCount = \Modules\Ecommerce\Models\CartItem::where('user_id', auth()->id())->sum('qty'); @endphp
+                <a href="{{ route('cart.index') }}" class="relative w-9 h-9 rounded-full border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary/30 transition-colors" aria-label="Keranjang">
+                    <span class="material-symbols-outlined text-xl">shopping_cart</span>
+                    @if($cartCount > 0)
+                        <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center">{{ $cartCount }}</span>
+                    @endif
+                </a>
+            @endauth
+            <a href="{{ route('shop.index') }}" class="hidden sm:inline-flex bg-primary text-on-primary px-5 py-2.5 rounded-full font-label-md text-sm hover:opacity-90 active:scale-95 transition-all">Belanja Sekarang</a>
         </div>
     </div>
 </nav>

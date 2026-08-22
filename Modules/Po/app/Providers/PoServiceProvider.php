@@ -2,45 +2,32 @@
 
 namespace Modules\Po\Providers;
 
+use Illuminate\Support\Facades\Gate;
+use Modules\Po\Models\Po;
+use Modules\Po\Models\PoDetail;
+use Modules\Po\Models\Supplier;
+use Modules\Po\Policies\PoDetailPolicy;
+use Modules\Po\Policies\PoPolicy;
+use Modules\Po\Policies\SupplierPolicy;
 use Nwidart\Modules\Support\ModuleServiceProvider;
-use Illuminate\Console\Scheduling\Schedule;
 
 class PoServiceProvider extends ModuleServiceProvider
 {
-    /**
-     * The name of the module.
-     */
     protected string $name = 'Po';
 
-    /**
-     * The lowercase version of the module name.
-     */
     protected string $nameLower = 'po';
 
-    /**
-     * Command classes to register.
-     *
-     * @var string[]
-     */
-    // protected array $commands = [];
-
-    /**
-     * Provider classes to register.
-     *
-     * @var string[]
-     */
     protected array $providers = [
         EventServiceProvider::class,
         RouteServiceProvider::class,
     ];
 
-    /**
-     * Define module schedules.
-     * 
-     * @param $schedule
-     */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    public function boot(): void
+    {
+        parent::boot();
+
+        Gate::policy(Supplier::class, SupplierPolicy::class);
+        Gate::policy(Po::class, PoPolicy::class);
+        Gate::policy(PoDetail::class, PoDetailPolicy::class);
+    }
 }

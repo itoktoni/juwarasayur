@@ -1,5 +1,8 @@
-@props(['empty' => 'No data found.'])
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden form-card">
+@props(['empty' => 'No data found.', 'border' => true])
+<div @class([
+    'bg-surface-container-lowest overflow-hidden form-card',
+    'border border-outline-variant rounded-xl' => $border,
+])>
     <div class="p-0">
         @desktop()
         <div class="hidden lg:block overflow-x-auto">

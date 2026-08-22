@@ -4,8 +4,8 @@ namespace Modules\Cms\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Modules\Cms\Models\Content;
-use Modules\Cms\Models\Section;
 use Modules\Cms\Models\Field;
+use Modules\Cms\Models\Section;
 use Modules\Cms\Models\Type;
 
 class ContentBuilderController extends Controller
@@ -17,6 +17,7 @@ class ContentBuilderController extends Controller
     {
         $types = Type::distinct()->pluck('type');
         $contentBlocks = Content::orderBy('sort_order')->get();
+
         return view('cms::dynamic-content-builder', compact('types', 'contentBlocks'));
     }
 
@@ -63,7 +64,7 @@ class ContentBuilderController extends Controller
 
         if ($request->filled('sections_order')) {
             $block->meta = array_merge($block->meta ?? [], [
-                '_sections_order' => json_decode($request->input('sections_order'), true)
+                '_sections_order' => json_decode($request->input('sections_order'), true),
             ]);
             $block->save();
         }

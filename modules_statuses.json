@@ -1,5 +1,8 @@
 {
     "Cms": true,
     "Catalog": true,
-    "Po": true
+    "Po": true,
+    "Inventory": true,
+    "So": true,
+    "Ecommerce": true
 }

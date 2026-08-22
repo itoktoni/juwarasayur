@@ -1,0 +1,11 @@
+{
+    "name": "So",
+    "alias": "so",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\So\\Providers\\SoServiceProvider"
+    ],
+    "files": []
+}

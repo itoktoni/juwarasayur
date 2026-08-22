@@ -2,17 +2,15 @@
 
 namespace App\Support;
 
-use Buki\AutoRoute\Middleware\AjaxRequestMiddleware;
-use Illuminate\Container\Container;
+use Buki\AutoRoute\AutoRoute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Routing\Router;
-use ReflectionClass;
-use ReflectionMethod;
 use Livewire\Component;
 use Livewire\Volt\Volt;
+use ReflectionClass;
+use ReflectionMethod;
 
-class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
+class FixedAutoRoute extends AutoRoute
 {
     public function auto(string $prefix, string $controller, array $options = []): void
     {
@@ -20,7 +18,7 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
         $except = $options['except'] ?? [];
         $patterns = $options['patterns'] ?? [];
 
-        $routeName = trim($options['as'] ?? ($options['name'] ?? trim($prefix, '/')), '.') . '.';
+        $routeName = trim($options['as'] ?? ($options['name'] ?? trim($prefix, '/')), '.').'.';
         if ($routeName === '.') {
             $routeName = '';
         }
@@ -33,15 +31,15 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
                 foreach ($classRef->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                     if (in_array($method->class, [BaseController::class, "{$this->namespace}\\Controller"])
                         || ($method->getDeclaringClass()->getParentClass() && $method->getDeclaringClass()->getParentClass()->getName() === BaseController::class)
-                        || !$method->isPublic()
+                        || ! $method->isPublic()
                         || str_starts_with($method->name, '__')) {
                         continue;
                     }
 
                     $methodName = $method->name;
 
-                    if ((!empty($only) && !in_array($methodName, $only))
-                        || (!empty($except) && in_array($methodName, $except))) {
+                    if ((! empty($only) && ! in_array($methodName, $only))
+                        || (! empty($except) && in_array($methodName, $except))) {
                         continue;
                     }
 
@@ -50,22 +48,23 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
 
                     $endpoint = implode('/', $endpoints);
                     $handler = [$classRef->getName(), $method->name];
-                    $routePath = ($path !== $this->mainMethod ? $path : '') . "/{$endpoint}";
+                    $routePath = ($path !== $this->mainMethod ? $path : '')."/{$endpoint}";
 
                     if (str_starts_with($method->name, 'volt')) {
                         if (class_exists(Volt::class) && $method->getReturnType()?->getName() === 'string') {
                             Volt::route($routePath, $method->invoke(new ($classRef->getName()), ...$endpoints))
                                 ->where($routePatterns)->name("{$method->name}")->middleware($middleware);
                         }
+
                         continue;
                     }
 
                     if (str_starts_with($method->name, 'wire')) {
-                        if (!(class_exists(Component::class) && $method->getReturnType()?->getName() === 'string')) {
+                        if (! (class_exists(Component::class) && $method->getReturnType()?->getName() === 'string')) {
                             continue;
                         }
                         $handler = $method->invoke(new ($classRef->getName()), ...$endpoints);
-                        if (!is_subclass_of($handler, Component::class)) {
+                        if (! is_subclass_of($handler, Component::class)) {
                             continue;
                         }
                     }
@@ -80,13 +79,14 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
 
     protected function resolveControllerNameFixed(string $controller): array
     {
-        $trimmed = ltrim($controller, "\\");
+        $trimmed = ltrim($controller, '\\');
         if (class_exists($trimmed)) {
             return [$trimmed, $trimmed];
         }
         $controller = str_replace(['.', $this->namespace], ['\\', ''], $controller);
+
         return [
-            $this->namespace . "\\" . trim($controller, "\\"),
+            $this->namespace.'\\'.trim($controller, '\\'),
             $controller,
         ];
     }
@@ -104,11 +104,12 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
                     $httpMethods = [ltrim($method, 'x')];
                 }
                 $middleware = str_starts_with($method, 'x') ? $this->ajaxMiddleware : null;
-                $controllerMethod = lcfirst(preg_replace('/' . $method . '_?/i', '', $controllerMethod, 1));
+                $controllerMethod = lcfirst(preg_replace('/'.$method.'_?/i', '', $controllerMethod, 1));
                 break;
             }
         }
         $controllerMethod = strtolower(preg_replace('%([a-z]|[0-9])([A-Z])%', '\1-\2', $controllerMethod));
+
         return [$httpMethods, $controllerMethod, $middleware];
     }
 
@@ -119,13 +120,14 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
         foreach ($method->getParameters() as $param) {
             $paramName = $param->getName();
             $typeHint = $param->hasType() ? $param->getType()->getName() : null;
-            if (!$this->isValidRouteParamFixed($typeHint)) {
+            if (! $this->isValidRouteParamFixed($typeHint)) {
                 continue;
             }
             $routePatterns[$paramName] = $patterns[$paramName] ??
                 ($this->defaultPatterns[":{$typeHint}"] ?? $this->defaultPatterns[':any']);
             $endpoints[] = $param->isOptional() ? "{{$paramName}?}" : "{{$paramName}}";
         }
+
         return [$endpoints, $routePatterns];
     }
 
@@ -140,6 +142,7 @@ class FixedAutoRoute extends \Buki\AutoRoute\AutoRoute
         if (function_exists('enum_exists') && enum_exists($type)) {
             return true;
         }
+
         return false;
     }
 }

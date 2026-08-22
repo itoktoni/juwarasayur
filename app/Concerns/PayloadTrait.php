@@ -4,7 +4,7 @@ namespace App\Concerns;
 
 trait PayloadTrait
 {
-    private function payload(string $message, $data = null, $code = 200)
+    protected function payload(string $message, $data = null, $code = 200)
     {
         $status = true;
 

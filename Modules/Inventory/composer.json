@@ -1,0 +1,30 @@
+{
+    "name": "itoktoni/inventory",
+    "description": "",
+    "authors": [
+        {
+            "name": "itoktoni",
+            "email": "itok@example.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Inventory\\": "app/",
+            "Modules\\Inventory\\Database\\Factories\\": "database/factories/",
+            "Modules\\Inventory\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Inventory\\Tests\\": "tests/"
+        }
+    }
+}

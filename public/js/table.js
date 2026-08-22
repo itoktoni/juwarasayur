@@ -8,47 +8,76 @@ window.initTable = function(sortField, sortDir) {
 };
 
 window.buildUrl = function() {
-    var params = new URLSearchParams();
-    var q = (document.getElementById('searchInput') || {}).value || '';
-    q = typeof q === 'string' ? q.trim() : '';
+    var params = new URLSearchParams(window.location.search);
+    var qEl = document.getElementById('searchInput');
+    var q = qEl ? (qEl.value || '').trim() : '';
     var fieldEl = document.getElementById('filterField');
     var field = fieldEl ? fieldEl.value : '';
-    var perPage = (document.getElementById('perPage') || {}).value || '25';
+    var perPageEl = document.getElementById('perPage');
+    var perPage = perPageEl ? perPageEl.value : '25';
 
-    if (q) {
-        if (field === 'price') {
-            params.set('filters[price][$eq]', q);
-        } else {
-            params.set('filters[' + field + '][$contains]', q);
+    var prevField = params.get('_field');
+    if (prevField && prevField !== field) {
+        params.delete('filters[' + prevField + '][$contains]');
+        params.delete('filters[' + prevField + '][$eq]');
+        for (var kk of Array.from(params.keys())) {
+            if (kk.indexOf('filters[' + prevField + '][') === 0) params.delete(kk);
         }
+        params.delete('filter_op[' + prevField + ']');
+    }
+    if (q) {
+        for (var kk2 of Array.from(params.keys())) {
+            if (kk2.indexOf('filters[' + field + '][') === 0) params.delete(kk2);
+        }
+        params.set('filters[' + field + '][$contains]', q);
         params.set('_field', field);
         params.set('_q', q);
+    } else {
+        if (field) {
+            for (var kk3 of Array.from(params.keys())) {
+                if (kk3.indexOf('filters[' + field + '][') === 0) params.delete(kk3);
+            }
+            params.delete('filter_op[' + field + ']');
+        }
+        if (!qEl || !q) {
+            params.delete('_q');
+            params.delete('_field');
+        }
+        if (prevField && prevField !== field) {
+            for (var kk4 of Array.from(params.keys())) {
+                if (kk4.indexOf('filters[' + prevField + '][') === 0) params.delete(kk4);
+            }
+            params.delete('filter_op[' + prevField + ']');
+        }
     }
 
     document.querySelectorAll('[data-field]').forEach(function(input) {
         var fieldName = input.dataset.field;
         var opEl = document.querySelector('[data-op="' + fieldName + '"]');
         var operator = opEl ? opEl.value : '$eq';
-        var value = input.tagName === 'SELECT' ? input.value : input.value.trim();
+        var value = input.tagName === 'SELECT' ? input.value : (input.value || '').trim();
+        for (var k of Array.from(params.keys())) {
+            if (k.indexOf('filters[' + fieldName + '][') === 0) params.delete(k);
+        }
+        params.delete('filter_op[' + fieldName + ']');
         if (value) {
             params.set('filters[' + fieldName + '][' + operator + ']', value);
             params.set('filter_op[' + fieldName + ']', operator);
         }
     });
 
-    document.querySelectorAll('[data-op]').forEach(function(select) {
-        var fieldName = select.dataset.op;
-        if (!params.has('filters[' + fieldName + ']')) {
-            params.set('filter_op[' + fieldName + ']', select.value);
-        }
-    });
-
     if (window.currentSortField) params.set('sort[0]', window.currentSortField + ':' + window.currentSortDir);
+    else params.delete('sort[0]');
     params.set('per_page', perPage);
 
-    var moduleEl = document.querySelector('input.module');
-    var module = moduleEl ? moduleEl.value : '';
-    if (module) window.location.href = '/' + module + '/table?' + params.toString();
+    var path = window.location.pathname;
+    if (path.indexOf('/table') === -1) {
+        var moduleEl = document.querySelector('input.module');
+        var module = moduleEl ? moduleEl.value : '';
+        if (module) path = '/' + module.replace(/-/g, '/') + '/table';
+        else path = window.location.pathname;
+    }
+    window.location.href = path + '?' + params.toString();
 };
 
 window.doSort = function(col) {

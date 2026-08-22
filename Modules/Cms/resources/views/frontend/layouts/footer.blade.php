@@ -3,8 +3,7 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-10">
             <div class="md:col-span-5">
                 <div class="flex items-center gap-3 mb-4">
-                    <span class="w-9 h-9 rounded-lg bg-primary text-on-primary flex items-center justify-center font-headline-md text-sm font-bold">{{ Str::upper(Str::substr(config('app.name', 'CP'), 0, 2)) }}</span>
-                    <span class="font-headline-md font-bold text-lg">{{ config('app.name', 'Company') }}</span>
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Juwara Sayur') }}" class="h-12 w-auto">
                 </div>
                 <p class="text-white/60 text-sm leading-relaxed max-w-md">Sayur-mayur &amp; bahan dapur segar — sayur, telur, ikan, ayam, daging. Pasar ke dapur Anda, setiap hari.</p>
                 <div class="flex gap-3 mt-6">
@@ -34,19 +33,27 @@
                 </div>
             @else
                 <div class="md:col-span-2">
-                    <h5 class="font-semibold text-white mb-4">Tautan</h5>
+                    <h5 class="font-semibold text-white mb-4">Jelajahi</h5>
                     <ul class="space-y-2.5 text-sm text-white/60">
-                        <li><a href="{{ url('/#produk') }}" class="hover:text-white">Produk</a></li>
-                        <li><a href="{{ url('/#tentang') }}" class="hover:text-white">Tentang Kami</a></li>
-                        <li><a href="{{ route('contact') }}" class="hover:text-white">Kontak</a></li>
+                        <li><a href="{{ url('/') }}" class="hover:text-white transition-colors">Beranda</a></li>
+                        <li><a href="{{ route('shop.index') }}" class="hover:text-white transition-colors">Belanja</a></li>
+                        <li><a href="{{ route('blog') }}" class="hover:text-white transition-colors">Blog</a></li>
                     </ul>
                 </div>
                 <div class="md:col-span-2">
-                    <h5 class="font-semibold text-white mb-4">Produk</h5>
+                    <h5 class="font-semibold text-white mb-4">Akun Saya</h5>
                     <ul class="space-y-2.5 text-sm text-white/60">
-                        <li><a href="{{ url('/#produk') }}" class="hover:text-white">Sayur Mayur</a></li>
-                        <li><a href="{{ url('/#produk') }}" class="hover:text-white">Telur &amp; Ayam</a></li>
-                        <li><a href="{{ url('/#produk') }}" class="hover:text-white">Ikan &amp; Daging</a></li>
+                        <li><a href="{{ route('cart.index') }}" class="hover:text-white transition-colors">Keranjang</a></li>
+                        <li><a href="{{ route('checkout.show') }}" class="hover:text-white transition-colors">Checkout</a></li>
+                        <li><a href="{{ route('ecommerce.orders.index') }}" class="hover:text-white transition-colors">Pesanan Saya</a></li>
+                    </ul>
+                </div>
+                <div class="md:col-span-2">
+                    <h5 class="font-semibold text-white mb-4">Bantuan</h5>
+                    <ul class="space-y-2.5 text-sm text-white/60">
+                        <li><a href="{{ route('contact') }}" class="hover:text-white transition-colors">Hubungi Kami</a></li>
+                        <li><a href="{{ route('search') }}" class="hover:text-white transition-colors">Pencarian</a></li>
+                        <li><a href="{{ route('login') }}" class="hover:text-white transition-colors">Masuk / Daftar</a></li>
                     </ul>
                 </div>
                 <div class="md:col-span-3">
@@ -60,8 +67,8 @@
             @endif
         </div>
         <div class="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-3 text-xs text-white/40">
-            <span>&copy; {{ date('Y') }} {{ config('app.name', 'Company') }}. All rights reserved.</span>
-            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Company Profile</span>
+            <span>&copy; {{ date('Y') }} Juwara Sayur. All rights reserved.</span>
+            <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Juwara Sayur</span>
         </div>
     </div>
 </footer>

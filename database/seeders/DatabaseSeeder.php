@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Catalog\Database\Seeders\CatalogDatabaseSeeder;
+use Modules\Inventory\Database\Seeders\InventoryDatabaseSeeder;
+use Modules\Po\Database\Seeders\PoDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,6 +17,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(UserSeeder::class);
         $this->call(MenuSeeder::class);
-        $this->call(\Modules\Catalog\Database\Seeders\CatalogDatabaseSeeder::class);
+        $this->call(CatalogDatabaseSeeder::class);
+        $this->call(PoDatabaseSeeder::class);
+        $this->call(InventoryDatabaseSeeder::class);
     }
 }

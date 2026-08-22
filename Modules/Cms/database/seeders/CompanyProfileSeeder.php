@@ -104,13 +104,17 @@ class CompanyProfileSeeder extends Seeder
         $sections = [];
         foreach ($order as $name => $sort) {
             $field = $fields[$name] ?? null;
-            if (! $field) continue;
+            if (! $field) {
+                continue;
+            }
 
             $sections[$name] = Section::updateOrCreate(
                 ['name' => $name],
                 [
-                    'description' => $name === 'services' ? 'Produk — sayur, telur, ikan, ayam, daging, bahan dapur' : ucfirst($name) . ' — website sayur',
-                    'icon' => match ($name) { 'hero' => 'home', 'about' => 'info', 'services' => 'grocery', 'clients' => 'handshake', 'cta' => 'shopping_cart', default => 'layers' },
+                    'description' => $name === 'services' ? 'Produk — sayur, telur, ikan, ayam, daging, bahan dapur' : ucfirst($name).' — website sayur',
+                    'icon' => match ($name) {
+                        'hero' => 'home', 'about' => 'info', 'services' => 'grocery', 'clients' => 'handshake', 'cta' => 'shopping_cart', default => 'layers'
+                    },
                     'content_type_id' => $type->id,
                     'field_ids' => [$field->id],
                     'sort_order' => $sort,
@@ -184,7 +188,7 @@ class CompanyProfileSeeder extends Seeder
         );
 
         if (empty($content->slug)) {
-            $content->slug = Str::slug($content->title) . '-' . $content->id;
+            $content->slug = Str::slug($content->title).'-'.$content->id;
             $content->saveQuietly();
         }
     }

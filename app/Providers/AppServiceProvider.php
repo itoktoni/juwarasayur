@@ -6,6 +6,7 @@ use App\Boost\Agents\CustomAgent;
 use App\Events\NotificationSent;
 use App\Listeners\SendNotificationViaCentrifugo;
 use App\Models\Menu;
+use App\Support\FixedAutoRoute;
 use Buki\AutoRoute\AutoRoute;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -35,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         // singleton instance and re-declare the Router::macro to close over $fixed
         // directly (not $app[AutoRoute::class] which vendor could re-bind later).
         // This survives composer install unlike a raw vendor edit.
-        $fixed = new \App\Support\FixedAutoRoute($this->app);
+        $fixed = new FixedAutoRoute($this->app);
         $fixed->setConfigurations($this->app['config']->get('auto-route', []));
         $this->app->instance(AutoRoute::class, $fixed);
         $this->app['router']->macro('auto', function (string $prefix, string $controller, array $options = []) use ($fixed) {

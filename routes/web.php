@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\CatalogPublicController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WebsiteSettingController;
 use App\Models\Notification;
@@ -40,6 +39,7 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
 
     Route::get('/settings/website', [WebsiteSettingController::class, 'index'])->name('settings.website');
     Route::post('/settings/website', [WebsiteSettingController::class, 'save'])->name('settings.website.save');
+    Route::post('/settings/website/shipping', [WebsiteSettingController::class, 'saveShipping'])->name('settings.website.shipping');
 
     Route::prefix('notifications-web')->group(function () {
         Route::get('/', function (Request $request) {
@@ -86,7 +86,9 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
     });
 });
 
-Route::get('/product', [CatalogPublicController::class, 'index'])->name('catalog.index');
-Route::get('/product/{slug}', [CatalogPublicController::class, 'show'])->name('catalog.show');
+Route::get('/', [\Modules\Ecommerce\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::get('/product', [\Modules\Ecommerce\Http\Controllers\StorefrontController::class, 'index'])->name('shop.index');
+Route::get('/product/{slug}', [\Modules\Ecommerce\Http\Controllers\StorefrontController::class, 'show'])->name('shop.show');
 
 require __DIR__.'/settings.php';

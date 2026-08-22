@@ -52,7 +52,7 @@ trait ControllerTrait
 
     public function getTable(GeneralRequest $request)
     {
-        $data = $this->getData()->cursorPaginate($request->input('per_page', 25))->withQueryString();
+        $data = $this->applyLegacyFilter($this->getData())->cursorPaginate($request->input('per_page', 25))->withQueryString();
 
         return $this->views($this->template(), [
             'data' => $data,
@@ -174,76 +174,24 @@ trait ControllerTrait
 
     protected function getData()
     {
-        $query = $this->model->query();
-        $request = request();
+        return $this->applyLegacyFilter($this->model->filter()->sort());
+    }
 
-        // Filters: filters[field][operator] = value
-        $filters = $request->input('filters', []);
-        $availableColumns = $this->model::$filterColumns ?? [];
-        $columnKeys = array_keys($availableColumns);
-        // Normalize associative columns to plain list
-        $allowedFields = array_map(fn ($k, $v) => is_numeric($k) ? $v : $k, $columnKeys, $availableColumns);
-
-        foreach ($filters as $field => $conditions) {
-            // Whitelist: skip fields not in $filterColumns
-            if (! empty($allowedFields) && ! in_array($field, $allowedFields)) {
-                continue;
+    protected function applyLegacyFilter($query)
+    {
+        $q = request()->input('_q');
+        $searchField = request()->input('_field');
+        if ($q !== null && $q !== '' && $searchField) {
+            $filterColumns = $this->model::$filterColumns ?? [];
+            $allowed = [];
+            foreach ($filterColumns as $k => $v) {
+                $allowed[] = is_int($k) ? $v : $k;
             }
-            // Handle leftJoin if field contains dot (relation.column)
-            if (str_contains($field, '.')) {
-                $parts = explode('.', $field);
-                $relation = $parts[0];
-                $column = $parts[1];
-                if (method_exists($this->model, $relation)) {
-                    $rel = $this->model->$relation();
-                    $relatedTable = $rel->getRelated()->getTable();
-                    $foreignKey = $rel->getQualifiedForeignKeyName();
-                    $ownerKey = $rel->getQualifiedOwnerKeyName();
-                    $query->leftJoin($relatedTable, $foreignKey, '=', $ownerKey);
-                    $field = $relatedTable.'.'.$column;
+            if (in_array($searchField, $allowed, true)) {
+                $alreadyFiltered = request()->input("filters.{$searchField}") !== null;
+                if (! $alreadyFiltered) {
+                    $query->whereRaw('LOWER('.$searchField.') LIKE ?', ['%'.strtolower((string) $q).'%']);
                 }
-            } elseif (! str_contains($field, '.')) {
-                $field = $this->model->getTable().'.'.$field;
-            }
-
-            if (is_array($conditions)) {
-                foreach ($conditions as $operator => $value) {
-                    if ($value === '' || $value === null) {
-                        continue;
-                    }
-                    match ($operator) {
-                        '$contains' => $query->whereRaw('LOWER('.$field.') LIKE ?', ['%'.strtolower($value).'%']),
-                        '$eq' => $query->whereRaw('LOWER('.$field.') = ?', [strtolower($value)]),
-                        '$gt' => $query->where($field, '>', $value),
-                        '$gte' => $query->where($field, '>=', $value),
-                        '$lt' => $query->where($field, '<', $value),
-                        '$lte' => $query->where($field, '<=', $value),
-                        '$ne' => $query->whereRaw('LOWER('.$field.') != ?', [strtolower($value)]),
-                        '$in' => $query->whereIn($field, (array) $value),
-                        default => $query->whereRaw('LOWER('.$field.') LIKE ?', ['%'.strtolower($value).'%']),
-                    };
-                }
-            } elseif (is_string($conditions) && $conditions !== '') {
-                $query->whereRaw('LOWER('.$field.') LIKE ?', ['%'.strtolower($conditions).'%']);
-            }
-        }
-
-        // Legacy _q + _field search
-        $q = $request->input('_q');
-        $searchField = $request->input('_field');
-        if ($q && $searchField && in_array($searchField, $allowedFields)) {
-            $query->whereRaw('LOWER('.$searchField.') LIKE ?', ['%'.strtolower($q).'%']);
-        }
-
-        // Sort: sort[0] = column:direction
-        $sort = $request->input('sort.0');
-        $sortColumns = $this->model::$sortColumns ?? [];
-        if ($sort) {
-            $parts = explode(':', $sort);
-            $col = $parts[0] ?? null;
-            $dir = ($parts[1] ?? 'asc') === 'desc' ? 'desc' : 'asc';
-            if ($col && (empty($sortColumns) || in_array($col, $sortColumns))) {
-                $query->orderBy($col, $dir);
             }
         }
 

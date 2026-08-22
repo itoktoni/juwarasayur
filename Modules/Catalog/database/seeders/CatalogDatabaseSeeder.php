@@ -3,6 +3,7 @@
 namespace Modules\Catalog\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Catalog\Models\Brand;
@@ -50,7 +51,7 @@ class CatalogDatabaseSeeder extends Seeder
         Category::where('category_slug', 'mayur')->forceDelete();
     }
 
-    private function seedBrands(): \Illuminate\Support\Collection
+    private function seedBrands(): Collection
     {
         $data = [
             ['brand_nama' => 'Mayur Fresh', 'brand_slug' => 'mayur-fresh', 'brand_deskripsi' => 'House brand sayur segar Mayur — petik hari ini, kirim hari ini'],
@@ -70,7 +71,7 @@ class CatalogDatabaseSeeder extends Seeder
         return Brand::whereIn('brand_slug', collect($data)->pluck('brand_slug'))->get()->keyBy('brand_slug');
     }
 
-    private function seedSatuans(): \Illuminate\Support\Collection
+    private function seedSatuans(): Collection
     {
         $data = [
             ['satuan_nama' => 'Kilogram', 'satuan_kode' => 'KG', 'satuan_simbol' => 'kg'],
@@ -90,7 +91,7 @@ class CatalogDatabaseSeeder extends Seeder
         return Satuan::whereIn('satuan_kode', collect($data)->pluck('satuan_kode'))->get()->keyBy('satuan_kode');
     }
 
-    private function seedCategories(): \Illuminate\Support\Collection
+    private function seedCategories(): Collection
     {
         $parents = [
             ['category_nama' => 'Sayuran Daun', 'category_slug' => 'sayuran-daun', 'category_deskripsi' => 'Bayam, kangkung, sawi, selada, pakcoy', 'category_icon' => 'grass'],
@@ -142,7 +143,7 @@ class CatalogDatabaseSeeder extends Seeder
         return Category::all()->keyBy('category_slug');
     }
 
-    private function seedTags(): \Illuminate\Support\Collection
+    private function seedTags(): Collection
     {
         $data = [
             ['tag_nama' => 'Segar', 'tag_slug' => 'segar', 'tag_warna' => '#16a34a'],
@@ -200,10 +201,10 @@ class CatalogDatabaseSeeder extends Seeder
                 ['product_slug' => $item['slug']],
                 [
                     'product_nama' => $item['nama'],
-                    'product_kode' => strtoupper(Str::slug($item['slug'], '') . '-' . substr(md5($item['slug']), 0, 4)),
-                    'product_sku' => 'SKU-' . strtoupper(Str::slug($item['slug'], '-')),
-                    'product_deskripsi' => $item['nama'] . ' — sayur segar petik hari ini, cuci bersih, siap masak.',
-                    'product_deskripsi_lengkap' => '<p>' . $item['nama'] . ' dipetik segar dari mitra petani pilihan Mayur. Tanpa pengawet, dikemas higienis dan dikirim dingin agar kesegaran terjaga sampai dapur.</p><ul><li>Petik hari ini</li><li>Tanpa pengawet</li><li>Siap masak & higienis</li><li>Pengiriman dingin</li></ul>',
+                    'product_kode' => strtoupper(Str::slug($item['slug'], '').'-'.substr(md5($item['slug']), 0, 4)),
+                    'product_sku' => 'SKU-'.strtoupper(Str::slug($item['slug'], '-')),
+                    'product_deskripsi' => $item['nama'].' — sayur segar petik hari ini, cuci bersih, siap masak.',
+                    'product_deskripsi_lengkap' => '<p>'.$item['nama'].' dipetik segar dari mitra petani pilihan Mayur. Tanpa pengawet, dikemas higienis dan dikirim dingin agar kesegaran terjaga sampai dapur.</p><ul><li>Petik hari ini</li><li>Tanpa pengawet</li><li>Siap masak & higienis</li><li>Pengiriman dingin</li></ul>',
                     'product_harga' => $item['harga'],
                     'product_harga_modal' => $hargaModal,
                     'product_harga_grosir' => $item['harga'] >= 20000 ? (int) round($item['harga'] * 0.88) : null,

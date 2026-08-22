@@ -40,21 +40,21 @@
                         "secondary-fixed": "#ffdf9d",
                         "outline": "#6e7a71",
                         "on-error-container": "#93000a",
-                        "primary-container": "#007a4d",
+                        "primary-container": "#2e7d32",
                         "surface": "#f7f9fb",
                         "on-primary-fixed-variant": "#005232",
                         "surface-container-high": "#e6e8ea",
                         "secondary-container": "#fdc008",
                         "on-background": "#191c1e",
-                        "primary": "#005f3b",
+                        "primary": "#388e3c",
                         "on-tertiary-container": "#e2ecff",
-                        "surface-tint": "#006d44",
+                        "surface-tint": "#2e7d32",
                         "on-tertiary": "#ffffff",
                         "on-secondary-container": "#6c5000",
                         "on-primary": "#ffffff",
                         "primary-fixed": "#95f6bf",
                         "on-tertiary-fixed": "#0d1c2f",
-                        "inverse-primary": "#79daa4",
+                        "inverse-primary": "#81c784",
                         "tertiary-container": "#5d6b81",
                         "surface-variant": "#e0e3e5",
                         "surface-container-low": "#f2f4f6",
@@ -123,7 +123,7 @@
         }
 
         .emerald-gradient {
-            background: linear-gradient(135deg, #005f3b 0%, #007a4d 100%);
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
         }
 
         .gold-shimmer {
@@ -149,7 +149,7 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
         }
-        .hero-main-slider .hs-arrow:hover { background: #005f3b; color: #fff; }
+        .hero-main-slider .hs-arrow:hover { background: #388e3c; color: #fff; }
         .hero-main-slider .hs-arrow:hover .material-symbols-outlined { color: #fff; }
         .hero-main-slider .hs-arrow.hs-prev { right: 80px; }
         .hero-main-slider .hs-arrow.hs-next { right: 24px; }
@@ -171,20 +171,20 @@
             padding: 24px; border: 1px solid #becabf33; border-radius: 12px; background: rgba(255,255,255,0.5);
             transition: all 0.3s;
         }
-        .client-slid .cl-item .cl-card:hover { border-color: #005f3b33; background: #fff; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .client-slid .cl-item .cl-card:hover { border-color: #388e3c33; background: #fff; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
         .client-slid .cl-btn {
             position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
             width: 38px; height: 38px; border-radius: 50%;
             background: #fff; border: 1px solid #becabf; display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        .client-slid .cl-btn:hover { background: #005f3b; color: #fff; border-color: #005f3b; }
+        .client-slid .cl-btn:hover { background: #388e3c; color: #fff; border-color: #388e3c; }
         .client-slid .cl-btn:hover .material-symbols-outlined { color: #fff; }
         .client-slid .cl-btn.cl-prev { left: 4px; }
         .client-slid .cl-btn.cl-next { right: 4px; }
         .cl-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
         .cl-dot { width: 8px; height: 8px; border-radius: 50%; background: #becabf; cursor: pointer; transition: all 0.3s; }
-        .cl-dot.active { background: #005f3b; width: 24px; border-radius: 4px; }
+        .cl-dot.active { background: #388e3c; width: 24px; border-radius: 4px; }
         @media (max-width: 640px) {
             .client-slid .cl-item { min-width: 100%; }
         }
@@ -199,11 +199,11 @@
             background: #fff; border: 1px solid #becabf; display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        .cmp-nav .cmp-btn:hover { background: #005f3b; color: #fff; border-color: #005f3b; }
+        .cmp-nav .cmp-btn:hover { background: #388e3c; color: #fff; border-color: #388e3c; }
         .cmp-nav .cmp-btn:hover .material-symbols-outlined { color: #fff; }
         .cmp-dots { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
         .cmp-dot { width: 8px; height: 8px; border-radius: 50%; background: #becabf; cursor: pointer; transition: all 0.3s; }
-        .cmp-dot.active { background: #005f3b; width: 24px; border-radius: 4px; }
+        .cmp-dot.active { background: #388e3c; width: 24px; border-radius: 4px; }
         @media (max-width: 1024px) {
             .cmp-slid .cmp-item { min-width: calc(50% - 12px); }
         }

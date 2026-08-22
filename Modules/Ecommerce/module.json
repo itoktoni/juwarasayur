@@ -1,0 +1,11 @@
+{
+    "name": "Ecommerce",
+    "alias": "ecommerce",
+    "description": "Toko online: cart, checkout, dan order history customer. Order dibuat masuk ke module So.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Ecommerce\\Providers\\EcommerceServiceProvider"
+    ],
+    "files": []
+}

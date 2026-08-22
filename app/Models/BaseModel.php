@@ -34,6 +34,39 @@ class BaseModel extends Model
     public static $sortColumns = [];
 
     /**
+     * Purity filter/sort whitelists resolved from the static columns above.
+     *
+     * ponytail: these MUST be declared properties (not assigned dynamically via
+     * $this->filterFields = ...). Eloquent's __set() treats undeclared properties
+     * as model attributes, so dynamic assignment pollutes getAttributes() and
+     * breaks every Eloquent create/insertGetId with "parameterize() string given".
+     */
+    public $filterFields;
+
+    public $sortFields;
+
+    /**
+     * Whitelisted fields consumed by abbasudo/laravel-purity (filter + sort).
+     *
+     * These mirror the static $filterColumns/$sortColumns so purity can resolve
+     * allowed fields without hitting the schema (getColumnListing) on every
+     * request. When the whitelist is empty the property stays unset and purity
+     * falls back to its default schema-based detection.
+     */
+    public function __construct(array $attributes = [])
+    {
+        if (! empty(static::$filterColumns)) {
+            $this->filterFields = array_values(static::$filterColumns);
+        }
+
+        if (! empty(static::$sortColumns)) {
+            $this->sortFields = array_values(static::$sortColumns);
+        }
+
+        parent::__construct($attributes);
+    }
+
+    /**
      * Accessor: $table->field_primary in blade templates → model ID.
      */
     public function getFieldPrimaryAttribute(): mixed

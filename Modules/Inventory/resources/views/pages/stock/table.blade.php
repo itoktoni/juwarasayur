@@ -1,0 +1,77 @@
+<?php /** @var Modules\Inventory\Models\Stock $table */ ?>
+<x-layouts::app>
+    <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => 'Stock']]" />
+    <div class="content mt-4 lg:mt-0">
+        <x-filter :per-page="25" :fields="$fields">
+            <x-slot:advanced>
+                @foreach ($fields as $key => $advance)
+                <x-filter-item :label="$advance" :name="$key"/>
+                @endforeach
+                <x-button variant="primary" class="btn-block" onclick="applyAdvanced()">Apply</x-button>
+                <x-button variant="soft" class="btn-block" onclick="resetAdvanced()">Reset</x-button>
+            </x-slot:advanced>
+        </x-filter>
+
+        @php
+            $currentSort = request('sort.0', '');
+            $sortField = str_replace(':desc','',str_replace(':asc','',$currentSort));
+            $sortDir = str_contains($currentSort, ':desc') ? 'desc' : 'asc';
+        @endphp
+
+        <x-table>
+            <x-slot:head>
+                <th>Kode Stock</th>
+                <th>Produk</th>
+                <th>Lokasi</th>
+                <th>Gudang</th>
+                <th>Qty</th>
+                <th>Expired</th>
+            </x-slot:head>
+            <x-slot:body>
+                @foreach($data as $table)
+                <tr>
+                    <td class="font-mono text-sm">{{ $table->stock_code }}</td>
+                    <td>{{ $table->has_product->product_nama ?? '-' }}</td>
+                    <td>{{ $table->has_lokasi->lokasi_nama ?? '-' }}</td>
+                    <td>{{ $table->has_lokasi->has_gudang->gudang_nama ?? '-' }}</td>
+                    <td>{{ $table->stock_qty }}</td>
+                    <td>{{ $table->stock_expired_date ? formatDate($table->stock_expired_date) : '-' }}</td>
+                </tr>
+                @endforeach
+            </x-slot:body>
+            <x-slot:mobile>
+                <x-table-mobile-list>
+                    @foreach($data as $table)
+                    <x-table-mobile-item :id="$table->field_primary">
+                        <x-table-mobile-header :title="$table->stock_code" />
+                        <div class="mt-2 space-y-1.5">
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs text-on-surface-variant">Produk</span>
+                                <span class="text-sm font-medium text-right">{{ $table->has_product->product_nama ?? '-' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs text-on-surface-variant">Lokasi</span>
+                                <span class="text-sm font-medium text-right">{{ $table->has_lokasi->lokasi_nama ?? '-' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs text-on-surface-variant">Qty</span>
+                                <span class="text-sm font-medium text-right">{{ $table->stock_qty }}</span>
+                            </div>
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs text-on-surface-variant">Expired</span>
+                                <span class="text-sm font-medium text-right">{{ $table->stock_expired_date ? formatDate($table->stock_expired_date) : '-' }}</span>
+                            </div>
+                        </div>
+                    </x-table-mobile-item>
+                    @endforeach
+                </x-table-mobile-list>
+            </x-slot:mobile>
+        </x-table>
+
+        <x-pagination :paginator="$data" />
+    </div>
+
+    <input type="hidden" class="module" value="{{ modules() }}">
+    <script src="/js/table.js?v=3"></script>
+    <script>initTable('{{ $sortField }}', '{{ $sortDir }}');</script>
+</x-layouts::app>

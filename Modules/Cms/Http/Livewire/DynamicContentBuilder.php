@@ -4,22 +4,30 @@ namespace Modules\Cms\Http\Livewire;
 
 use Livewire\Component;
 use Modules\Cms\Models\Content;
-use Modules\Cms\Models\Section;
 use Modules\Cms\Models\Field;
+use Modules\Cms\Models\Section;
 use Modules\Cms\Models\Type;
 
 class DynamicContentBuilder extends Component
 {
     public $contentBlocks;
+
     public $editingId = null;
+
     public $showModal = false;
 
     public $title = '';
+
     public $slug = '';
+
     public $content = '';
+
     public $type = '';
+
     public $status = 'draft';
+
     public $meta = [];
+
     public $sectionsOrder = [];
 
     protected $listeners = ['sectionAdded', 'sectionUpdated', 'sectionDeleted', 'refreshBuilder' => 'refresh'];
@@ -32,7 +40,7 @@ class DynamicContentBuilder extends Component
     public function create()
     {
         $this->reset([
-            'title', 'slug', 'content', 'type', 'status', 'meta', 'sectionsOrder', 'editingId'
+            'title', 'slug', 'content', 'type', 'status', 'meta', 'sectionsOrder', 'editingId',
         ]);
         $this->showModal = true;
     }
@@ -62,7 +70,7 @@ class DynamicContentBuilder extends Component
         ]);
 
         $meta = $this->meta;
-        if (!empty($this->sectionsOrder)) {
+        if (! empty($this->sectionsOrder)) {
             $meta['_sections_order'] = $this->sectionsOrder;
         }
 
@@ -118,6 +126,7 @@ class DynamicContentBuilder extends Component
         }
 
         $this->mount();
+
         return response()->json(['success' => true]);
     }
 

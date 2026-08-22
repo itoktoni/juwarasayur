@@ -16,6 +16,14 @@ return [
 
     'sidebar' => [
         [
+            'label' => 'Toko',
+            'items' => [
+                ['route' => 'catalog.index', 'icon' => 'storefront', 'label' => 'Belanja', 'match' => ['catalog.*']],
+                ['route' => 'cart.index', 'icon' => 'shopping_cart', 'label' => 'Keranjang', 'match' => ['cart.*', 'checkout.*']],
+                ['route' => 'ecommerce.orders.index', 'icon' => 'receipt_long', 'label' => 'Pesanan Saya', 'match' => ['ecommerce.orders.*']],
+            ],
+        ],
+        [
             'label' => null,
             'items' => [
                 ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Dashboard'],
@@ -35,6 +43,28 @@ return [
                 ['route' => 'catalog-brand.getTable', 'icon' => 'branding_watermark', 'label' => 'Brands', 'match' => ['catalog-brand.*']],
                 ['route' => 'catalog-satuan.getTable', 'icon' => 'straighten', 'label' => 'Satuan', 'match' => ['catalog-satuan.*']],
                 ['route' => 'catalog-tag.getTable', 'icon' => 'label', 'label' => 'Tags', 'match' => ['catalog-tag.*']],
+            ],
+        ],
+        [
+            'label' => 'Sales',
+            'items' => [
+                ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
+                ['route' => 'so-customer.getTable', 'icon' => 'group', 'label' => 'Customers', 'match' => ['so-customer.*']],
+            ],
+        ],
+        [
+            'label' => 'Purchase',
+            'items' => [
+                ['route' => 'po-supplier.getTable', 'icon' => 'local_shipping', 'label' => 'Suppliers', 'match' => ['po-supplier.*']],
+                ['route' => 'po-po.getTable', 'icon' => 'shopping_cart', 'label' => 'Purchase Orders', 'match' => ['po-po.*', 'po-detail.*']],
+            ],
+        ],
+        [
+            'label' => 'Inventory',
+            'items' => [
+                ['route' => 'inventory-gudang.getTable', 'icon' => 'warehouse', 'label' => 'Warehouse', 'match' => ['inventory-gudang.*']],
+                ['route' => 'inventory-lokasi.getTable', 'icon' => 'location_on', 'label' => 'Lokasi', 'match' => ['inventory-lokasi.*']],
+                ['route' => 'inventory-stock.getTable', 'icon' => 'inventory', 'label' => 'Stock', 'match' => ['inventory-stock.*']],
             ],
         ],
         [
