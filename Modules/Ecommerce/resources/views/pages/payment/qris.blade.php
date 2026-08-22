@@ -1,6 +1,4 @@
-@include('ecommerce::components.brand')
-<?php /** @var \Modules\So\Models\So $so */ ?>
-<x-layouts::app :title="'Pembayaran'">
+<x-ecommerce::public-layout :title="'Pembayaran'">
     <div class="content mt-4 lg:mt-0">
         <div class="max-w-md mx-auto">
 
@@ -146,4 +144,4 @@
             </div>
         </div>
     </div>
-</x-layouts::app>
+</x-ecommerce::public-layout>

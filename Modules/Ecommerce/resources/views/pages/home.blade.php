@@ -28,11 +28,11 @@
             <div class="ml-auto flex items-center gap-2">
                 <a href="{{ route('shop.index') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Belanja</a>
                 <a href="{{ route('blog') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Blog</a>
+                <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center {{ $cartCount <= 0 ? 'hidden' : '' }}">{{ max($cartCount, 0) }}</span>
+                </a>
                 @auth
-                    <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
-                        <span class="material-symbols-outlined">shopping_cart</span>
-                        <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold grid place-items-center {{ $cartCount <= 0 ? 'hidden' : '' }}">{{ max($cartCount, 0) }}</span>
-                    </a>
                     <a href="{{ route('ecommerce.orders.index') }}" class="p-2 rounded-full hover:bg-surface-container" title="Pesanan Saya">
                         <span class="material-symbols-outlined">receipt_long</span>
                     </a>

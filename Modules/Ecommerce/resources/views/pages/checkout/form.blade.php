@@ -1,6 +1,4 @@
-@include('ecommerce::components.brand')
-<?php /** @var \Illuminate\Support\Collection $items */ ?>
-<x-layouts::app :title="'Checkout'">
+<x-ecommerce::public-layout :title="'Checkout'">
     <div class="content mt-4 lg:mt-0">
         <div class="mb-6 flex items-center gap-2">
             <h2 class="text-2xl font-bold text-on-surface">Checkout</h2>
@@ -225,4 +223,4 @@
             togglePanel();
         })();
     </script>
-</x-layouts::app>
+</x-ecommerce::public-layout>

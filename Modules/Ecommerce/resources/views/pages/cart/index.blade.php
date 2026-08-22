@@ -1,7 +1,6 @@
-@include('ecommerce::components.brand')
 <?php /** @var \Illuminate\Support\Collection $items */ ?>
-<x-layouts::app :title="'Keranjang'">
-    <div class="content mt-4 lg:mt-0">
+<x-ecommerce::public-layout :title="'Keranjang'">
+    <div class="max-w-4xl mx-auto">
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-on-surface">Keranjang Belanja</h2>
         </div>
@@ -30,11 +29,13 @@
                             <div class="w-24">
                                 <label class="text-[10px] uppercase tracking-wide text-on-surface-variant block mb-1">Qty</label>
                                 <input type="number" name="qty[{{ $item->id }}]" value="{{ $item->qty }}" min="0" max="999"
-                                    class="w-full h-10 px-3 bg-white border border-outline-variant rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                                    data-price="{{ (float) ($item->has_product?->product_harga ?? 0) }}"
+                                    data-row-subtotal="row-subtotal-{{ $item->id }}"
+                                    class="cart-qty w-full h-10 px-3 bg-white border border-outline-variant rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
                             </div>
                             <div class="text-right w-32">
                                 <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Subtotal</p>
-                                <p class="font-mono font-bold text-on-surface">{{ formatAngka((int) ($item->qty * (float) ($item->has_product?->product_harga ?? 0)), 'Rp') }}</p>
+                                <p class="font-mono font-bold text-on-surface" id="row-subtotal-{{ $item->id }}">{{ formatAngka((int) ($item->qty * (float) ($item->has_product?->product_harga ?? 0)), 'Rp') }}</p>
                             </div>
                             <button type="button" title="Hapus"
                                 onclick="if(confirm('Hapus produk ini dari keranjang?')){ document.getElementById('remove-form-{{ $item->id }}').submit(); }"
@@ -57,7 +58,7 @@
                     </button>
                     <div class="text-right">
                         <p class="text-xs text-on-surface-variant">Total sementara (belum termasuk ongkir)</p>
-                        <p class="text-xl font-bold font-mono text-primary">{{ formatAngka((int) $subtotal, 'Rp') }}</p>
+                        <p class="text-xl font-bold font-mono text-primary" id="cart-total">{{ formatAngka((int) $subtotal, 'Rp') }}</p>
                     </div>
                     <a href="{{ route('checkout.show') }}" class="btn btn-primary">
                         Lanjut ke Checkout <span class="material-symbols-outlined text-base">arrow_forward</span>
@@ -66,4 +67,27 @@
             </form>
         @endif
     </div>
-</x-layouts::app>
+
+    <script>
+        (function () {
+            const fmtRp = n => 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(n));
+            const inputs = document.querySelectorAll('.cart-qty');
+            if (!inputs.length) return;
+            const totalEl = document.getElementById('cart-total');
+
+            function recalc() {
+                let total = 0;
+                inputs.forEach(input => {
+                    const price = parseFloat(input.dataset.price) || 0;
+                    const qty = Math.max(0, parseInt(input.value || '0', 10) || 0);
+                    const row = document.getElementById(input.dataset.rowSubtotal);
+                    if (row) row.textContent = fmtRp(price * qty);
+                    total += price * qty;
+                });
+                if (totalEl) totalEl.textContent = fmtRp(total);
+            }
+
+            inputs.forEach(input => input.addEventListener('input', recalc));
+        })();
+    </script>
+</x-ecommerce::public-layout>
