@@ -16,8 +16,19 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                    {{-- Contact Info --}}
+                    {{-- Map + Contact Info --}}
                     <div>
+                        @php
+                            $site = \App\Models\WebsiteSetting::merged();
+                            $whLat = (float) (\App\Models\WebsiteSetting::raw()['warehouse_lat'] ?? config('so.shipping.warehouse.lat', -7.644872));
+                            $whLng = (float) (\App\Models\WebsiteSetting::raw()['warehouse_lng'] ?? config('so.shipping.warehouse.lng', 112.904528));
+                        @endphp
+
+                        {{-- Peta lokasi gudang utama --}}
+                        <div class="mb-8">
+                            <div id="contact-map" class="w-full h-72 rounded-2xl border border-outline-variant/30 shadow-sm z-0"></div>
+                        </div>
+
                         <h2 class="font-headline-md text-headline-md text-on-surface mb-8">Informasi Kontak</h2>
                         <div class="space-y-8">
                             <div class="flex items-start gap-4">
@@ -26,7 +37,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-label-md text-label-md text-on-surface mb-1">Alamat</h4>
-                                    <p class="text-on-surface-variant">Alamat kantor Anda</p>
+                                    <p class="text-on-surface-variant">{{ $site['alamat'] ?? '-' }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
@@ -35,7 +46,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-label-md text-label-md text-on-surface mb-1">Telepon</h4>
-                                    <p class="text-on-surface-variant">+62 800 0000 0000</p>
+                                    <p class="text-on-surface-variant">{{ $site['telepon'] ?? '-' }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
@@ -44,7 +55,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-label-md text-label-md text-on-surface mb-1">Email</h4>
-                                    <p class="text-on-surface-variant">info@example.com</p>
+                                    <p class="text-on-surface-variant">{{ $site['email'] ?? '-' }}</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
@@ -57,6 +68,22 @@
                                 </div>
                             </div>
                         </div>
+
+                        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+                        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const el = document.getElementById('contact-map');
+                                if (!el || typeof L === 'undefined') return;
+
+                                const center = [{{ $whLat }}, {{ $whLng }}];
+                                const map = L.map(el).setView(center, 15);
+                                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+                                L.marker(center).addTo(map)
+                                    .bindPopup('<strong>{{ addslashes($site['warehouse_name'] ?? 'Gudang Utama') }}</strong><br>{{ addslashes($site['warehouse_address'] ?? '') }}')
+                                    .openPopup();
+                            });
+                        </script>
                     </div>
 
                     {{-- Contact Form --}}

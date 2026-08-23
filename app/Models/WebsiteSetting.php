@@ -11,7 +11,7 @@ class WebsiteSetting
 
     public static function contentPath(): string
     {
-        return base_path('content/website_settings/1.json');
+        return config_path('website.php');
     }
 
     public static function raw(): array
@@ -21,19 +21,13 @@ class WebsiteSetting
             return [];
         }
 
-        $decoded = json_decode((string) file_get_contents($path), true);
+        $config = require $path;
 
-        return is_array($decoded) ? $decoded : [];
+        return is_array($config) ? $config : [];
     }
 
     public static function persist(array $data): void
     {
-        $path = static::contentPath();
-        $dir = dirname($path);
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
         $data['updated_at'] = now()->toIso8601String();
         if (! isset($data['created_at'])) {
             $data['created_at'] = $data['updated_at'];
@@ -42,7 +36,15 @@ class WebsiteSetting
             $data['id'] = 1;
         }
 
-        file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).PHP_EOL);
+        $export = var_export($data, true);
+        $content = "<?php\n\nreturn ".$export.";\n";
+
+        file_put_contents(static::contentPath(), $content);
+
+        // Bersihkan cache config agar perubahan langsung terbaca.
+        if (file_exists(base_path('bootstrap/cache/config.php'))) {
+            \Artisan::call('config:clear');
+        }
     }
 
     public static function merged(): array
