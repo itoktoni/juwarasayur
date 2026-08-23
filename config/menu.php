@@ -51,6 +51,20 @@ return [
             'items' => [
                 ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
                 ['route' => 'so-customer.getTable', 'icon' => 'group', 'label' => 'Customers', 'match' => ['so-customer.*']],
+                ['route' => 'so-discount.getTable', 'icon' => 'sell', 'label' => 'Diskon', 'match' => ['so-discount.*']],
+            ],
+        ],
+        [
+            'label' => 'Reseller',
+            'items' => [
+                ['route' => 'reseller-order.getTable', 'icon' => 'point_of_sale', 'label' => 'Order Reseller', 'match' => ['reseller-order.*']],
+                ['route' => 'reseller-customer.getTable', 'icon' => 'person_add', 'label' => 'Customer Reseller', 'match' => ['reseller-customer.*']],
+            ],
+        ],
+        [
+            'label' => 'Chatbot',
+            'items' => [
+                ['route' => 'chatbot.index', 'icon' => 'smart_toy', 'label' => 'Chatbot Session', 'match' => ['chatbot.*']],
             ],
         ],
         [
@@ -71,7 +85,8 @@ return [
         [
             'label' => 'Production',
             'items' => [
-                ['route' => 'production.getTable', 'icon' => 'precision_manufacturing', 'label' => 'Work Order', 'match' => ['production.*']],
+                ['route' => 'production-routine.getTable', 'icon' => 'calendar_month', 'label' => 'Produksi Rutin', 'match' => ['production-routine.*']],
+                ['route' => 'production-order.getTable', 'icon' => 'assignment', 'label' => 'Produksi dari SO', 'match' => ['production-order.*']],
             ],
         ],
         [

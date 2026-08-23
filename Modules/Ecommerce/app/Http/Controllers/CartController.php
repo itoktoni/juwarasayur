@@ -2,10 +2,14 @@
 
 namespace Modules\Ecommerce\Http\Controllers;
 
+use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 use Modules\Catalog\Models\Product;
 use Modules\Ecommerce\Services\CartService;
@@ -18,9 +22,68 @@ class CartController extends Controller
     {
         $items = $this->cart->items();
 
+        $user = Auth::user();
+        $isReseller = $user && $user->isReseller();
+        // Hanya user bertipe customer yang jadi opsi (bukan diri reseller sendiri)
+        $customers = $isReseller
+            ? $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->get(['id', 'name', 'phone'])
+            : collect();
+        $selectedCustomerId = $isReseller ? (int) Session::get('reseller_customer_id', 0) : 0;
+
         return view('ecommerce::pages.cart.index', [
             'items' => $items,
             'subtotal' => $this->cart->subtotal(),
+            'isReseller' => $isReseller,
+            'customers' => $customers,
+            'selectedCustomerId' => $selectedCustomerId,
+        ]);
+    }
+
+    /**
+     * Reseller memilih customer tujuan pesanan (disimpan di session).
+     * AJAX: balas JSON tanpa redirect; web: redirect biasa.
+     */
+    public function setCustomer(Request $request): RedirectResponse|JsonResponse
+    {
+        $request->validate(['customer_id' => ['nullable', 'integer', 'exists:users,id']]);
+
+        $user = Auth::user();
+        $selectedId = 0;
+
+        if ($user && $user->isReseller()) {
+            if ($request->customer_id) {
+                // find → kalau id tidak valid, anggap tidak memilih apa-apa
+                $customer = User::where('type', UserTypeEnum::CUSTOMER)
+                    ->where('reference_id', $user->id)
+                    ->find($request->customer_id);
+
+                if (! $customer) {
+                    Session::forget('reseller_customer_id');
+
+                    return $this->customerResponse($request, 0);
+                }
+
+                Session::put('reseller_customer_id', $customer->id);
+                $selectedId = $customer->id;
+            } else {
+                // Kosong = reseller belanja untuk dirinya sendiri
+                Session::forget('reseller_customer_id');
+            }
+        }
+
+        if ($request->expectsJson()) {
+            return $this->customerResponse($request, $selectedId);
+        }
+
+        return redirect()->route('cart.index');
+    }
+
+    private function customerResponse(Request $request, int $selectedId): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'customer_id' => $selectedId,
+            'message' => $selectedId ? 'Pesanan akan dibuat atas nama customer terpilih.' : 'Pesanan atas nama Anda sendiri.',
         ]);
     }
 

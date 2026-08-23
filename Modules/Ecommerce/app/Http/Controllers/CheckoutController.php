@@ -4,12 +4,14 @@ namespace Modules\Ecommerce\Http\Controllers;
 
 use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 use Modules\Ecommerce\Models\CodLocation;
 use Modules\Ecommerce\Services\CartService;
@@ -18,15 +20,58 @@ use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;
 use Modules\So\Models\So;
 use Modules\So\Models\SoDetail;
+use Modules\So\Models\SoDiscount;
 use Modules\So\Services\DistanceService;
 
 class CheckoutController extends Controller
 {
+    /** Session key kode diskon yang sedang dipakai di checkout */
+    private const DISCOUNT_SESSION_KEY = 'checkout_discount';
+
     public function __construct(
         private CartService $cart,
         private CodShippingService $cod,
         private DistanceService $distance,
     ) {}
+
+    /**
+     * AJAX: redeem kode diskon — validasi matrix (aktif + min. transaksi),
+     * simpan kode di session checkout.
+     */
+    public function redeemDiscount(Request $request): JsonResponse
+    {
+        $request->validate(['code' => ['required', 'string', 'max:50']]);
+
+        /** @var SoDiscount|null $discount */
+        $discount = SoDiscount::where('discount_code', strtoupper(trim($request->code)))->first();
+
+        if (! $discount || ! $discount->is_active) {
+            return response()->json(['status' => false, 'message' => 'Kode diskon tidak ditemukan atau tidak aktif.'], 422);
+        }
+
+        $subtotal = $this->cart->subtotal();
+        if (! $discount->layakDigunakan($subtotal)) {
+            return response()->json(['status' => false, 'message' => 'Minimal transaksi Rp '.number_format((float) $discount->discount_min_purchase, 0, ',', '.').' untuk memakai kode ini.'], 422);
+        }
+
+        Session::put(self::DISCOUNT_SESSION_KEY, ['code' => $discount->discount_code]);
+
+        return response()->json([
+            'status' => true,
+            'code' => $discount->discount_code,
+            'label' => $discount->discount_nama,
+            'type' => $discount->discount_type,
+            'value' => (float) $discount->discount_value,
+            'amount' => $discount->hitungPotongan($subtotal),
+        ]);
+    }
+
+    public function removeDiscount(): JsonResponse
+    {
+        Session::forget(self::DISCOUNT_SESSION_KEY);
+
+        return response()->json(['status' => true]);
+    }
 
     public function show(): View|RedirectResponse
     {
@@ -38,15 +83,52 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index');
         }
 
+        $user = Auth::user();
+        $isReseller = $user && $user->isReseller();
+
+        $customers = collect();
+        $customer = $user;
+
+        if ($isReseller) {
+            $customers = $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->get(['id', 'name', 'phone']);
+            $selectedId = (int) Session::get('reseller_customer_id', 0);
+            // Tanpa pilihan customer = belanja untuk diri sendiri → pakai data user login
+            $customer = $selectedId
+                ? (User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->find($selectedId) ?? $user)
+                : $user;
+        }
+
+        $subtotal = $this->cart->subtotal();
+
         return view('ecommerce::pages.checkout.form', [
             'items' => $items,
-            'subtotal' => $this->cart->subtotal(),
-            'customer' => Auth::user(),
+            'subtotal' => $subtotal,
+            'customer' => $customer,
+            'isReseller' => $isReseller,
+            'customers' => $customers,
+            // Kode diskon yang sedang diredeem (jika valid)
+            'discount' => $this->activeDiscount($subtotal),
             // Titik awal peta delivery = gudang utama (.env: SO_WAREHOUSE_*)
             'warehouse' => config('so.shipping.warehouse'),
             // Daftar lokasi COD aktif untuk pilihan di checkout
             'codLocations' => CodLocation::active(),
         ]);
+    }
+
+    /**
+     * Kode diskon aktif dari session — null jika tidak ada / tidak layak.
+     */
+    private function activeDiscount(float $subtotal): ?SoDiscount
+    {
+        $code = Session::get(self::DISCOUNT_SESSION_KEY)['code'] ?? null;
+        if (! $code) {
+            return null;
+        }
+
+        /** @var SoDiscount|null $discount */
+        $discount = SoDiscount::where('discount_code', $code)->first();
+
+        return ($discount && $discount->layakDigunakan($subtotal)) ? $discount : null;
     }
 
     /**
@@ -130,9 +212,10 @@ class CheckoutController extends Controller
             'so_address_cod' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $customer = Auth::user();
+        $user = Auth::user();
+        $isReseller = $user && $user->isReseller();
 
-        if ($customer && $customer->type !== UserTypeEnum::CUSTOMER) {
+        if ($user && ! $isReseller && $user->type !== UserTypeEnum::CUSTOMER) {
             abort(403, 'Hanya customer yang dapat melakukan pemesanan.');
         }
 
@@ -151,6 +234,23 @@ class CheckoutController extends Controller
             if (! empty($product->product_stok) && (int) $item->qty > (int) $product->product_stok) {
                 return back()->withErrors(['cart' => "Stok '{$product->product_nama}' tidak cukup (sisa {$product->product_stok})."]).withInput();
             }
+        }
+
+        // Penentuan pemesan: reseller memesan untuk customer pilihannya
+        if ($isReseller) {
+            $selectedId = (int) Session::get('reseller_customer_id', 0);
+            $buyer = $selectedId
+                ? User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->find($selectedId)
+                : null;
+            $buyerName = $validated['customer_name'] ?: ($buyer?->name ?? 'Pelanggan');
+            $buyerPhone = $validated['customer_phone'] ?: ($buyer?->phone ?? null);
+            $soIdReseller = $user->id;
+            $soIdCustomer = $buyer?->id;
+        } else {
+            $buyerName = $validated['customer_name'];
+            $buyerPhone = $validated['customer_phone'];
+            $soIdReseller = $user ? ($user->reference_id ?: $user->id) : null;
+            $soIdCustomer = $user?->id;
         }
 
         // Ongkir dihitung ulang server-side — fee dari klien tidak dipercaya
@@ -208,17 +308,17 @@ class CheckoutController extends Controller
         }
 
         $subtotal = $this->cart->subtotal();
-        $isGuest = $customer === null;
+        $isGuest = $user === null;
 
-        $so = DB::transaction(function () use ($validated, $customer, $cartItems, $subtotal, $shipping) {
+        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer) {
             /** @var So $so */
             $so = So::create([
                 'so_tanggal' => now(),
                 // Guest: tanpa reseller & customer; login: milik reseller terkait
-                'so_id_reseller' => $customer ? ($customer->reference_id ?: $customer->id) : null,
-                'so_id_customer' => $customer?->id,
-                'so_customer_name' => $validated['customer_name'],
-                'so_customer_phone' => $validated['customer_phone'],
+                'so_id_reseller' => $soIdReseller,
+                'so_id_customer' => $soIdCustomer,
+                'so_customer_name' => $buyerName,
+                'so_customer_phone' => $buyerPhone,
                 'so_status' => SoStatusEnum::PENDING,
                 'so_shipping_method' => $shipping['method'],
                 'so_cod_location' => $shipping['location'],
@@ -257,8 +357,41 @@ class CheckoutController extends Controller
             session()->push('guest_orders', $so->id);
         }
 
+        if ($isReseller) {
+            Session::forget('reseller_customer_id');
+            flash()->success("Pesanan {$so->so_code} dibuat. Bagikan link pembayaran ke customer.");
+
+            return redirect()->route('checkout.share', ['token' => $so->so_payment_token]);
+        }
+
         flash()->success("Pesanan {$so->so_code} dibuat. Silakan selesaikan pembayaran.");
 
         return redirect()->route('payment.show', ['token' => $so->so_payment_token]);
+    }
+
+    /**
+     * Halaman berbagi link pembayaran untuk reseller.
+     */
+    public function share(string $token)
+    {
+        $so = So::with('has_details.has_product')
+            ->where('so_payment_token', $token)
+            ->firstOrFail();
+
+        if (Auth::check() && Auth::user()->isReseller() && $so->so_id_reseller !== Auth::id()) {
+            abort(403);
+        }
+
+        $link = url('/payment/'.$so->so_payment_token);
+        // Sisa waktu pembayaran, sama dengan aturan di PaymentController
+        $secondsLeft = max(0, \Modules\Ecommerce\Http\Controllers\PaymentController::EXPIRY_MINUTES * 60
+            - (int) $so->created_at?->diffInSeconds(now()));
+
+        return view('ecommerce::pages.checkout.share', [
+            'so' => $so,
+            'link' => $link,
+            'secondsLeft' => $secondsLeft,
+            'methodLabel' => ShippingMethodEnum::getDescription($so->so_shipping_method),
+        ]);
     }
 }

@@ -8,31 +8,34 @@ abstract class Controller extends \App\Http\Controllers\Controller
 {
     use ControllerTrait;
 
-    protected function template($file = null, $folder = null, $core = false)
+    /**
+     * Nama action saat ini ('table' | 'form' | lainnya) dari backtrace.
+     */
+    protected function currentAction(): string
     {
-        $action = 'table';
-
         foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
             if (isset($frame['function']) && preg_match('/^(get|post)/', $frame['function'])) {
                 $action = strtolower(preg_replace('/^(get|post)/', '', $frame['function']));
-                break;
+
+                if (in_array($action, ['update', 'create'])) {
+                    $action = 'form';
+                }
+
+                return $action !== '' ? $action : 'table';
             }
         }
 
-        if (in_array($action, ['update', 'create'])) {
-            $action = 'form';
-        }
+        return 'table';
+    }
 
-        if ($file) {
-            $action = $file;
-        }
-
+    protected function template($file = null, $folder = null, $core = false)
+    {
         $module = strtolower(str_replace('Controller', '', class_basename(get_class($this))));
 
         if ($folder) {
             $module = $folder;
         }
 
-        return 'production::pages.'.$module.'.'.$action;
+        return 'production::pages.'.$module.'.'.($file ?: $this->currentAction());
     }
 }

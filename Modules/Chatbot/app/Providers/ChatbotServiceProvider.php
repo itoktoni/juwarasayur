@@ -2,8 +2,11 @@
 
 namespace Modules\Chatbot\Providers;
 
-use Nwidart\Modules\Support\ModuleServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Gate;
+use Modules\Chatbot\Models\ChatbotSession;
+use Modules\Chatbot\Policies\ChatbotSessionPolicy;
+use Nwidart\Modules\Support\ModuleServiceProvider;
 
 class ChatbotServiceProvider extends ModuleServiceProvider
 {
@@ -34,10 +37,17 @@ class ChatbotServiceProvider extends ModuleServiceProvider
         RouteServiceProvider::class,
     ];
 
+    public function boot(): void
+    {
+        parent::boot();
+
+        Gate::policy(ChatbotSession::class, ChatbotSessionPolicy::class);
+    }
+
     /**
      * Define module schedules.
-     * 
-     * @param $schedule
+     *
+     * @param  $schedule
      */
     // protected function configureSchedules(Schedule $schedule): void
     // {

@@ -66,27 +66,15 @@ class PaymentController extends Controller
     }
 
     /**
-     * SO milik user login, atau tercatat di session browser (guest).
+     * Cari pesanan berdasarkan token pembayaran.
+     * Token UUID bersifat unguessable — siapa pun yang punya link
+     * (customer hasil share, reseller, guest) berhak membuka halaman ini.
      */
     private function findAuthorized(string $token): So
     {
-        $so = So::query()
+        return So::query()
             ->with(['has_details.has_product.has_satuan'])
             ->where('so_payment_token', $token)
             ->firstOrFail();
-
-        $user = Auth::user();
-
-        if ($user) {
-            if ((int) $so->so_id_customer === (int) $user->id || $user->isAdmin() || $user->isDeveloper()) {
-                return $so;
-            }
-        }
-
-        if (in_array($so->id, array_map('intval', (array) session('guest_orders', [])), true)) {
-            return $so;
-        }
-
-        abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
     }
 }

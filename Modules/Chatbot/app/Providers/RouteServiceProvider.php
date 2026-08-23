@@ -26,6 +26,7 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->mapApiRoutes();
         $this->mapWebRoutes();
+        $this->mapPublicRoutes();
     }
 
     /**
@@ -35,7 +36,18 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function mapWebRoutes(): void
     {
-        Route::middleware('web')->group(module_path($this->name, '/routes/web.php'));
+        Route::middleware(['web', 'auth', 'verified', 'access', 'admin'])
+            ->prefix('admin')
+            ->group(module_path($this->name, '/routes/web.php'));
+    }
+
+    /**
+     * Webhook publik (dipanggil server messenger, tanpa auth).
+     */
+    protected function mapPublicRoutes(): void
+    {
+        Route::middleware('web')
+            ->group(module_path($this->name, '/routes/public.php'));
     }
 
     /**

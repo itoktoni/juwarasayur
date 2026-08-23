@@ -25,7 +25,7 @@
                 <input type="search" name="q" placeholder="Cari produk..." class="w-full h-10 px-4 bg-surface-container border border-outline-variant rounded-l-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
                 <button type="submit" class="h-10 px-4 bg-primary text-on-primary rounded-r-lg"><span class="material-symbols-outlined text-base">search</span></button>
             </form>
-            <div class="ml-auto flex items-center gap-2">
+            <div class="ml-auto flex items-center gap-2 relative">
                 <a href="{{ route('shop.index') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Belanja</a>
                 <a href="{{ route('blog') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Blog</a>
                 <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
@@ -33,9 +33,23 @@
                     <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center {{ $cartCount <= 0 ? 'hidden' : '' }}">{{ max($cartCount, 0) }}</span>
                 </a>
                 @auth
-                    <a href="{{ route('ecommerce.orders.index') }}" class="p-2 rounded-full hover:bg-surface-container" title="Pesanan Saya">
-                        <span class="material-symbols-outlined">receipt_long</span>
-                    </a>
+                    <details class="dropdown dropdown-end">
+                        <summary class="p-2 rounded-full hover:bg-surface-container flex items-center cursor-pointer list-none" title="Profile">
+                            <span class="material-symbols-outlined">person</span>
+                        </summary>
+                        <ul class="dropdown-content menu p-2 shadow-lg bg-white rounded-box w-52 border border-outline-variant z-50 mt-2">
+                            <li><a href="{{ route('profile.edit') }}" class="py-2 text-sm text-on-surface">Profile</a></li>
+                            @if(auth()->user()->isReseller())
+                                <li><a href="{{ route('reseller-customer.getTable') }}" class="py-2 text-sm text-on-surface">Customer</a></li>
+                            @endif
+                            <li class="border-t border-outline-variant mt-1 pt-1">
+                                <form method="POST" action="{{ route('logout') }}" class="w-full">
+                                    @csrf
+                                    <button type="submit" class="w-full text-left py-1 text-sm text-error font-medium">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </details>
                 @else
                     <a href="{{ route('login') }}" class="btn btn-primary btn-sm">Masuk</a>
                 @endauth

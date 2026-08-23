@@ -1,6 +1,6 @@
 <?php /** @var Modules\Production\Models\Production $table */ ?>
 <x-layouts::app>
-    <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => 'Production']]" />
+    <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => 'Produksi Rutin']]" />
     <div class="content mt-4 lg:mt-0">
         <x-filter :per-page="25" :fields="$fields">
             <x-slot:advanced>
@@ -23,7 +23,6 @@
                 <x-table-checkbox :model="$model" onchange="toggleAll(this)" />
                 <th>Actions</th>
                 <th>Kode WO</th>
-                <th>Tipe</th>
                 <th>Produk Hasil</th>
                 <th>Qty Output</th>
                 <th>Bahan</th>
@@ -35,8 +34,7 @@
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
                     <x-table-action :model="$model" :id="$table->field_primary" />
                     <td>{{ $table->production_code }}</td>
-                    <td>{{ \Modules\Production\Enums\ProductionTypeEnum::getDescription($table->production_type) }}</td>
-                    <td>{{ $table->has_product?->product_nama ?? '-' }} @if($table->production_orders)<span class="text-xs text-on-surface-variant">({{ count($table->production_orders) }} SO)</span>@endif</td>
+                    <td>{{ $table->has_product?->product_nama ?? '-' }}</td>
                     <td>{{ formatQty($table->production_qty_output) }}</td>
                     <td>{{ $table->has_items->count() }} item</td>
                     <td>

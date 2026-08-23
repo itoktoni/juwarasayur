@@ -29,7 +29,8 @@ Route::middleware('auth')->post('/centrifugo/token', function (Request $request)
     ]);
 });
 
-Route::middleware(['auth', 'verified', 'access'])->group(function () {
+// Halaman admin: prefix /admin, diblokir untuk user tipe customer & reseller
+Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->group(function () {
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 

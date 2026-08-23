@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Reseller\Http\Controllers\ResellerController;
+use Modules\Reseller\Http\Controllers\CustomerController;
+use Modules\Reseller\Http\Controllers\OrderController;
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('resellers', ResellerController::class)->names('reseller');
-});
+Route::auto('/reseller/customer', CustomerController::class, ['name' => 'reseller-customer']);
+Route::auto('/reseller/order', OrderController::class, ['name' => 'reseller-order']);

@@ -5,7 +5,9 @@ namespace Modules\So\Providers;
 use Illuminate\Support\Facades\Gate;
 use Modules\So\Models\So;
 use Modules\So\Models\SoDetail;
+use Modules\So\Models\SoDiscount;
 use Modules\So\Policies\SoDetailPolicy;
+use Modules\So\Policies\SoDiscountPolicy;
 use Modules\So\Policies\SoPolicy;
 use Nwidart\Modules\Support\ModuleServiceProvider;
 
@@ -26,5 +28,6 @@ class SoServiceProvider extends ModuleServiceProvider
 
         Gate::policy(So::class, SoPolicy::class);
         Gate::policy(SoDetail::class, SoDetailPolicy::class);
+        Gate::policy(SoDiscount::class, SoDiscountPolicy::class);
     }
 }

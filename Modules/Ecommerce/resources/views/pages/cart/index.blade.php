@@ -14,6 +14,23 @@
                 </a>
             </div>
         @else
+            @if($isReseller)
+                <div class="mb-5 p-4 rounded-xl border border-primary/40 bg-primary/5">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-sm font-semibold text-on-surface">Pesan untuk Customer</p>
+                        <span id="customer-status" class="hidden text-xs font-medium"></span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant mb-3">Pilih customer tujuan pesanan ini. Kosongkan jika belanja untuk diri sendiri.</p>
+                    <form method="POST" action="{{ route('cart.setCustomer') }}" id="set-customer-form">
+                        @csrf
+                        <x-select name="customer_id" label="Pilih Customer" col="12" class="search"
+                            placeholder="-- Belanja untuk Diri Sendiri --"
+                            :options="$customers->pluck('name', 'id')"
+                            :default="$selectedCustomerId ?: null" />
+                    </form>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('cart.update') }}">
                 @csrf
                 <div class="space-y-3">
@@ -88,6 +105,44 @@
             }
 
             inputs.forEach(input => input.addEventListener('input', recalc));
+
+            // AJAX: simpan pilihan customer tanpa refresh
+            const customerForm = document.getElementById('set-customer-form');
+            if (customerForm) {
+                const statusEl = document.getElementById('customer-status');
+                const select = customerForm.querySelector('select[name="customer_id"]');
+
+                const showStatus = (text, ok = true) => {
+                    if (!statusEl) return;
+                    statusEl.textContent = text;
+                    statusEl.classList.remove('hidden', 'text-success', 'text-error');
+                    statusEl.classList.add(ok ? 'text-success' : 'text-error');
+                    clearTimeout(showStatus._t);
+                    showStatus._t = setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                };
+
+                select?.addEventListener('change', async () => {
+                    const body = new FormData(customerForm);
+                    try {
+                        statusEl?.classList.remove('hidden');
+                        if (statusEl) statusEl.textContent = 'Menyimpan…';
+                        const res = await fetch(customerForm.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': customerForm.querySelector('_token')?.value || '',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                            body,
+                        });
+                        const json = await res.json();
+                        if (!json.status) throw new Error(json.message ?? 'Gagal');
+                        showStatus('✓ ' + json.message);
+                    } catch (e) {
+                        showStatus('Gagal menyimpan pilihan.', false);
+                    }
+                });
+            }
         })();
     </script>
 </x-ecommerce::public-layout>

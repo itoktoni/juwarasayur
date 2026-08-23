@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AccessMiddleware;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\VerifyVerified;
 use App\Providers\ModelAliasServiceProvider;
 use Ibex\CrudGenerator\CrudServiceProvider;
@@ -27,12 +28,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'access' => AccessMiddleware::class,
+            'admin' => AdminMiddleware::class,
             'verified' => VerifyVerified::class,
             // 'skip_verified' => SkipVerifiedCheck::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'wms/forklift/*',
+            'chatbot/webhook/telegram',
+            'chatbot/webhook/whatsapp',
         ]);
 
         $middleware->append([

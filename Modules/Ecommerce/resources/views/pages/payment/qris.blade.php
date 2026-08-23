@@ -61,10 +61,34 @@
                     @endguest
                 </div>
             @else
+                {{-- ================= INFO PESANAN: nama | SO / QRIS | pengiriman ================= --}}
+                <div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest mb-5">
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-5">
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Atas Nama</p>
+                            <p class="font-bold text-on-surface truncate">{{ $so->so_customer_name ?: 'Tamu' }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Kode SO</p>
+                            <p class="font-bold font-mono text-on-surface">{{ $so->so_code }}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Pembayaran</p>
+                            <p class="font-semibold text-on-surface inline-flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-primary text-base">qr_code_2</span> QRIS
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Pengiriman</p>
+                            <p class="font-semibold text-on-surface">{{ $methodLabel }}@if($so->so_cod_location) — {{ $so->so_cod_location }}@endif</p>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ================= QRIS + TIMER ================= --}}
                 <div class="p-6 rounded-xl border border-outline-variant bg-surface-container-lowest text-center">
                     <h2 class="text-xl font-bold text-on-surface">Bayar via QRIS</h2>
-                    <p class="text-xs text-on-surface-variant mt-1">Pesanan <strong class="font-mono">{{ $so->so_code }}</strong> — scan & bayar dalam</p>
+                    <p class="text-xs text-on-surface-variant mt-1">Scan & bayar dalam</p>
 
                     {{-- Timer 5 menit --}}
                     <div id="pay-timer" data-seconds="{{ $secondsLeft }}"
@@ -111,7 +135,83 @@
                     </p>
                 </div>
 
+                {{-- ================= DAFTAR PRODUK (collapse) ================= --}}
+                <div class="mt-5 p-5 rounded-xl border border-outline-variant bg-surface-container-lowest">
+                    <button type="button" onclick="toggleProducts()"
+                        class="w-full flex items-center justify-between gap-2 text-left">
+                        <span class="inline-flex items-center gap-2 text-sm font-semibold text-on-surface">
+                            <span class="material-symbols-outlined text-primary text-xl">inventory_2</span>
+                            Daftar Produk ({{ $so->has_details->count() }})
+                        </span>
+                        <span id="products-chevron" class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+                    </button>
+
+                    <div id="products-section" class="hidden mt-4 pt-4 border-t border-outline-variant/60 space-y-3">
+                        @foreach($so->has_details as $d)
+                            <div class="flex items-center gap-3">
+                                <img src="{{ $d->has_product?->product_gambar_url ?: asset('images/placeholder.png') }}" alt=""
+                                    class="w-14 h-14 rounded-lg object-cover border border-outline-variant shrink-0"
+                                    onerror="this.style.display='none'">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-on-surface text-sm truncate">{{ $d->has_product?->product_nama }}</p>
+                                    <p class="text-xs font-mono text-on-surface-variant">
+                                        {{ formatAngka((float) $d->so_detail_harga, 'Rp') }} × {{ $d->so_detail_qty }}
+                                    </p>
+                                </div>
+                                <p class="font-mono font-bold text-on-surface text-sm shrink-0">
+                                    {{ formatAngka((int) ($d->so_detail_qty * (float) $d->so_detail_harga), 'Rp') }}
+                                </p>
+                            </div>
+                        @endforeach
+
+                        {{-- Rincian biaya --}}
+                        @php
+                            $subtotalProduk = (float) $so->has_details->sum(fn ($d) => $d->so_detail_qty * (float) $d->so_detail_harga);
+                            $isPercentDiscount = $so->so_discount_type === 'percent';
+                        @endphp
+                        <div class="flex items-center justify-between pt-3 border-t border-outline-variant/60 text-sm text-on-surface-variant">
+                            <span>Subtotal</span>
+                            <span class="font-mono">{{ formatAngka($subtotalProduk, 'Rp') }}</span>
+                        </div>
+                        @if((float) $so->so_discount > 0)
+                            <div class="flex items-center justify-between text-sm text-on-surface-variant">
+                                <span>Diskon{{ $isPercentDiscount ? ' (' . rtrim(rtrim((string) $so->so_discount, '0'), '.') . '%)' : '' }}</span>
+                                <span class="font-mono text-success">- {{ formatAngka($isPercentDiscount ? $subtotalProduk * (float) $so->so_discount / 100 : (float) $so->so_discount, 'Rp') }}</span>
+                            </div>
+                        @endif
+                        @if((float) $so->so_ppn > 0)
+                            <div class="flex items-center justify-between text-sm text-on-surface-variant">
+                                <span>PPN {{ rtrim(rtrim((string) $so->so_ppn_rate, '0'), '.') !== '' ? '(' . rtrim(rtrim((string) $so->so_ppn_rate, '0'), '.') . '%)' : '' }}</span>
+                                <span class="font-mono">{{ formatAngka((float) $so->so_ppn, 'Rp') }}</span>
+                            </div>
+                        @endif
+                        @if((float) $so->so_pph > 0)
+                            <div class="flex items-center justify-between text-sm text-on-surface-variant">
+                                <span>PPh {{ rtrim(rtrim((string) $so->so_pph_rate, '0'), '.') !== '' ? '(' . rtrim(rtrim((string) $so->so_pph_rate, '0'), '.') . '%)' : '' }}</span>
+                                <span class="font-mono">{{ formatAngka((float) $so->so_pph, 'Rp') }}</span>
+                            </div>
+                        @endif
+                        @if((float) $so->so_shipping_fee > 0)
+                            <div class="flex items-center justify-between text-sm text-on-surface-variant">
+                                <span>Ongkos Kirim</span>
+                                <span class="font-mono">{{ formatAngka((float) $so->so_shipping_fee, 'Rp') }}</span>
+                            </div>
+                        @endif
+                        <div class="flex items-center justify-between pt-3 border-t border-outline-variant text-sm">
+                            <span class="font-bold text-on-surface">Total</span>
+                            <span class="font-bold font-mono text-primary">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</span>
+                        </div>
+                    </div>
+                </div>
+
                     <script>
+                        function toggleProducts() {
+                            const section = document.getElementById('products-section');
+                            const chevron = document.getElementById('products-chevron');
+                            section.classList.toggle('hidden');
+                            chevron.style.transform = section.classList.contains('hidden') ? '' : 'rotate(180deg)';
+                        }
+
                         (function () {
                             const timerBox = document.getElementById('pay-timer');
                             const timerText = document.getElementById('pay-timer-text');

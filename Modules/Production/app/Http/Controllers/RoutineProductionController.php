@@ -5,63 +5,44 @@ namespace Modules\Production\Http\Controllers;
 use App\Actions\CreateAction;
 use App\Actions\UpdateAction;
 use App\Http\Requests\GeneralRequest;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Models\Product;
 use Modules\Production\Enums\ProductionStatusEnum;
 use Modules\Production\Enums\ProductionTypeEnum;
 use Modules\Production\Models\Production;
-use Modules\So\Enums\SoStatusEnum;
-use Modules\So\Models\So;
 
-class ProductionController extends Controller
+/**
+ * Produksi rutin: gabungkan beberapa barang menjadi 1 paket.
+ */
+class RoutineProductionController extends Controller
 {
     public function __construct(Production $model)
     {
         $this->model = $model::getModel();
     }
 
+    protected function template($file = null, $folder = null, $core = false)
+    {
+        return 'production::pages.routine.'.($file ?: $this->currentAction());
+    }
+
     protected function share($data = [])
     {
         return array_merge([
-            'typeOptions' => ProductionTypeEnum::getOptions(),
+            'model' => $this->model,
             'statusOptions' => ProductionStatusEnum::getOptions(),
             'productOptions' => Product::orderBy('product_nama')->pluck('product_nama', 'id')->all(),
-            // SO yang bisa dipilih sebagai sumber produksi (bukan batal)
-            'soOptions' => So::query()
-                ->where('so_status', '!=', SoStatusEnum::CANCELLED)
-                ->orderByDesc('id')
-                ->limit(200)
-                ->get()
-                ->pluck('so_code', 'id')
-                ->all(),
+            // Peta harga modal per produk untuk estimasi live di form
+            'productPrices' => Product::pluck('product_harga_modal', 'id')->all(),
         ], $data);
     }
 
     protected function getData()
     {
-        return $this->model->with(['has_items.has_product', 'has_product'])->filter()->sort();
-    }
-
-    /**
-     * AJAX: kelompokkan kebutuhan produk dari beberapa pesanan (SO).
-     */
-    public function getGroupOrders(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'ids' => ['required', 'array'],
-            'ids.*' => ['integer'],
-        ]);
-
-        $rows = DB::table('so_details')
-            ->join('catalog_products', 'catalog_products.id', '=', 'so_details.so_detail_id_product')
-            ->whereIn('so_details.so_detail_id_so', $validated['ids'])
-            ->groupBy('so_details.so_detail_id_product', 'catalog_products.product_nama')
-            ->selectRaw('so_details.so_detail_id_product as product_id, catalog_products.product_nama as product_nama, SUM(so_details.so_detail_qty) as total_qty')
-            ->get();
-
-        return response()->json(['status' => true, 'data' => $rows]);
+        return $this->model->where('production_type', ProductionTypeEnum::ROUTINE)
+            ->with(['has_items.has_product', 'has_product'])
+            ->filter()
+            ->sort();
     }
 
     public function postCreate(GeneralRequest $request)
@@ -84,8 +65,9 @@ class ProductionController extends Controller
             ? $this->model->findOrFail($id)->production_status
             : null;
 
-        // Field dinamis bahan (item_*) tanpa rule akan lolos validasi &
-        // diabaikan mass-assignment oleh Eloquent.
+        // Paksa tipe rutin; field dinamis bahan diabaikan mass-assignment
+        $request->merge(['production_type' => ProductionTypeEnum::ROUTINE]);
+
         $response = $id !== null
             ? UpdateAction::run($request, $id, $this->model)
             : CreateAction::run($request, $this->model);
@@ -102,10 +84,16 @@ class ProductionController extends Controller
             $saved->has_items()->create($item);
         }
 
+        // Sinkronkan biaya tambahan (parkir, konsumsi, dll)
+        $saved->has_costs()->delete();
+        foreach ($this->costsFromRequest($request) as $cost) {
+            $saved->has_costs()->create($cost);
+        }
+
         // Efek stok sekali saja saat transisi ke completed
         if ($oldStatus !== ProductionStatusEnum::COMPLETED
             && $saved->production_status === ProductionStatusEnum::COMPLETED) {
-            $this->applyStock($saved);
+            Production::applyStockEffects($saved);
         }
 
         return $this->response($response);
@@ -131,22 +119,24 @@ class ProductionController extends Controller
         return $items;
     }
 
-    /**
-     * Konsumsi stok bahan & tambah stok paket hasil produksi.
-     */
-    private function applyStock(Production $production): void
+    private function costsFromRequest(Request $request): array
     {
-        $production->load('has_items.has_product');
+        $costs = [];
 
-        foreach ($production->has_items as $item) {
-            $product = $item->has_product;
-            if (! $product) {
+        foreach ((array) $request->input('cost_nama', []) as $i => $nama) {
+            $nominal = (float) ($request->input('cost_nominal')[$i] ?? 0);
+            $nama = trim((string) $nama);
+
+            if ($nama === '' || $nominal <= 0) {
                 continue;
             }
-            $product->decrement('product_stok', $item->production_item_qty);
+
+            $costs[] = [
+                'production_cost_nama' => $nama,
+                'production_cost_nominal' => $nominal,
+            ];
         }
 
-        Product::where('id', $production->production_id_product)
-            ->increment('product_stok', $production->production_qty_output);
+        return $costs;
     }
 }

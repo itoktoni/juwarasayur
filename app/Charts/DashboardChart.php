@@ -6,6 +6,7 @@ use App\Models\Notification;
 use App\Models\User;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 use Carbon\Carbon;
+use Modules\So\Models\So;
 
 class DashboardChart
 {
@@ -31,6 +32,82 @@ class DashboardChart
             ->setColors(['#3755c3'])
             ->setGrid()
             ->setMarkers(['#3755c3'], 4, 6);
+    }
+
+    /**
+     * Revenue per day over the last 7 days (all sales orders).
+     */
+    public function salesRevenue(): LarapexChart
+    {
+        $days = collect(range(6, 0))->map(function ($i) {
+            $date = Carbon::today()->subDays($i);
+
+            $total = (float) So::whereDate('so_tanggal', $date)
+                ->whereNotIn('so_status', ['cancelled'])
+                ->sum('so_grand_total');
+
+            return [
+                'label' => $date->format('d M'),
+                'total' => $total,
+            ];
+        });
+
+        return (new LarapexChart)->areaChart()
+            ->setTitle('Pendapatan Penjualan')
+            ->setSubtitle('7 hari terakhir')
+            ->addData($days->pluck('total')->toArray())
+            ->setXAxis($days->pluck('label')->toArray())
+            ->setColors(['#3755c3'])
+            ->setGrid()
+            ->setMarkers(['#3755c3'], 4, 6);
+    }
+
+    /**
+     * Order count grouped by status (donut).
+     */
+    public function orderStatusBreakdown(): LarapexChart
+    {
+        $statuses = ['pending', 'paid', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+        $labels = ['Pending', 'Dibayar', 'Confirmed', 'Dikirim', 'Diterima', 'Cancelled'];
+        $colors = ['#d97706', '#2563eb', '#7c3aed', '#0891b2', '#16a34a', '#dc2626'];
+
+        $data = collect($statuses)->map(fn ($s) => So::where('so_status', $s)->count())->toArray();
+
+        return (new LarapexChart)->donutChart()
+            ->setTitle('Status Pesanan')
+            ->setSubtitle('Total per status')
+            ->addData($data)
+            ->setLabels($labels)
+            ->setColors($colors);
+    }
+
+    /**
+     * Revenue per day over the last 7 days for a specific reseller.
+     */
+    public function resellerSales(int $resellerId): LarapexChart
+    {
+        $days = collect(range(6, 0))->map(function ($i) use ($resellerId) {
+            $date = Carbon::today()->subDays($i);
+
+            $total = (float) So::where('so_id_reseller', $resellerId)
+                ->whereDate('so_tanggal', $date)
+                ->whereNotIn('so_status', ['cancelled'])
+                ->sum('so_grand_total');
+
+            return [
+                'label' => $date->format('d M'),
+                'total' => $total,
+            ];
+        });
+
+        return (new LarapexChart)->areaChart()
+            ->setTitle('Penjualan Saya')
+            ->setSubtitle('7 hari terakhir')
+            ->addData($days->pluck('total')->toArray())
+            ->setXAxis($days->pluck('label')->toArray())
+            ->setColors(['#16a34a'])
+            ->setGrid()
+            ->setMarkers(['#16a34a'], 4, 6);
     }
 
     /**

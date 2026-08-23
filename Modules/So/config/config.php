@@ -5,6 +5,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Webhook Pembayaran
+    |--------------------------------------------------------------------------
+    | Secret bersama untuk mengamankan endpoint webhook pembayaran.
+    | Dikirim lewat header "X-Webhook-Secret". Kosongkan untuk menonaktifkan
+    | pengecekan (hanya mengandalkan so_payment_token per-pesanan).
+    |
+    */
+    'webhook' => [
+        'secret' => env('SO_WEBHOOK_SECRET', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Shipping / Pengiriman
     |--------------------------------------------------------------------------
     | Metode: pickup (diambil di gudang), cod (lokasi COD terbatas),
