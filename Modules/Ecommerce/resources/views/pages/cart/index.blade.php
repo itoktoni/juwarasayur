@@ -53,14 +53,14 @@
                 </div>
 
                 <div class="mt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
-                    <button type="submit" class="btn btn-soft">
+                    <button type="submit" class="btn btn-soft px-4 py-2">
                         <span class="material-symbols-outlined text-base">refresh</span> Update Keranjang
                     </button>
                     <div class="text-right">
                         <p class="text-xs text-on-surface-variant">Total sementara (belum termasuk ongkir)</p>
                         <p class="text-xl font-bold font-mono text-primary" id="cart-total">{{ formatAngka((int) $subtotal, 'Rp') }}</p>
                     </div>
-                    <a href="{{ route('checkout.show') }}" class="btn btn-primary">
+                    <a href="{{ route('checkout.show') }}" class="btn btn-primary px-4 py-2">
                         Lanjut ke Checkout <span class="material-symbols-outlined text-base">arrow_forward</span>
                     </a>
                 </div>

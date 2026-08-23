@@ -11,6 +11,10 @@ class CodLocation extends BaseModel
 {
     protected $table = 'so_cod_locations';
 
+    public static $sortColumns = ['location_name', 'fee', 'is_active'];
+
+    public static $filterColumns = ['location_name' => 'Nama Lokasi', 'is_active'];
+
     protected function casts(): array
     {
         return [
@@ -29,5 +33,17 @@ class CodLocation extends BaseModel
     public static function active(): Collection
     {
         return static::where('is_active', true)->orderBy('location_name')->get();
+    }
+
+    public function rules(): array
+    {
+        return [
+            'location_name' => ['required', 'string', 'max:100', 'unique:so_cod_locations,location_name,'.($this->id ?? '')],
+            'address' => ['nullable', 'string', 'max:255'],
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+            'fee' => ['nullable', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ];
     }
 }

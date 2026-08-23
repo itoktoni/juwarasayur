@@ -37,6 +37,10 @@
                         <a href="{{ route('shop.index') }}" class="btn btn-primary flex-1 h-11 justify-center">
                             <span class="material-symbols-outlined text-base">storefront</span> Belanja Lagi
                         </a>
+                        <a href="{{ route('payment.invoice', ['id' => $so->id]) }}" target="_blank"
+                            class="btn btn-soft flex-1 h-11 justify-center">
+                            <span class="material-symbols-outlined text-base">print</span> Print Invoice
+                        </a>
                         @auth
                             <a href="{{ route('ecommerce.orders.show', ['id' => $so->id]) }}" class="btn btn-soft flex-1 h-11 justify-center">
                                 <span class="material-symbols-outlined text-base">receipt_long</span> Lihat Pesanan

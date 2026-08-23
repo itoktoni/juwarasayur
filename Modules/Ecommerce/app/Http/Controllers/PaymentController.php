@@ -33,6 +33,19 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Invoice cetak (print-friendly) — akses sama dengan halaman pembayaran.
+     */
+    public function invoice(int $id): View
+    {
+        $so = $this->findAuthorized($id);
+
+        return view('ecommerce::pages.payment.invoice', [
+            'so' => $so,
+            'methodLabel' => ShippingMethodEnum::getDescription($so->so_shipping_method),
+        ]);
+    }
+
     public function simulate(int $id): RedirectResponse
     {
         $so = $this->findAuthorized($id);

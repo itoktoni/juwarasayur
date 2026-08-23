@@ -24,10 +24,13 @@ Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
 // Checkout
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::post('/checkout/quote-cod', [CheckoutController::class, 'quoteCod'])->name('checkout.quoteCod');
+Route::post('/checkout/quote-cod-location', [CheckoutController::class, 'quoteCodLocation'])->name('checkout.quoteCodLocation');
+Route::post('/checkout/quote-delivery', [CheckoutController::class, 'quoteDelivery'])->name('checkout.quoteDelivery');
 Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 
 // Pembayaran QRIS (mockup)
 Route::get('/payment/{id}', [PaymentController::class, 'show'])->name('payment.show');
+Route::get('/payment/{id}/invoice', [PaymentController::class, 'invoice'])->name('payment.invoice');
 Route::post('/payment/{id}/simulate', [PaymentController::class, 'simulate'])->name('payment.simulate');
 
 /*

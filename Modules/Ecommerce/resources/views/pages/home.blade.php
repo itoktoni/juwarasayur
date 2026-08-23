@@ -81,27 +81,25 @@
                 Flash sale belum tersedia. Cek katalog lengkap kami.
             </div>
         @else
-            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($flashSaleProducts as $p)
-                    <div class="card overflow-hidden border border-outline-variant bg-white rounded-xl flex flex-col hover:shadow-lg transition-shadow relative">
-                        <span class="absolute top-2 left-2 z-10 badge badge-danger text-[10px] px-2 py-0.5 rounded-full bg-error text-on-error">FLASH</span>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-square bg-surface-container overflow-hidden block">
+                    <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
+                        <span class="absolute left-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-error px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest text-on-error shadow-lg shadow-error/40"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">bolt</span>Flash</span>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="relative block aspect-square overflow-hidden bg-surface-container">
                             @if($p->product_gambar)
-                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300" loading="lazy">
+                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" loading="lazy">
                             @else
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <div class="p-2.5 flex flex-col gap-1 flex-1">
-                            <a href="{{ route('shop.show', $p->product_slug) }}" class="text-xs font-medium leading-tight line-clamp-2 min-h-[2rem] hover:text-primary">{{ $p->product_nama }}</a>
-                            <div class="mt-auto pt-1">
-                                <p class="font-bold text-sm text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
-                                    <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-                                        class="mt-1.5 w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary text-on-primary text-xs font-semibold py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none">
-                                        <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
-                                    </button>
-                            </div>
-                        </div>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+<button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
+    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
+    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
+        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
+    </span>
+</button>
                     </div>
                 @endforeach
             </div>
@@ -120,27 +118,24 @@
                     Lihat Semua <span class="material-symbols-outlined text-base">arrow_forward</span>
                 </a>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($bestSellingProducts as $p)
-                    <div class="card overflow-hidden border border-outline-variant bg-white rounded-xl flex flex-col hover:shadow-md transition-shadow">
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-square bg-surface-container overflow-hidden block relative">
+                    <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="relative block aspect-square overflow-hidden bg-surface-container">
                             @if($p->product_gambar)
-                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300" loading="lazy">
+                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" loading="lazy">
                             @else
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <div class="p-2.5 flex flex-col gap-1 flex-1">
-                            <a href="{{ route('shop.show', $p->product_slug) }}" class="text-xs font-medium leading-tight line-clamp-2 min-h-[2rem] hover:text-primary">{{ $p->product_nama }}</a>
-                            <p class="text-[10px] text-on-surface-variant">Terjual {{ (int) $p->total_sold }}</p>
-                            <div class="mt-auto pt-1 flex items-center justify-between gap-1">
-                                <p class="font-bold text-xs text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
-                                <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-                                    class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 disabled:pointer-events-none" title="Tambah ke keranjang">
-                                    <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
-                                </button>
-                            </div>
-                        </div>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+<button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
+    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
+    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
+        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
+    </span>
+</button>
                     </div>
                 @endforeach
             </div>
@@ -156,26 +151,24 @@
                     Lihat Semua <span class="material-symbols-outlined text-base">arrow_forward</span>
                 </a>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($latestProducts as $p)
-                    <div class="card overflow-hidden border border-outline-variant bg-white rounded-xl flex flex-col hover:shadow-md transition-shadow">
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-square bg-surface-container overflow-hidden block">
+                    <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="relative block aspect-square overflow-hidden bg-surface-container">
                             @if($p->product_gambar)
-                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300" loading="lazy">
+                                <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" loading="lazy">
                             @else
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <div class="p-2.5 flex flex-col gap-1 flex-1">
-                            <a href="{{ route('shop.show', $p->product_slug) }}" class="text-xs font-medium leading-tight line-clamp-2 min-h-[2rem] hover:text-primary">{{ $p->product_nama }}</a>
-                            <div class="mt-auto pt-1 flex items-center justify-between gap-1">
-                                <p class="font-bold text-xs text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
-                                <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-                                    class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 disabled:pointer-events-none" title="Tambah ke keranjang">
-                                    <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
-                                </button>
-                            </div>
-                        </div>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+<button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
+    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
+    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
+        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
+    </span>
+</button>
                     </div>
                 @endforeach
             </div>

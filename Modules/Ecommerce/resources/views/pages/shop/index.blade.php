@@ -209,40 +209,32 @@
                 @else
                     <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                         @foreach($products as $p)
-                            <div class="group card overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-                                <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-[4/3] bg-surface-container overflow-hidden relative block">
+                            <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
+                                <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-square bg-surface-container overflow-hidden relative block">
                                     @if($p->product_gambar)
-                                        <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" loading="lazy">
+                                        <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" loading="lazy">
                                     @else
                                         <div class="w-full h-full grid place-items-center text-outline">
                                             <span class="material-symbols-outlined text-4xl">image</span>
                                         </div>
                                     @endif
                                     @if($p->is_featured)
-                                        <span class="absolute top-2 left-2 badge badge-warning text-[10px]">Featured</span>
+                                        <span class="absolute left-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-secondary px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest text-on-secondary shadow-lg shadow-secondary/40"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">star</span>Featured</span>
                                     @endif
                                     @if($p->product_stok <= 0)
-                                        <span class="absolute top-2 right-2 badge badge-danger text-[10px]">Habis</span>
+                                        <span class="absolute right-2 top-2 z-10 rounded-full bg-error px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest text-on-error shadow-lg shadow-error/40">Habis</span>
                                     @endif
                                 </a>
-                                <div class="p-3 flex flex-col gap-1.5 flex-1">
-                                    <a href="{{ route('shop.show', $p->product_slug) }}" class="flex flex-wrap gap-1">
-                                        @if($p->has_category)<span class="badge badge-neutral text-[10px] leading-none px-2 py-1">{{ $p->has_category->category_nama }}</span>@endif
-                                        @if($p->has_brand)<span class="badge bg-white border border-outline-variant text-[10px] leading-none px-2 py-1">{{ $p->has_brand->brand_nama }}</span>@endif
-                                    </a>
-                                    <a href="{{ route('shop.show', $p->product_slug) }}" class="font-medium text-sm leading-tight line-clamp-2 min-h-[2.5rem] hover:text-primary transition-colors">{{ $p->product_nama }}</a>
-                                    <p class="text-xs text-on-surface-variant line-clamp-1">{{ $p->has_tags->pluck('tag_nama')->implode(' · ') }}</p>
-                                    <div class="mt-auto pt-1 flex items-baseline justify-between gap-2">
-                                        <span class="font-bold text-sm text-primary">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
-                                        <span class="text-[11px] text-on-surface-variant">Stok {{ $p->product_stok }}</span>
-                                    </div>
-                                    <button type="button"
-                                        onclick="addToCart({{ $p->id }}, this)"
-                                        @disabled($p->product_stok <= 0)
-                                        class="mt-1 w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary text-on-primary text-xs font-semibold py-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none">
-                                        <span class="material-symbols-outlined text-sm">add_shopping_cart</span> Keranjang
-                                    </button>
-                                </div>
+                                <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                                <button type="button"
+                                    onclick="addToCart({{ $p->id }}, this)"
+                                    @disabled($p->product_stok <= 0)
+                                    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
+                                    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
+                                        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
+                                    </span>
+                                </button>
                             </div>
                         @endforeach
                     </div>

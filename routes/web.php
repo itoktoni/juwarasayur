@@ -41,7 +41,8 @@ Route::middleware(['auth', 'verified', 'access'])->group(function () {
 
     Route::get('/settings/website', [WebsiteSettingController::class, 'index'])->name('settings.website');
     Route::post('/settings/website', [WebsiteSettingController::class, 'save'])->name('settings.website.save');
-    Route::post('/settings/website/shipping', [WebsiteSettingController::class, 'saveShipping'])->name('settings.website.shipping');
+
+    Route::auto('/shipping', \App\Http\Controllers\ShippingController::class, ['name' => 'shipping']);
 
     Route::prefix('notifications-web')->group(function () {
         Route::get('/', function (Request $request) {

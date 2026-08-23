@@ -11,18 +11,21 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Modules\Ecommerce\Models\CodLocation;
 use Modules\Ecommerce\Services\CartService;
 use Modules\Ecommerce\Services\CodShippingService;
 use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;
 use Modules\So\Models\So;
 use Modules\So\Models\SoDetail;
+use Modules\So\Services\DistanceService;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         private CartService $cart,
         private CodShippingService $cod,
+        private DistanceService $distance,
     ) {}
 
     public function show(): View|RedirectResponse
@@ -39,6 +42,10 @@ class CheckoutController extends Controller
             'items' => $items,
             'subtotal' => $this->cart->subtotal(),
             'customer' => Auth::user(),
+            // Titik awal peta delivery = gudang utama (.env: SO_WAREHOUSE_*)
+            'warehouse' => config('so.shipping.warehouse'),
+            // Daftar lokasi COD aktif untuk pilihan di checkout
+            'codLocations' => CodLocation::active(),
         ]);
     }
 
@@ -55,15 +62,72 @@ class CheckoutController extends Controller
         return response()->json($this->cod->quote((float) $validated['lat'], (float) $validated['lng']));
     }
 
+    /**
+     * AJAX: quote untuk lokasi COD terpilih (+ titik customer jika perlu).
+     */
+    public function quoteCodLocation(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'location' => ['required', 'string', 'max:255'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
+        ]);
+
+        $location = CodLocation::where('location_name', $validated['location'])
+            ->where('is_active', true)
+            ->first();
+
+        if (! $location) {
+            return response()->json(['status' => false, 'message' => 'Lokasi COD tidak ditemukan.']);
+        }
+
+        return response()->json($this->cod->quoteForLocation(
+            $location,
+            isset($validated['lat']) ? (float) $validated['lat'] : null,
+            isset($validated['lng']) ? (float) $validated['lng'] : null,
+        ));
+    }
+
+    /**
+     * AJAX: quote diantar ke rumah — jarak rumah customer ke gudang utama
+     * (config .env SO_WAREHOUSE_LAT/LNG) + ongkir per km.
+     */
+    public function quoteDelivery(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
+        ]);
+
+        $km = $this->distance->distanceFromWarehouse((float) $validated['lat'], (float) $validated['lng']);
+
+        $maxRadius = (float) config('so.shipping.max_radius_km');
+        if ($maxRadius > 0 && $km > $maxRadius) {
+            return response()->json([
+                'status' => false,
+                'message' => "Lokasi Anda di luar radius layanan pengiriman (maks {$maxRadius} km dari gudang utama).",
+            ]);
+        }
+
+        return response()->json([
+            'status' => true,
+            'distance_km' => $km,
+            'shipping_fee' => $this->distance->shippingFee($km),
+        ]);
+    }
+
     public function placeOrder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:20'],
-            'shipping_method' => ['required', 'in:'.ShippingMethodEnum::PICKUP.','.ShippingMethodEnum::COD],
-            'so_lat' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::COD, 'numeric', 'between:-90,90'],
-            'so_lng' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::COD, 'numeric', 'between:-180,180'],
-            'so_address' => ['nullable', 'string', 'max:1000'],
+            'shipping_method' => ['required', 'in:'.ShippingMethodEnum::PICKUP.','.ShippingMethodEnum::COD.','.ShippingMethodEnum::DELIVERY],
+            'so_cod_location' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::COD, 'string', 'max:255'],
+            'so_lat' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::DELIVERY, 'numeric', 'between:-90,90'],
+            'so_lng' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::DELIVERY, 'numeric', 'between:-180,180'],
+            'so_address' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::DELIVERY, 'string', 'max:1000'],
+            // Alamat opsional khusus COD (panel terpisah dari delivery)
+            'so_address_cod' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $customer = Auth::user();
@@ -102,7 +166,20 @@ class CheckoutController extends Controller
         ];
 
         if ($method === ShippingMethodEnum::COD) {
-            $quote = $this->cod->quote((float) $validated['so_lat'], (float) $validated['so_lng']);
+            $location = CodLocation::where('location_name', $validated['so_cod_location'])
+                ->where('is_active', true)
+                ->first();
+
+            if (! $location) {
+                return back()->withErrors(['shipping' => 'Lokasi COD tidak valid.'])->withInput();
+            }
+
+            // Fee flat lokasi menang; jika kosong, wajib titik customer untuk hitung jarak
+            $quote = $this->cod->quoteForLocation(
+                $location,
+                isset($validated['so_lat']) ? (float) $validated['so_lat'] : null,
+                isset($validated['so_lng']) ? (float) $validated['so_lng'] : null,
+            );
 
             if (! $quote['status']) {
                 return back()->withErrors(['shipping' => $quote['message'] ?? 'Lokasi COD tidak valid.'])->withInput();
@@ -110,7 +187,21 @@ class CheckoutController extends Controller
 
             $shipping['fee'] = (float) $quote['shipping_fee'];
             $shipping['location'] = $quote['location_name'];
-            $shipping['distance_km'] = (float) $quote['distance_km'];
+            $shipping['distance_km'] = $quote['distance_km'];
+            $shipping['lat'] = isset($validated['so_lat']) ? (float) $validated['so_lat'] : null;
+            $shipping['lng'] = isset($validated['so_lng']) ? (float) $validated['so_lng'] : null;
+            $shipping['address'] = $validated['so_address_cod'] ?? ($validated['so_address'] ?? null);
+        } elseif ($method === ShippingMethodEnum::DELIVERY) {
+            // Ongkir dihitung dari jarak pin rumah ke gudang utama (.env)
+            $km = $this->distance->distanceFromWarehouse((float) $validated['so_lat'], (float) $validated['so_lng']);
+
+            $maxRadius = (float) config('so.shipping.max_radius_km');
+            if ($maxRadius > 0 && $km > $maxRadius) {
+                return back()->withErrors(['shipping' => "Lokasi Anda di luar radius layanan pengiriman (maks {$maxRadius} km dari gudang utama)."])->withInput();
+            }
+
+            $shipping['fee'] = $this->distance->shippingFee($km);
+            $shipping['distance_km'] = $km;
             $shipping['lat'] = (float) $validated['so_lat'];
             $shipping['lng'] = (float) $validated['so_lng'];
             $shipping['address'] = $validated['so_address'] ?? null;

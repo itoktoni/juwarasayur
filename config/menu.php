@@ -33,6 +33,7 @@ return [
             'label' => 'Master Data',
             'items' => [
                 ['route' => 'user.getTable', 'icon' => 'manage_accounts', 'label' => 'Users', 'match' => ['user.*']],
+                ['route' => 'shipping.getTable', 'icon' => 'local_shipping', 'label' => 'Pengiriman & COD', 'match' => ['shipping.*']],
             ],
         ],
         [

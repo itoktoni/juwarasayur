@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\WebsiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-use Modules\Ecommerce\Models\CodLocation;
 
 class WebsiteSettingController extends Controller
 {
@@ -19,7 +17,12 @@ class WebsiteSettingController extends Controller
 
         return view('pages.settings.website', [
             'settings' => $settings,
-            'shipping' => $this->shippingConfig(),
+            'warehouse' => [
+                'name' => config('so.shipping.warehouse.name'),
+                'address' => config('so.shipping.warehouse.address'),
+                'lat' => config('so.shipping.warehouse.lat'),
+                'lng' => config('so.shipping.warehouse.lng'),
+            ],
         ]);
     }
 
@@ -38,6 +41,11 @@ class WebsiteSettingController extends Controller
             'remove_favicon' => ['nullable', 'boolean'],
             'primary_color' => ['nullable', 'string', 'max:7'],
             'footer_text' => ['nullable', 'string'],
+            // Gudang utama (dipakai modul SO/ecommerce via config so.shipping.warehouse)
+            'warehouse_name' => ['required', 'string', 'max:255'],
+            'warehouse_address' => ['nullable', 'string'],
+            'warehouse_lat' => ['required', 'numeric', 'between:-90,90'],
+            'warehouse_lng' => ['required', 'numeric', 'between:-180,180'],
         ]);
 
         $existing = WebsiteSetting::raw();
@@ -77,125 +85,22 @@ class WebsiteSettingController extends Controller
 
         WebsiteSetting::persist($merged);
 
+        // Gudang utama disimpan ke .env agar terbaca config('so.shipping.warehouse.*')
+        $envPath = base_path('.env');
+        if (File::isWritable($envPath)) {
+            $this->updateEnv($envPath, [
+                'SO_WAREHOUSE_NAME' => $validated['warehouse_name'],
+                'SO_WAREHOUSE_ADDRESS' => (string) $validated['warehouse_address'],
+                'SO_WAREHOUSE_LAT' => (string) $validated['warehouse_lat'],
+                'SO_WAREHOUSE_LNG' => (string) $validated['warehouse_lng'],
+            ]);
+        } else {
+            flash()->warning(__('The .env file is not writable. Warehouse location was not saved.'));
+        }
+
         flash()->success('Website settings saved.');
 
         return Redirect::route('settings.website');
-    }
-
-    /**
-     * Simpan konfigurasi pengiriman SO langsung ke file .env.
-     */
-    public function saveShipping(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'warehouse_name' => ['required', 'string', 'max:255'],
-            'warehouse_address' => ['nullable', 'string'],
-            'warehouse_lat' => ['required', 'numeric', 'between:-90,90'],
-            'warehouse_lng' => ['required', 'numeric', 'between:-180,180'],
-            'price_per_km' => ['required', 'numeric', 'min:0'],
-            'min_fee' => ['required', 'numeric', 'min:0'],
-            'max_radius_km' => ['required', 'numeric', 'min:0'],
-            'map_provider' => ['required', 'string', 'max:30'],
-            'map_base_url' => ['required', 'url', 'max:255'],
-            'map_api_key' => ['nullable', 'string', 'max:255'],
-            'cod_name' => ['nullable', 'array'],
-            'cod_lat' => ['nullable', 'array'],
-            'cod_lng' => ['nullable', 'array'],
-            'cod_fee' => ['nullable', 'array'],
-        ]);
-
-        // Susun lokasi COD dari baris dinamis (skip baris tanpa nama)
-        $cod = [];
-        foreach ((array) ($validated['cod_name'] ?? []) as $i => $name) {
-            $name = trim((string) $name);
-            if ($name === '') {
-                continue;
-            }
-
-            $lat = $validated['cod_lat'][$i] ?? null;
-            $lng = $validated['cod_lng'][$i] ?? null;
-
-            if ($lat === null || $lng === null || (float) $lat === 0.0 && (float) $lng === 0.0) {
-                continue;
-            }
-
-            $cod[] = [
-                'name' => $name,
-                'lat' => (float) $lat,
-                'lng' => (float) $lng,
-                'fee' => isset($validated['cod_fee'][$i]) && $validated['cod_fee'][$i] !== '' ? (float) $validated['cod_fee'][$i] : null,
-            ];
-        }
-
-        $envPath = base_path('.env');
-        if (! File::isWritable($envPath)) {
-            flash()->error(__('The .env file is not writable.'));
-
-            return Redirect::route('settings.website');
-        }
-
-        // Sinkronkan titik COD ke tabel DB (sumber tunggal untuk ecommerce & SO)
-        DB::transaction(function () use ($cod) {
-            foreach ($cod as $row) {
-                CodLocation::updateOrCreate(
-                    ['location_name' => $row['name']],
-                    [
-                        'lat' => $row['lat'],
-                        'lng' => $row['lng'],
-                        'fee' => $row['fee'],
-                        'is_active' => true,
-                    ]
-                );
-            }
-
-            if (! empty($cod)) {
-                CodLocation::whereNotIn('location_name', array_column($cod, 'name'))->delete();
-            }
-        });
-
-        $this->updateEnv($envPath, [
-            'SO_WAREHOUSE_NAME' => $validated['warehouse_name'],
-            'SO_WAREHOUSE_ADDRESS' => (string) $validated['warehouse_address'],
-            'SO_WAREHOUSE_LAT' => (string) $validated['warehouse_lat'],
-            'SO_WAREHOUSE_LNG' => (string) $validated['warehouse_lng'],
-            'SO_SHIPPING_PRICE_PER_KM' => (string) $validated['price_per_km'],
-            'SO_SHIPPING_MIN_FEE' => (string) $validated['min_fee'],
-            'SO_SHIPPING_MAX_RADIUS_KM' => (string) $validated['max_radius_km'],
-            'SO_MAP_PROVIDER' => $validated['map_provider'],
-            'SO_MAP_BASE_URL' => $validated['map_base_url'],
-            'SO_MAP_API_KEY' => (string) ($validated['map_api_key'] ?? ''),
-        ]);
-
-        flash()->success('Pengaturan pengiriman SO berhasil disimpan.');
-
-        return Redirect::route('settings.website');
-    }
-
-    private function shippingConfig(): array
-    {
-        return [
-            'warehouse_name' => config('so.shipping.warehouse.name'),
-            'warehouse_address' => config('so.shipping.warehouse.address'),
-            'warehouse_lat' => config('so.shipping.warehouse.lat'),
-            'warehouse_lng' => config('so.shipping.warehouse.lng'),
-            'price_per_km' => config('so.shipping.price_per_km'),
-            'min_fee' => config('so.shipping.min_fee'),
-            'max_radius_km' => config('so.shipping.max_radius_km'),
-            'cod_locations' => CodLocation::query()
-                ->orderBy('location_name')
-                ->get()
-                ->map(fn ($loc) => [
-                    'name' => $loc->location_name,
-                    'lat' => (float) $loc->lat,
-                    'lng' => (float) $loc->lng,
-                    'fee' => $loc->fee !== null ? (float) $loc->fee : '',
-                ])
-                ->values()
-                ->all(),
-            'map_provider' => config('so.map.provider'),
-            'map_base_url' => config('so.map.base_url'),
-            'map_api_key' => config('so.map.api_key'),
-        ];
     }
 
     /**

@@ -67,6 +67,53 @@ class CodShippingService
     }
 
     /**
+     * Quote untuk lokasi COD terpilih: pakai fee flat jika ada,
+     * selain itu hitung ongkir dari jarak titik customer ke lokasi tersebut.
+     *
+     * @return array{status: bool, message?: string, location_name?: string, address?: ?string, distance_km?: ?float, shipping_fee?: float}
+     */
+    public function quoteForLocation(CodLocation $location, ?float $lat, ?float $lng): array
+    {
+        // Fee flat per titik menang — tanpa perlu titik customer
+        if ($location->fee !== null) {
+            return [
+                'status' => true,
+                'location_name' => $location->location_name,
+                'address' => $location->address,
+                'distance_km' => null,
+                'shipping_fee' => (float) $location->fee,
+            ];
+        }
+
+        if ($lat === null || $lng === null) {
+            return [
+                'status' => false,
+                'message' => "Pilih titik lokasi Anda untuk menghitung ongkir ke {$location->location_name}.",
+            ];
+        }
+
+        // Jarak tempuh (jalan) dari rumah customer ke titik COD terpilih
+        $km = $this->roadDistance($lat, $lng, (float) $location->lat, (float) $location->lng)
+            ?? round($this->haversine($lat, $lng, (float) $location->lat, (float) $location->lng), 2);
+
+        $maxRadius = (float) config('so.shipping.max_radius_km');
+        if ($maxRadius > 0 && $km > $maxRadius) {
+            return [
+                'status' => false,
+                'message' => "Lokasi Anda di luar radius layanan COD {$location->location_name} (maks {$maxRadius} km).",
+            ];
+        }
+
+        return [
+            'status' => true,
+            'location_name' => $location->location_name,
+            'address' => $location->address,
+            'distance_km' => $km,
+            'shipping_fee' => $this->shippingFee($km),
+        ];
+    }
+
+    /**
      * Ongkir berdasarkan jarak (km): price_per_km * km, minimal min_fee.
      */
     public function shippingFee(float $distanceKm): float
