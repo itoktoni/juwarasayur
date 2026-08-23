@@ -86,9 +86,26 @@ class CodShippingService
         }
 
         if ($lat === null || $lng === null) {
+            // Tanpa titik customer — estimasi dari jarak gudang utama ke titik COD
+            $warehouse = config('so.shipping.warehouse');
+            $km = $this->roadDistance(
+                (float) $warehouse['lat'],
+                (float) $warehouse['lng'],
+                (float) $location->lat,
+                (float) $location->lng,
+            ) ?? round($this->haversine(
+                (float) $warehouse['lat'],
+                (float) $warehouse['lng'],
+                (float) $location->lat,
+                (float) $location->lng,
+            ), 2);
+
             return [
-                'status' => false,
-                'message' => "Pilih titik lokasi Anda untuk menghitung ongkir ke {$location->location_name}.",
+                'status' => true,
+                'location_name' => $location->location_name,
+                'address' => $location->address,
+                'distance_km' => $km,
+                'shipping_fee' => $this->shippingFee($km),
             ];
         }
 

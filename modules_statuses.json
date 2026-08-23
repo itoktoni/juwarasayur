@@ -4,5 +4,8 @@
     "Po": true,
     "Inventory": true,
     "So": true,
-    "Ecommerce": true
+    "Ecommerce": true,
+    "Reseller": true,
+    "Production": true,
+    "Chatbot": true
 }

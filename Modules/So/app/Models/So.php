@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;
 
-#[Fillable(['so_code', 'so_tanggal', 'so_id_reseller', 'so_id_customer', 'so_customer_name', 'so_customer_phone', 'so_status', 'so_shipping_method', 'so_cod_location', 'so_shipping_fee', 'so_distance_km', 'so_address', 'so_lat', 'so_lng', 'so_keterangan', 'so_subtotal', 'so_discount', 'so_discount_type', 'so_discount_note', 'so_dpp', 'so_ppn', 'so_ppn_rate', 'so_pph', 'so_pph_rate', 'so_grand_total'])]
+#[Fillable(['so_code', 'so_payment_token', 'so_tanggal', 'so_id_reseller', 'so_id_customer', 'so_customer_name', 'so_customer_phone', 'so_status', 'so_shipping_method', 'so_cod_location', 'so_shipping_fee', 'so_distance_km', 'so_address', 'so_lat', 'so_lng', 'so_keterangan', 'so_subtotal', 'so_discount', 'so_discount_type', 'so_discount_note', 'so_dpp', 'so_ppn', 'so_ppn_rate', 'so_pph', 'so_pph_rate', 'so_grand_total'])]
 class So extends BaseModel
 {
     protected $table = 'so_orders';
@@ -83,6 +83,9 @@ class So extends BaseModel
             if (empty($model->so_code)) {
                 $model->so_code = static::generateCode();
             }
+
+            // URL pembayaran memakai token acak, bukan id berurutan
+            $model->so_payment_token ??= (string) Str::uuid();
         });
     }
 

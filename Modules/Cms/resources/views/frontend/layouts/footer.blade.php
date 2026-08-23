@@ -7,7 +7,8 @@
 @endphp
 <footer class="bg-[#0f1f18] text-white pt-16 pb-8">
     <div class="max-w-7xl mx-auto px-6 md:px-8">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-10">
+        {{-- Mobile: kolom menu dibagi 2 sebaris, kontak full row; desktop: grid 12 --}}
+        <div class="grid grid-cols-2 md:grid-cols-12 gap-x-6 gap-y-10">
             @if(($footerMenu ?? null) && $footerMenu->items)
                 @php
                     $footerItems = collect($footerMenu->items)->sortBy('sort_order')->values()->take(3);
@@ -15,7 +16,7 @@
                     // Grid 12 kolom: logo + N kolom menu (2 each) + kontak (3)
                     $logoSpan = max(3, 12 - 3 - ($menuCount * 2));
                 @endphp
-                <div class="md:col-span-{{ $logoSpan }}">
+                <div class="col-span-2 md:col-span-{{ $logoSpan }}">
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Juwara Sayur') }}" class="h-12 w-auto">
                     </div>
@@ -39,7 +40,7 @@
                         </ul>
                     </div>
                 @endforeach
-                <div class="md:col-span-3">
+                <div class="col-span-2 md:col-span-3">
                     <h5 class="font-semibold text-white mb-4">Kontak</h5>
                     <ul class="space-y-2.5 text-sm text-white/60">
                         @if($siteAlamat !== '')
@@ -54,7 +55,7 @@
                     </ul>
                 </div>
             @else
-                <div class="md:col-span-3">
+                <div class="col-span-2 md:col-span-3">
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Juwara Sayur') }}" class="h-12 w-auto">
                     </div>
@@ -92,7 +93,7 @@
                         <li><a href="{{ route('login') }}" class="hover:text-white transition-colors">Masuk / Daftar</a></li>
                     </ul>
                 </div>
-                <div class="md:col-span-3">
+                <div class="col-span-2 md:col-span-3">
                     <h5 class="font-semibold text-white mb-4">Kontak</h5>
                     <ul class="space-y-2.5 text-sm text-white/60">
                         @if($siteAlamat !== '')

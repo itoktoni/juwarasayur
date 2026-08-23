@@ -28,10 +28,10 @@ Route::post('/checkout/quote-cod-location', [CheckoutController::class, 'quoteCo
 Route::post('/checkout/quote-delivery', [CheckoutController::class, 'quoteDelivery'])->name('checkout.quoteDelivery');
 Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
 
-// Pembayaran QRIS (mockup)
-Route::get('/payment/{id}', [PaymentController::class, 'show'])->name('payment.show');
-Route::get('/payment/{id}/invoice', [PaymentController::class, 'invoice'])->name('payment.invoice');
-Route::post('/payment/{id}/simulate', [PaymentController::class, 'simulate'])->name('payment.simulate');
+// Pembayaran QRIS (mockup) — URL memakai token uuid, bukan id
+Route::get('/payment/{token}', [PaymentController::class, 'show'])->name('payment.show');
+Route::get('/payment/{token}/invoice', [PaymentController::class, 'invoice'])->name('payment.invoice');
+Route::get('/payment/{token}/status', [PaymentController::class, 'status'])->name('payment.status');
 
 /*
 |--------------------------------------------------------------------------

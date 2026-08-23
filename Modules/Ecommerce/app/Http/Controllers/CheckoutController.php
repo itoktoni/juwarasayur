@@ -259,6 +259,6 @@ class CheckoutController extends Controller
 
         flash()->success("Pesanan {$so->so_code} dibuat. Silakan selesaikan pembayaran.");
 
-        return redirect()->route('payment.show', ['id' => $so->id]);
+        return redirect()->route('payment.show', ['token' => $so->so_payment_token]);
     }
 }

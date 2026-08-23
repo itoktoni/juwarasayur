@@ -3,7 +3,7 @@
 namespace Modules\Ecommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Modules\So\Enums\ShippingMethodEnum;
@@ -12,15 +12,16 @@ use Modules\So\Models\So;
 
 /**
  * Halaman pembayaran QRIS (mockup) — timer 5 menit + simulasi bayar.
+ * URL memakai so_payment_token (uuid acak), bukan id berurutan.
  * Guest mengakses via session guest_orders; user login via kepemilikan SO.
  */
 class PaymentController extends Controller
 {
     public const EXPIRY_MINUTES = 5;
 
-    public function show(int $id): View|RedirectResponse
+    public function show(string $token): View|RedirectResponse
     {
-        $so = $this->findAuthorized($id);
+        $so = $this->findAuthorized($token);
 
         if ($so->so_status === SoStatusEnum::PENDING && $this->secondsLeft($so) <= 0) {
             flash()->warning('Waktu pembayaran habis. Pesanan tetap tersimpan dengan status Pending.');
@@ -36,9 +37,9 @@ class PaymentController extends Controller
     /**
      * Invoice cetak (print-friendly) — akses sama dengan halaman pembayaran.
      */
-    public function invoice(int $id): View
+    public function invoice(string $token): View
     {
-        $so = $this->findAuthorized($id);
+        $so = $this->findAuthorized($token);
 
         return view('ecommerce::pages.payment.invoice', [
             'so' => $so,
@@ -46,27 +47,17 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function simulate(int $id): RedirectResponse
+    /**
+     * Polling status pembayaran (GET berkala dari halaman QRIS).
+     */
+    public function status(string $token): JsonResponse
     {
-        $so = $this->findAuthorized($id);
+        $so = So::query()->where('so_payment_token', $token)->firstOrFail();
 
-        if ($so->so_status !== SoStatusEnum::PENDING) {
-            flash()->error('Pesanan ini sudah diproses.');
-
-            return redirect()->route('payment.show', ['id' => $so->id]);
-        }
-
-        if ($this->secondsLeft($so) <= 0) {
-            flash()->error('Waktu pembayaran sudah habis. Hubungi admin untuk konfirmasi pembayaran.');
-
-            return redirect()->route('payment.show', ['id' => $so->id]);
-        }
-
-        $so->update(['so_status' => SoStatusEnum::PAID]);
-
-        flash()->success("Pembayaran untuk pesanan {$so->so_code} berhasil.");
-
-        return redirect()->route('payment.show', ['id' => $so->id]);
+        return response()->json([
+            'status' => $so->so_status,
+            'paid' => $so->so_status === SoStatusEnum::PAID,
+        ]);
     }
 
     private function secondsLeft(So $so): int
@@ -77,9 +68,12 @@ class PaymentController extends Controller
     /**
      * SO milik user login, atau tercatat di session browser (guest).
      */
-    private function findAuthorized(int $id): So
+    private function findAuthorized(string $token): So
     {
-        $so = So::query()->with(['has_details.has_product.has_satuan'])->findOrFail($id);
+        $so = So::query()
+            ->with(['has_details.has_product.has_satuan'])
+            ->where('so_payment_token', $token)
+            ->firstOrFail();
 
         $user = Auth::user();
 

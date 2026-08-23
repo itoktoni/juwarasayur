@@ -37,107 +37,109 @@
                     <h3 class="font-bold text-on-surface mb-1">Pengiriman</h3>
                     <p class="text-xs text-on-surface-variant mb-4">Pilih cara penerimaan pesanan.</p>
 
-                    <div class="space-y-2">
-                        <label class="flex items-start gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                            <input type="radio" name="shipping_method" value="pickup" {{ old('shipping_method', 'pickup') === 'pickup' ? 'checked' : '' }}
-                                class="mt-1 accent-primary shipping-toggle">
-                            <span>
-                                <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">store</span> Ambil di Gudang (Pickup)</span>
-                                <span class="block text-xs text-on-surface-variant mt-0.5">Gratis — pesanan diambil sendiri di gudang.</span>
-                            </span>
-                        </label>
-                        <label class="flex items-start gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                            <input type="radio" name="shipping_method" value="cod" id="radio-cod" {{ old('shipping_method') === 'cod' ? 'checked' : '' }}
-                                class="mt-1 accent-primary shipping-toggle">
-                            <span>
-                                <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">local_shipping</span> COD — Titik Terdekat</span>
-                                <span class="block text-xs text-on-surface-variant mt-0.5">Ongkir dihitung dari jarak rumah ke titik COD terdekat.</span>
-                            </span>
-                        </label>
-                        <label class="flex items-start gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                            <input type="radio" name="shipping_method" value="delivery" id="radio-delivery" {{ old('shipping_method') === 'delivery' ? 'checked' : '' }}
-                                class="mt-1 accent-primary shipping-toggle">
-                            <span>
-                                <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">home</span> Diantar ke Rumah</span>
-                                <span class="block text-xs text-on-surface-variant mt-0.5">Tandai lokasi rumah di peta — ongkir dihitung dari jarak ke gudang utama.</span>
-                            </span>
-                        </label>
-                    </div>
+                    {{-- Accordion: 1. Pickup, 2. COD, 3. Diantar ke Rumah --}}
+                    <div class="space-y-2" id="shipping-accordion">
 
-                    {{-- Panel lokasi COD --}}
-                    <div id="cod-panel" class="hidden mt-4 pt-4 border-t border-outline-variant">
-                        <p class="text-sm font-semibold text-on-surface mb-2">Pilih Lokasi COD <span class="text-error">*</span></p>
-                        @if($codLocations->isEmpty())
-                            <p class="text-xs text-error p-3 rounded-lg bg-error/5 border border-error/30">Belum ada lokasi COD tersedia. Silakan pilih metode lain.</p>
-                        @else
-                        <div class="space-y-2">
-                            @foreach($codLocations as $loc)
-                            <label class="flex items-center justify-between gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                                <span class="flex items-center gap-3">
-                                    <input type="radio" name="so_cod_location_pick" value="{{ $loc->location_name }}"
-                                        {{ old('so_cod_location') === $loc->location_name ? 'checked' : '' }}
-                                        class="accent-primary cod-pick">
-                                    <span>
-                                        <span class="block font-semibold text-on-surface text-sm">{{ $loc->location_name }}</span>
-                                        @if($loc->address)<span class="block text-xs text-on-surface-variant mt-0.5">{{ $loc->address }}</span>@endif
-                                    </span>
-                                </span>
-                                <span class="font-mono text-sm shrink-0 text-on-surface">
-                                    {{ $loc->fee !== null ? formatAngka((float) $loc->fee, 'Rp') : 'Hitung dari jarak' }}
+                        {{-- 1. Ambil di Gudang --}}
+                        <div class="ship-opt rounded-lg border overflow-hidden {{ old('shipping_method', 'pickup') === 'pickup' ? 'border-primary bg-primary/5' : 'border-outline-variant' }}" data-method="pickup">
+                            <label class="flex items-start gap-3 p-3 cursor-pointer hover:bg-surface-container ship-head">
+                                <input type="radio" name="shipping_method" value="pickup" {{ old('shipping_method', 'pickup') === 'pickup' ? 'checked' : '' }}
+                                    class="mt-1 accent-primary shipping-toggle">
+                                <span>
+                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">store</span> 1. Ambil di Gudang (Pickup)</span>
+                                    <span class="block text-xs text-on-surface-variant mt-0.5">Gratis — pesanan diambil sendiri.</span>
                                 </span>
                             </label>
-                            @endforeach
-                        </div>
-                        @endif
-
-                        <button type="button" id="btn-gps"
-                            class="btn btn-soft w-full h-11 justify-center gap-2 text-sm mt-3">
-                            <span class="material-symbols-outlined text-base">my_location</span> Gunakan Lokasi Saya (opsional — hitung ongkir dari jarak)
-                        </button>
-                        <p id="gps-status" class="text-xs text-on-surface-variant mt-2"></p>
-
-                        <div id="cod-result" class="hidden mt-3 p-3 rounded-lg bg-primary/5 border border-primary/30 text-sm">
-                            <p><span class="font-semibold">Lokasi COD:</span> <span id="cod-name"></span></p>
-                            <p class="text-on-surface-variant text-xs mt-0.5 hidden" id="cod-distance-row"><span id="cod-distance"></span> km dari lokasi Anda</p>
-                            <p class="mt-1">Ongkir: <strong id="cod-fee" class="font-mono"></strong></p>
+                            <div class="ship-pane px-3 pb-3">
+                                <div class="p-3 rounded-lg border border-outline-variant bg-surface-container-low/50 text-sm space-y-1">
+                                    <p class="text-on-surface"><span class="material-symbols-outlined align-middle text-base text-primary">warehouse</span> <strong>{{ $warehouse['name'] ?? 'Gudang Utama' }}</strong></p>
+                                    @if(!empty($warehouse['address']))
+                                        <p class="text-on-surface-variant"><span class="material-symbols-outlined align-middle text-base text-primary">location_on</span> {{ $warehouse['address'] }}</p>
+                                    @endif
+                                    <p class="text-xs text-on-surface-variant">Buka setiap hari 08.00 – 17.00 WIB. Tunjukkan kode pesanan saat mengambil.</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mt-3">
-                            <label class="block text-sm font-semibold text-on-surface mb-1">Detail Alamat (opsional)</label>
-                            <textarea name="so_address_cod" rows="2" placeholder="Patokan, nomor rumah, dll."
-                                class="w-full px-4 py-2 bg-white border border-outline-variant rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">{{ old('so_address_cod') }}</textarea>
-                            @error('shipping')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
-                            @error('so_lat')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
-                            @error('so_cod_location')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                        {{-- 2. COD --}}
+                        <div class="ship-opt rounded-lg border overflow-hidden {{ old('shipping_method') === 'cod' ? 'border-primary bg-primary/5' : 'border-outline-variant' }}" data-method="cod">
+                            <label class="flex items-start gap-3 p-3 cursor-pointer hover:bg-surface-container ship-head">
+                                <input type="radio" name="shipping_method" value="cod" {{ old('shipping_method') === 'cod' ? 'checked' : '' }}
+                                    class="mt-1 accent-primary shipping-toggle">
+                                <span>
+                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">local_shipping</span> 2. COD — Titik Kumpu Terdekat</span>
+                                    <span class="block text-xs text-on-surface-variant mt-0.5">Pilih lokasi COD dengan harga ongkirnya.</span>
+                                </span>
+                            </label>
+                            <div class="ship-pane px-3 pb-3">
+                                <p class="text-sm font-semibold text-on-surface mb-2">Pilih Lokasi COD <span class="text-error">*</span></p>
+                                @if($codLocations->isEmpty())
+                                    <p class="text-xs text-error p-3 rounded-lg bg-error/5 border border-error/30">Belum ada lokasi COD tersedia. Silakan pilih metode lain.</p>
+                                @else
+                                <div class="space-y-2">
+                                    @foreach($codLocations as $loc)
+                                    <label class="flex items-center justify-between gap-3 p-3 rounded-lg border border-outline-variant cursor-pointer hover:bg-surface-container has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                        <span class="flex items-center gap-3">
+                                            <input type="radio" name="so_cod_location_pick" value="{{ $loc->location_name }}"
+                                                {{ old('so_cod_location') === $loc->location_name ? 'checked' : '' }}
+                                                class="accent-primary cod-pick">
+                                            <span>
+                                                <span class="block font-semibold text-on-surface text-sm">{{ $loc->location_name }}</span>
+                                                @if($loc->address)<span class="block text-xs text-on-surface-variant mt-0.5">{{ $loc->address }}</span>@endif
+                                            </span>
+                                        </span>
+                                        <span class="font-mono text-sm shrink-0 text-on-surface">
+                                            {{ $loc->fee !== null ? formatAngka((float) $loc->fee, 'Rp') : 'Hitung dari jarak' }}
+                                        </span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                                @endif
+
+                                <div id="cod-result" class="hidden mt-3 p-3 rounded-lg bg-primary/5 border border-primary/30 text-sm">
+                                    <p><span class="font-semibold">Lokasi COD:</span> <span id="cod-name"></span></p>
+                                    <p class="mt-1">Ongkir: <strong id="cod-fee" class="font-mono"></strong></p>
+                                </div>
+
+                                @error('shipping')<span class="text-xs text-error block mt-2">{{ $message }}</span>@enderror
+                                @error('so_cod_location')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                            </div>
+                        </div>
+
+                        {{-- 3. Diantar ke Rumah --}}
+                        <div class="ship-opt rounded-lg border overflow-hidden {{ old('shipping_method') === 'delivery' ? 'border-primary bg-primary/5' : 'border-outline-variant' }}" data-method="delivery">
+                            <label class="flex items-start gap-3 p-3 cursor-pointer hover:bg-surface-container ship-head">
+                                <input type="radio" name="shipping_method" value="delivery" {{ old('shipping_method') === 'delivery' ? 'checked' : '' }}
+                                    class="mt-1 accent-primary shipping-toggle">
+                                <span>
+                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">home</span> 3. Diantar ke Rumah</span>
+                                    <span class="block text-xs text-on-surface-variant mt-0.5">Tandai titik rumah di peta — ongkir dihitung dari jarak ke gudang utama.</span>
+                                </span>
+                            </label>
+                            <div class="ship-pane px-3 pb-3">
+                                <p class="text-sm font-semibold text-on-surface mb-2">Titik Lokasi Rumah <span class="text-error">*</span></p>
+                                <button type="button" id="btn-deliv-gps"
+                                    class="btn btn-soft w-full h-11 justify-center gap-2 text-sm mb-3">
+                                    <span class="material-symbols-outlined text-base">my_location</span> Gunakan Lokasi Saya
+                                </button>
+                                <p class="text-xs text-on-surface-variant mb-2">Klik peta atau geser pin untuk menandai lokasi rumah Anda.</p>
+                                <div id="delivery-map" class="w-full h-64 rounded-lg border border-outline-variant z-0"></div>
+                                <p id="deliv-status" class="text-xs text-on-surface-variant mt-2"></p>
+
+                                <div id="delivery-result" class="hidden mt-3 p-3 rounded-lg bg-primary/5 border border-primary/30 text-sm">
+                                    <p><span class="font-semibold">Jarak ke gudang utama:</span> <span id="delivery-distance"></span> km</p>
+                                    <p class="mt-1">Ongkir: <strong id="delivery-fee" class="font-mono"></strong></p>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label class="block text-sm font-semibold text-on-surface mb-1">Alamat Lengkap <span class="text-error">*</span></label>
+                                    <textarea name="so_address" rows="2" placeholder="Nama jalan, nomor rumah, patokan, dll."
+                                        class="w-full px-4 py-2 bg-white border {{ $errors->has('so_address') ? 'border-error' : 'border-outline-variant' }} rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">{{ old('so_address') }}</textarea>
+                                    @error('so_address')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    {{-- Panel diantar ke rumah (delivery) --}}
-                    <div id="delivery-panel" class="hidden mt-4 pt-4 border-t border-outline-variant">
-                        <p class="text-sm font-semibold text-on-surface mb-2">Titik Lokasi Rumah <span class="text-error">*</span></p>
-                        <button type="button" id="btn-deliv-gps"
-                            class="btn btn-soft w-full h-11 justify-center gap-2 text-sm mb-3">
-                            <span class="material-symbols-outlined text-base">my_location</span> Gunakan Lokasi Saya
-                        </button>
-                        <p class="text-xs text-on-surface-variant mb-2">Klik peta atau geser pin untuk menandai lokasi rumah Anda.</p>
-                        <div id="delivery-map" class="w-full h-64 rounded-lg border border-outline-variant z-0"></div>
-                        <p id="deliv-status" class="text-xs text-on-surface-variant mt-2"></p>
-
-                        <div id="delivery-result" class="hidden mt-3 p-3 rounded-lg bg-primary/5 border border-primary/30 text-sm">
-                            <p><span class="font-semibold">Jarak ke gudang utama:</span> <span id="delivery-distance"></span> km</p>
-                            <p class="mt-1">Ongkir: <strong id="delivery-fee" class="font-mono"></strong></p>
-                        </div>
-
-                        <div class="mt-3">
-                            <label class="block text-sm font-semibold text-on-surface mb-1">Alamat Lengkap <span class="text-error">*</span></label>
-                            <textarea name="so_address" rows="2" placeholder="Nama jalan, nomor rumah, patokan, dll."
-                                class="w-full px-4 py-2 bg-white border {{ $errors->has('so_address') ? 'border-error' : 'border-outline-variant' }} rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">{{ old('so_address') }}</textarea>
-                            @error('so_address')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                    @error('shipping')
-                        <p class="text-error text-xs mt-3">{{ $message }}</p>
-                    @enderror
                 </div>
             </div>
 
@@ -186,11 +188,8 @@
             let delivMap = null;
             let delivMarker = null;
 
-            const panelCod = document.getElementById('cod-panel');
-            const panelDeliv = document.getElementById('delivery-panel');
+            const shipOpts = document.querySelectorAll('.ship-opt');
             const radios = document.querySelectorAll('.shipping-toggle');
-            const btnGps = document.getElementById('btn-gps');
-            const gpsStatus = document.getElementById('gps-status');
             const resultBox = document.getElementById('cod-result');
             const delivStatus = document.getElementById('deliv-status');
             const delivResult = document.getElementById('delivery-result');
@@ -278,17 +277,22 @@
                 }
             }
 
-            // ================= Panel & ongkir =================
+            // ================= Accordion & ongkir =================
             function togglePanels() {
                 const method = selectedMethod();
-                panelCod.classList.toggle('hidden', method !== 'cod');
-                panelDeliv.classList.toggle('hidden', method !== 'delivery');
+
+                shipOpts.forEach(opt => {
+                    const active = opt.dataset.method === method;
+                    opt.querySelector('.ship-pane').classList.toggle('hidden', !active);
+                    opt.classList.toggle('border-primary', active);
+                    opt.classList.toggle('bg-primary/5', active);
+                });
 
                 if (method === 'delivery' && !delivMap) {
                     whenLeaflet(() => initDeliveryMap(DEF_LAT, DEF_LNG));
                 }
                 if (method !== 'delivery') { delivFee = 0; delivResult.classList.add('hidden'); }
-                if (method !== 'cod') { codFee = 0; resultBox.classList.add('hidden'); gpsStatus.textContent = ''; }
+                if (method !== 'cod') { codFee = 0; resultBox.classList.add('hidden'); }
                 updateFee(); updateTotal();
             }
 
@@ -325,75 +329,36 @@
 
                 const flat = codFees[name];
                 if (flat !== null && flat !== undefined) {
-                    // Fee flat — langsung tampil tanpa perlu titik customer
+                    // Fee flat — langsung tampil
                     codFee = flat;
                     document.getElementById('cod-fee').textContent = fmtRp(flat);
-                    document.getElementById('cod-distance-row').classList.add('hidden');
                     resultBox.classList.remove('hidden');
-                    gpsStatus.textContent = '';
                 } else {
-                    codFee = 0;
-                    resultBox.classList.add('hidden');
-                    gpsStatus.textContent = 'Lokasi "' + name + '" tidak punya harga tetap — gunakan Lokasi Saya untuk menghitung ongkir dari jarak.';
+                    // Tanpa harga tetap — estimasi ongkir dari server (jarak gudang → titik COD)
+                    fetch('{{ route("checkout.quoteCodLocation") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ location: name })
+                    }).then(res => res.json()).then(json => {
+                        if (json.status) {
+                            codFee = json.shipping_fee;
+                            document.getElementById('cod-fee').textContent = fmtRp(json.shipping_fee);
+                            resultBox.classList.remove('hidden');
+                        } else {
+                            codFee = 0;
+                            resultBox.classList.add('hidden');
+                        }
+                        updateFee(); updateTotal();
+                    }).catch(() => {});
                 }
                 updateFee(); updateTotal();
             }
 
             document.querySelectorAll('.cod-pick').forEach(r => r.addEventListener('change', applyPickedCod));
-
-            // ================= GPS untuk COD =================
-            btnGps.addEventListener('click', function () {
-                if (!navigator.geolocation) {
-                    gpsStatus.textContent = 'Browser tidak mendukung geolokasi.';
-                    return;
-                }
-                gpsStatus.textContent = 'Mengambil lokasi…';
-                navigator.geolocation.getCurrentPosition(async pos => {
-                    try {
-                        setPinInputs(pos.coords.latitude, pos.coords.longitude);
-                        const picked = pickedCodLocation();
-                        // Lokasi terpilih: hitung ongkir ke lokasi itu;
-                        // tanpa pilihan: cari titik COD terdekat
-                        const res = await fetch(picked ? '{{ route("checkout.quoteCodLocation") }}' : '{{ route("checkout.quoteCod") }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify(picked
-                                ? { location: picked, lat: pos.coords.latitude, lng: pos.coords.longitude }
-                                : { lat: pos.coords.latitude, lng: pos.coords.longitude })
-                        });
-                        const json = await res.json();
-                        if (json.status) {
-                            addHidden('so_cod_location', json.location_name);
-                            document.getElementById('cod-name').textContent = json.location_name;
-                            if (json.distance_km !== null && json.distance_km !== undefined) {
-                                document.getElementById('cod-distance').textContent = json.distance_km;
-                                document.getElementById('cod-distance-row').classList.remove('hidden');
-                            } else {
-                                document.getElementById('cod-distance-row').classList.add('hidden');
-                            }
-                            document.getElementById('cod-fee').textContent = fmtRp(json.shipping_fee);
-                            codFee = json.shipping_fee;
-                            resultBox.classList.remove('hidden');
-                            gpsStatus.textContent = '';
-                            // Sinkronkan radio dengan hasil (mis. terpilih otomatis titik terdekat)
-                            document.querySelectorAll('.cod-pick').forEach(r => { r.checked = r.value === json.location_name; });
-                        } else {
-                            resultBox.classList.add('hidden');
-                            codFee = 0;
-                            gpsStatus.textContent = json.message || 'Gagal menghitung ongkir.';
-                        }
-                        updateFee(); updateTotal();
-                    } catch (e) {
-                        gpsStatus.textContent = 'Gagal menghubungi server.';
-                    }
-                }, err => {
-                    gpsStatus.textContent = 'Izin lokasi ditolak. Aktifkan GPS & izinkan akses lokasi.';
-                }, { enableHighAccuracy: true, timeout: 10000 });
-            });
 
             // ================= GPS untuk Delivery =================
             document.getElementById('btn-deliv-gps').addEventListener('click', function () {

@@ -44,7 +44,7 @@
 <body>
     <div class="toolbar">
         <button class="btn btn-primary" onclick="window.print()">🖨️ Print Invoice</button>
-        <a href="{{ route('payment.show', ['id' => $so->id]) }}" class="btn btn-soft">← Kembali</a>
+        <a href="{{ route('payment.show', ['token' => $so->so_payment_token]) }}" class="btn btn-soft">← Kembali</a>
     </div>
 
     <div class="sheet">

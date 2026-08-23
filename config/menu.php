@@ -69,6 +69,12 @@ return [
             ],
         ],
         [
+            'label' => 'Production',
+            'items' => [
+                ['route' => 'production.getTable', 'icon' => 'precision_manufacturing', 'label' => 'Work Order', 'match' => ['production.*']],
+            ],
+        ],
+        [
             'label' => 'CMS',
             'items' => [
                 ['route' => 'cms-type.getTable', 'icon' => 'category', 'label' => 'Types', 'match' => ['cms-type.*']],
