@@ -10,7 +10,7 @@ return [
     'logo' => '/favicon.svg',
     'favicon' => '/favicon.ico',
     'colors' => [
-        'primary' => '#00288e',
+        'primary' => '#388e3c',
         'on_primary' => '#ffffff',
         'primary_container' => '#1e40af',
         'on_primary_container' => '#a8b8ff',
@@ -31,7 +31,7 @@ return [
     'warehouse_address' => 'Jl. Raya Pasuruan No. 1, Pasuruan',
     'warehouse_lat' => '-7.644872',
     'warehouse_lng' => '112.904528',
-    'updated_at' => '2026-08-23T06:24:40+00:00',
+    'updated_at' => '2026-08-24T06:43:23+00:00',
     'created_at' => '2026-08-23T06:24:40+00:00',
     'id' => 1,
 ];

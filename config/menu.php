@@ -25,7 +25,6 @@ return [
             'label' => 'Master Data',
             'items' => [
                 ['route' => 'user.getTable', 'icon' => 'manage_accounts', 'label' => 'Users', 'match' => ['user.*']],
-                ['route' => 'shipping.getTable', 'icon' => 'local_shipping', 'label' => 'Pengiriman & COD', 'match' => ['shipping.*']],
             ],
         ],
         [
@@ -41,9 +40,11 @@ return [
         [
             'label' => 'Sales',
             'items' => [
-                ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
                 ['route' => 'so-customer.getTable', 'icon' => 'group', 'label' => 'Customers', 'match' => ['so-customer.*']],
+                ['route' => 'so-reseller.getTable', 'icon' => 'storefront', 'label' => 'Resellers', 'match' => ['so-reseller.*']],
                 ['route' => 'so-discount.getTable', 'icon' => 'sell', 'label' => 'Diskon', 'match' => ['so-discount.*']],
+                ['route' => 'shipping.getTable', 'icon' => 'local_shipping', 'label' => 'Pengiriman & COD', 'match' => ['shipping.*']],
+                ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
             ],
         ],
         [
