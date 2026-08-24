@@ -2,6 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Chatbot\Http\Controllers\ChatbotWebhookController;
+use Modules\Chatbot\Http\Controllers\WebChatController;
+
+/*
+|--------------------------------------------------------------------------
+| Web chat WhatsApp-like (guest, template berdeda dari public/admin)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/chat', [WebChatController::class, 'index'])->name('chat.web.index');
+Route::post('/chat/send', [WebChatController::class, 'send'])->name('chat.web.send');
 
 /*
 |--------------------------------------------------------------------------
