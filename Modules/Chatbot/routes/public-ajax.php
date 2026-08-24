@@ -18,6 +18,7 @@ Route::post('/chat/cart/add', [WebChatController::class, 'addItems'])->name('cha
 Route::post('/chat/cart/remove', [WebChatController::class, 'removeItem'])->name('chat.web.removeItem');
 Route::post('/chat/checkout/start', [WebChatController::class, 'start'])->name('chat.web.checkoutStart');
 Route::post('/chat/checkout/details', [WebChatController::class, 'shippingDetails'])->name('chat.web.details');
+Route::get('/chat/checkout/contact', [WebChatController::class, 'contact'])->name('chat.web.contact');
 Route::get('/chat/checkout/cod-locations', [WebChatController::class, 'codLocations'])->name('chat.web.codLocations');
 Route::post('/chat/checkout/shipping', [WebChatController::class, 'setShipping'])->name('chat.web.shipping');
 Route::post('/chat/checkout/pay', [WebChatController::class, 'pay'])->name('chat.web.pay');

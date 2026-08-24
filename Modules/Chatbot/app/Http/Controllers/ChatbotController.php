@@ -2,55 +2,31 @@
 
 namespace Modules\Chatbot\Http\Controllers;
 
+use App\Concerns\ControllerTrait;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Modules\Chatbot\Models\ChatbotSession;
 
 class ChatbotController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use ControllerTrait;
+
+    public function __construct(ChatbotSession $model)
     {
-        return view('chatbot::index');
+        $this->model = $model::getModel();
+    }
+
+    protected function getData()
+    {
+        return $this->model->orderByDesc('last_active_at');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Halaman riwayat percakapan sesi.
      */
-    public function create()
+    public function getShow($id)
     {
-        return view('chatbot::create');
+        $model = $this->model->findOrFail($id);
+
+        return $this->views('pages.chatbot.show', ['model' => $model]);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {}
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('chatbot::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('chatbot::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id) {}
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id) {}
 }

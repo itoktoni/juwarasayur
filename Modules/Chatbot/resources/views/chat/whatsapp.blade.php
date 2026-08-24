@@ -301,7 +301,9 @@
         .chip:hover { border-color: {{ $primary }}; background: #f6fbf6; }
         .chip.active { border-color: {{ $primary }}; background: {{ $primary }}14; font-weight: 600; }
         .chip .material-symbols-outlined { font-size: 20px; color: {{ $primary }}; }
-        .radio-cod { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border: 1.5px solid #eee; border-radius: 8px; margin-top: 6px; cursor: pointer; }
+        .radio-cod { display: flex; align-items: flex-start; gap: 12px !important; padding: 9px 12px; border: 1.5px solid #eee; border-radius: 8px; margin-top: 6px; cursor: pointer; }
+        .radio-cod input[type=radio] { margin-top: 2px; accent-color: {{ $primary }}; flex-shrink: 0; width: 12px; height: 12px; }
+        .radio-cod > span { margin-left: 6px; }
         .radio-cod:has(input:checked) { border-color: {{ $primary }}; background: {{ $primary }}10; }
         .radio-cod input { accent-color: {{ $primary }}; margin-top: 2px; }
         .loc-btn {
@@ -929,6 +931,18 @@
             '<button class="btn-ghost-w" id="sh-chat">Isi lewat chat</button>' +
             '<button class="btn-primary-w" id="sh-save">Simpan</button></div>';
 
+        // Prefill dari data yang sudah tersimpan di sesi
+        fetch('{{ route('chat.web.contact') }}')
+            .then(r => r.json())
+            .then(c => {
+                if (c.name) sheetBody.querySelector('#sh-name').value = c.name;
+                if (c.phone) sheetBody.querySelector('#sh-phone').value = c.phone;
+                if (c.name && c.phone) {
+                    sheetBody.querySelector('#sh-save').textContent = 'Lanjutkan Pengiriman';
+                }
+            })
+            .catch(() => {});
+
         sheetBody.querySelector('#sh-save').addEventListener('click', async () => {
             const name = sheetBody.querySelector('#sh-name').value.trim();
             const phone = sheetBody.querySelector('#sh-phone').value.trim();
@@ -998,21 +1012,53 @@
 
             if (method === 'delivery') {
                 extra.innerHTML =
+                    '<label>Klik peta untuk pin lokasi, atau pakai GPS</label>' +
+                    '<div id="sh-map" class="map-box"></div>' +
+                    '<div class="map-hint">Geser pin untuk koreksi lokasi. Ongkir dihitung dari jarak.</div>' +
                     '<button type="button" class="loc-btn" id="sh-loc"><span class="material-symbols-outlined">my_location</span> Gunakan Lokasi Saat Ini</button>' +
                     '<label>Alamat lengkap *</label>' +
                     '<textarea id="sh-address" rows="2" placeholder="Nama jalan, nomor rumah, patokan..."></textarea>';
-                const locBtn = sheetBody.querySelector('#sh-loc');
-                locBtn.addEventListener('click', () => {
-                    if (!navigator.geolocation) { locBtn.textContent = 'Browser tidak mendukung GPS'; return; }
-                    locBtn.textContent = 'Mengambil lokasi...';
+
+                const wh = @json(config('so.shipping.warehouse'));
+                const mapEl = extra.querySelector('#sh-map');
+                const map = L.map(mapEl).setView([parseFloat(wh.lat), parseFloat(wh.lng)], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+                let marker = null;
+                function setMarker(lat, lng) {
+                    coords = { lat, lng };
+                    const locBtnNow = sheetBody.querySelector('#sh-loc');
+                    if (marker) {
+                        marker.setLatLng([lat, lng]);
+                        locBtnNow.classList.add('ok');
+                        locBtnNow.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Lokasi terpasang ✓';
+                        return;
+                    }
+                    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                    marker.on('dragend', () => {
+                        const ll = marker.getLatLng();
+                        coords = { lat: ll.lat, lng: ll.lng };
+                    });
+                    locBtnNow.classList.add('ok');
+                    locBtnNow.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Lokasi terpasang ✓';
+                }
+
+                map.on('click', (e) => setMarker(e.latlng.lat, e.latlng.lng));
+                setTimeout(() => map.invalidateSize(), 200);
+
+                sheetBody.querySelector('#sh-loc').addEventListener('click', () => {
+                    if (!navigator.geolocation) {
+                        sheetBody.querySelector('#sh-loc').textContent = 'Browser tidak mendukung GPS';
+                        return;
+                    }
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
-                            coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                            locBtn.classList.add('ok');
-                            locBtn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Lokasi terkirim ✓';
+                            setMarker(pos.coords.latitude, pos.coords.longitude);
+                            map.setView([pos.coords.latitude, pos.coords.longitude], 15);
                         },
-                        () => { locBtn.textContent = 'Gagal mengambil lokasi, coba lagi'; },
-                        { enableHighAccuracy: true, timeout: 15000 });
+                        () => {},
+                        { enableHighAccuracy: true, timeout: 15000 },
+                    );
                 });
             }
         }));

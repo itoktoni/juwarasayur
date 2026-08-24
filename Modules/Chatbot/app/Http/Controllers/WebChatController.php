@@ -17,6 +17,7 @@ use Modules\Chatbot\Ai\Tools\ListProductsTool;
 use Modules\Chatbot\Ai\Tools\RequestCheckoutTool;
 use Modules\Chatbot\Ai\Tools\SearchFaqTool;
 use Modules\Chatbot\Ai\Tools\ViewCartTool;
+use Modules\Chatbot\Models\ChatbotMessage;
 use Modules\Chatbot\Models\ChatbotSession;
 use Modules\Chatbot\Models\WebChatMessage;
 use Modules\Chatbot\Services\CatalogService;
@@ -93,6 +94,11 @@ class WebChatController extends Controller
 
             WebChatMessage::create(['session_token' => $token, 'role' => 'user', 'content' => $userMessage]);
             WebChatMessage::create(['session_token' => $token, 'role' => 'assistant', 'content' => $reply]);
+
+            // Log ke riwayat admin (channel web)
+            $chatSession = $this->chatbotSession($token);
+            ChatbotMessage::log($chatSession, 'user', $userMessage);
+            ChatbotMessage::log($chatSession, 'assistant', $reply);
 
             return response()->json(['reply' => $reply]);
         }
@@ -318,6 +324,20 @@ class WebChatController extends Controller
 
         return response()->json([
             'summary' => implode("\n", $lines)."\nSubtotal: Rp ".number_format($subtotal, 0, ',', '.'),
+        ]);
+    }
+
+    /**
+     * Data penerima yang sudah tersimpan di sesi (untuk prefill form).
+     */
+    public function contact(Request $request): JsonResponse
+    {
+        $token = (string) $request->cookie(self::COOKIE, '');
+        $session = $this->chatbotSession($token);
+
+        return response()->json([
+            'name' => (string) ($session->contact_name ?? ''),
+            'phone' => (string) ($session->contact_phone ?? ''),
         ]);
     }
 

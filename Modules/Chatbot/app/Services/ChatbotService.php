@@ -3,6 +3,7 @@
 namespace Modules\Chatbot\Services;
 
 use Illuminate\Support\Str;
+use Modules\Chatbot\Models\ChatbotMessage;
 use Modules\Chatbot\Models\ChatbotSession;
 
 /**
@@ -24,8 +25,23 @@ class ChatbotService
 
     public function respond(string $channel, string $messengerUser, ?string $text, ?string $phone = null): string
     {
-        $text = trim(Str::lower((string) $text));
         $session = $this->sessions->findOrCreate($channel, $messengerUser);
+
+        // Log percakapan untuk riwayat admin
+        if ($text !== null && trim($text) !== '') {
+            ChatbotMessage::log($session, 'user', $text);
+        }
+
+        $reply = $this->handleRespond($session, $channel, $text, $phone);
+
+        ChatbotMessage::log($session, 'assistant', $reply);
+
+        return $reply;
+    }
+
+    private function handleRespond(ChatbotSession $session, string $channel, ?string $text, ?string $phone = null): string
+    {
+        $text = trim(Str::lower((string) $text));
 
         if (! empty($phone) && empty($session->contact_phone)) {
             $session->forceFill(['contact_phone' => $phone])->save();
