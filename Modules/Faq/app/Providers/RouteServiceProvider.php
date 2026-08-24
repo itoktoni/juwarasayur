@@ -1,14 +1,13 @@
 <?php
 
-namespace Modules\Chatbot\Providers;
+namespace Modules\Faq\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
-use Modules\Chatbot\Http\Controllers\WebChatController;
 
 class RouteServiceProvider extends ServiceProvider
 {
-    protected string $name = 'Chatbot';
+    protected string $name = 'Faq';
 
     /**
      * Called before routes are registered.
@@ -27,13 +26,10 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->mapApiRoutes();
         $this->mapWebRoutes();
-        $this->mapPublicRoutes();
     }
 
     /**
-     * Define the "web" routes for the application.
-     *
-     * These routes all receive session state, CSRF protection, etc.
+     * Define the "web" routes for the application (area admin).
      */
     protected function mapWebRoutes(): void
     {
@@ -43,26 +39,7 @@ class RouteServiceProvider extends ServiceProvider
     }
 
     /**
-     * Halaman /chat butuh session (CSRF meta); endpoint AJAX-nya memakai
-     * group 'chat' tanpa StartSession agar tidak terkunci saat AI berpikir.
-     */
-    protected function mapPublicRoutes(): void
-    {
-        Route::middleware('web')
-            ->get('/chat', [WebChatController::class, 'index'])
-            ->name('chat.web.index');
-
-        Route::middleware('chat')
-            ->group(module_path($this->name, '/routes/public-ajax.php'));
-
-        Route::middleware('web')
-            ->group(module_path($this->name, '/routes/public.php'));
-    }
-
-    /**
      * Define the "api" routes for the application.
-     *
-     * These routes are typically stateless.
      */
     protected function mapApiRoutes(): void
     {

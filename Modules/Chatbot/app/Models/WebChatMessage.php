@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
  * Riwayat chat web (halaman WhatsApp-like). Identitas anonim per browser
  * via cookie session_token — terpisah dari ChatbotSession (WA/Telegram).
  */
-#[Fillable(['session_token', 'role', 'content'])]
+#[Fillable(['session_token', 'role', 'content', 'ui'])]
 class WebChatMessage extends BaseModel
 {
     protected $table = 'chat_web_messages';
@@ -19,5 +19,12 @@ class WebChatMessage extends BaseModel
     public static function field_name(): string
     {
         return 'content';
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'ui' => 'string',
+        ];
     }
 }

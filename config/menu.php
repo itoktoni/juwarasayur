@@ -51,6 +51,7 @@ return [
             'label' => 'Chatbot',
             'items' => [
                 ['route' => 'chatbot.index', 'icon' => 'smart_toy', 'label' => 'Chatbot Session', 'match' => ['chatbot.*']],
+                ['route' => 'faq.getTable', 'icon' => 'quiz', 'label' => 'FAQ Chatbot', 'match' => ['faq.*']],
             ],
         ],
         [

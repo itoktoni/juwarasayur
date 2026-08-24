@@ -2,14 +2,18 @@
 
 use App\Http\Middleware\AccessMiddleware;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\VerifyChatOrigin;
 use App\Http\Middleware\VerifyVerified;
 use App\Providers\ModelAliasServiceProvider;
 use Ibex\CrudGenerator\CrudServiceProvider;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
 use Milon\Barcode\BarcodeServiceProvider;
 
@@ -33,10 +37,21 @@ return Application::configure(basePath: dirname(__DIR__))
             // 'skip_verified' => SkipVerifiedCheck::class,
         ]);
 
+        // Endpoint AJAX chat: tanpa session (menghindari lock saat AI berpikir lama),
+        // identitas memakai cookie chat_web_token + proteksi origin.
+        $middleware->group('chat', [
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            VerifyChatOrigin::class,
+            SubstituteBindings::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'wms/forklift/*',
             'chatbot/webhook/telegram',
             'chatbot/webhook/whatsapp',
+            'chat/*',
+            'chat/send',
         ]);
 
         $middleware->append([

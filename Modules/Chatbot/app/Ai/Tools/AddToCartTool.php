@@ -21,12 +21,28 @@ class AddToCartTool implements Tool
 
     public function description(): Stringable|string
     {
-        return 'Masukkan produk ke keranjang belanja customer. Gunakan id dari hasil list_products. Panggil ulang dengan qty tambahan jika customer ingin menambah jumlah produk yang sama.';
+        return 'Masukkan produk ke keranjang belanja customer. Produk bisa dirujuk lewat number (nomor dari daftar list_products terakhir) atau product_id. Panggil ulang dengan qty tambahan jika customer ingin menambah jumlah produk yang sama.';
     }
 
     public function handle(Request $request): Stringable|string
     {
-        $productId = $request->integer('product_id');
+        $productId = (int) $request->integer('product_id');
+
+        // Referensi via nomor daftar terakhir ("beli nomer 1")
+        $number = $request->integer('number');
+        if ($productId <= 0 && $number > 0) {
+            $list = is_array($this->session->meta) ? ($this->session->meta['list'] ?? []) : [];
+            $productId = (int) ($list[$number - 1] ?? 0);
+
+            if ($productId <= 0) {
+                return 'Nomor '.$number.' tidak ada di daftar terakhir. Tampilkan list_products dulu lalu minta customer memilih nomor yang valid.';
+            }
+        }
+
+        if ($productId <= 0) {
+            return 'Sebutkan produk lewat number (nomor daftar terakhir) atau product_id.';
+        }
+
         $qty = max(1, min(999, $request->integer('qty', 1) ?: 1));
 
         $product = $this->catalog->findByIds([$productId])->get($productId);
@@ -75,7 +91,8 @@ class AddToCartTool implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'product_id' => $schema->integer()->description('Id produk dari list_products')->required(),
+            'number' => $schema->integer()->description('Nomor produk dari daftar list_products terakhir, misal 1 untuk "nomer 1". Gunakan ini ATAU product_id.'),
+            'product_id' => $schema->integer()->description('Id produk dari list_products (opsional jika sudah pakai number)'),
             'qty' => $schema->integer()->description('Jumlah yang dibeli, default 1'),
         ];
     }

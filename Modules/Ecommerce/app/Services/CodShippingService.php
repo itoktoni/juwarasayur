@@ -141,6 +141,33 @@ class CodShippingService
     }
 
     /**
+     * Quote pengiriman (delivery): jarak gudang → titik customer + ongkir.
+     * Null jika koordinat di luar radius layanan.
+     *
+     * @return ?array{distance_km: float, shipping_fee: float}
+     */
+    public function deliveryQuote(float $lat, float $lng): ?array
+    {
+        $warehouse = config('so.shipping.warehouse');
+        $km = $this->roadDistance(
+            (float) $warehouse['lat'],
+            (float) $warehouse['lng'],
+            $lat,
+            $lng,
+        ) ?? round($this->haversine((float) $warehouse['lat'], (float) $warehouse['lng'], $lat, $lng), 2);
+
+        $maxRadius = (float) config('so.shipping.max_radius_km');
+        if ($maxRadius > 0 && $km > $maxRadius) {
+            return null;
+        }
+
+        return [
+            'distance_km' => $km,
+            'shipping_fee' => $this->shippingFee($km),
+        ];
+    }
+
+    /**
      * Jarak berkendara via OSRM; null jika gagal (fallback haversine).
      */
     private function roadDistance(float $fromLat, float $fromLng, float $toLat, float $toLng): ?float

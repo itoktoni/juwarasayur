@@ -7,5 +7,6 @@
     "Ecommerce": true,
     "Reseller": true,
     "Production": true,
-    "Chatbot": true
+    "Chatbot": true,
+    "Faq": true
 }

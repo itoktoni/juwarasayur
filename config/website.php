@@ -1,13 +1,13 @@
 <?php
 
 return [
-    'name' => 'Sayurin',
+    'name' => 'JuwaraSayur.id',
     'tagline' => 'Web Application',
     'description' => 'A powerful web application built with Laravel.',
     'alamat' => 'jalan tanah koja RT. 01/02 No,. 45',
     'telepon' => '0853454354353',
     'email' => 'itok.toni@gmail.com',
-    'logo' => '/favicon.svg',
+    'logo' => 'storage/website/6a8c11d07a8ab_juwarasayur.png',
     'favicon' => '/favicon.ico',
     'colors' => [
         'primary' => '#388e3c',
@@ -31,7 +31,7 @@ return [
     'warehouse_address' => 'Jl. Raya Pasuruan No. 1, Pasuruan',
     'warehouse_lat' => '-7.644872',
     'warehouse_lng' => '112.904528',
-    'updated_at' => '2026-08-24T06:43:23+00:00',
+    'updated_at' => '2026-08-24T09:41:36+00:00',
     'created_at' => '2026-08-23T06:24:40+00:00',
     'id' => 1,
 ];

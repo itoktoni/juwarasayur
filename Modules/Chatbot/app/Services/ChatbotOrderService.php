@@ -21,9 +21,10 @@ class ChatbotOrderService
 
     /**
      * @param  array<int, int>  $cart  [product_id => qty]
+     * @param  array{method: string, fee?: float, address?: ?string, cod_location?: ?string, distance_km?: ?float, lat?: ?float, lng?: ?float}  $shipping
      * @return array{so: So, payment_url: string, subtotal: float, grand_total: float}
      */
-    public function createOrder(ChatbotSession $session, array $cart): array
+    public function createOrder(ChatbotSession $session, array $cart, array $shipping = []): array
     {
         $products = $this->catalog->findByIds(array_keys($cart));
         $items = [];
@@ -46,10 +47,18 @@ class ChatbotOrderService
             throw new \RuntimeException('Keranjang chatbot kosong.');
         }
 
-        $subtotal = array_sum(array_map(fn ($i) => $i['qty'] * $i['price'], $items));
-        $totals = So::calculateTotals($subtotal, 0, 'nominal', 0, 0, 0);
+        // Metode kirim wajib dipilih customer sebelum checkout.
+        $method = ShippingMethodEnum::coerce($shipping['method'] ?? null);
+        if ($method === null) {
+            throw new \RuntimeException('Metode pengiriman belum dipilih.');
+        }
 
-        $so = DB::transaction(function () use ($session, $items, $totals) {
+        $shippingFee = (float) ($shipping['fee'] ?? 0);
+
+        $subtotal = array_sum(array_map(fn ($i) => $i['qty'] * $i['price'], $items));
+        $totals = So::calculateTotals($subtotal, 0, 'nominal', 0, 0, $shippingFee);
+
+        $so = DB::transaction(function () use ($session, $items, $totals, $method, $shipping) {
             $so = So::create([
                 'so_tanggal' => now(),
                 // Pesanan via chatbot tidak selalu punya akun — id user diisi jika ada.
@@ -58,8 +67,13 @@ class ChatbotOrderService
                 'so_customer_name' => $session->contact_name ?: 'Customer Chatbot',
                 'so_customer_phone' => $session->contact_phone,
                 'so_status' => SoStatusEnum::PENDING,
-                'so_shipping_method' => ShippingMethodEnum::PICKUP,
-                'so_shipping_fee' => 0,
+                'so_shipping_method' => $method,
+                'so_cod_location' => $method === ShippingMethodEnum::COD ? ($shipping['cod_location'] ?? null) : null,
+                'so_address' => $shipping['address'] ?? null,
+                'so_lat' => $shipping['lat'] ?? null,
+                'so_lng' => $shipping['lng'] ?? null,
+                'so_distance_km' => $shipping['distance_km'] ?? null,
+                'so_shipping_fee' => $totals['shipping_fee'],
                 'so_subtotal' => $totals['subtotal'],
                 'so_discount' => 0,
                 'so_discount_type' => 'nominal',
