@@ -16,15 +16,7 @@ return [
 
     'sidebar' => [
         [
-            'label' => 'Toko',
-            'items' => [
-                ['route' => 'shop.index', 'icon' => 'storefront', 'label' => 'Belanja', 'match' => ['shop.*']],
-                ['route' => 'cart.index', 'icon' => 'shopping_cart', 'label' => 'Keranjang', 'match' => ['cart.*', 'checkout.*']],
-                ['route' => 'ecommerce.orders.index', 'icon' => 'receipt_long', 'label' => 'Pesanan Saya', 'match' => ['ecommerce.orders.*']],
-            ],
-        ],
-        [
-            'label' => null,
+            'label' => 'Dashboard',
             'items' => [
                 ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Dashboard'],
             ],
@@ -52,13 +44,6 @@ return [
                 ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
                 ['route' => 'so-customer.getTable', 'icon' => 'group', 'label' => 'Customers', 'match' => ['so-customer.*']],
                 ['route' => 'so-discount.getTable', 'icon' => 'sell', 'label' => 'Diskon', 'match' => ['so-discount.*']],
-            ],
-        ],
-        [
-            'label' => 'Reseller',
-            'items' => [
-                ['route' => 'reseller-order.getTable', 'icon' => 'point_of_sale', 'label' => 'Order Reseller', 'match' => ['reseller-order.*']],
-                ['route' => 'reseller-customer.getTable', 'icon' => 'person_add', 'label' => 'Customer Reseller', 'match' => ['reseller-customer.*']],
             ],
         ],
         [

@@ -4,7 +4,6 @@ namespace Modules\Ecommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;

@@ -31,7 +31,7 @@
     @php
         $cartCount = app(\Modules\Ecommerce\Services\CartService::class)->count();
         $txUrl = auth()->check() ? route('ecommerce.orders.index') : route('login');
-        $profileUrl = auth()->check() ? route('profile.edit') : route('login');
+        $profileUrl = auth()->check() ? route('account.profile') : route('login');
     @endphp
     <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-outline-variant">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,7 +59,9 @@
                         <span class="material-symbols-outlined">shopping_cart</span>
                         <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center {{ $cartCount > 0 ? '' : 'hidden' }}">{{ $cartCount }}</span>
                     </a>
-                    <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                    @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDeveloper()))
+                        <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                    @endif
                 </nav>
             </div>
         </div>

@@ -4,7 +4,7 @@
     $siteName = config('app.name', 'Mayur');
     $cartCount = app(\Modules\Ecommerce\Services\CartService::class)->count();
     $txUrl = auth()->check() ? route('ecommerce.orders.index') : route('login');
-    $profileUrl = auth()->check() ? route('profile.edit') : route('login');
+    $profileUrl = auth()->check() ? route('account.profile') : route('login');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_','-',app()->getLocale()) }}">
@@ -40,7 +40,11 @@
                         <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center {{ $cartCount > 0 ? '' : 'hidden' }}">{{ $cartCount }}</span>
                     </a>
                     @auth
-                        <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                        @if(auth()->user()->isAdmin() || auth()->user()->isDeveloper())
+                            <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                        @else
+                            <a href="{{ route('account.profile') }}" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Akun</a>
+                        @endif
                     @else
                         <a href="{{ route('login') }}" class="btn btn-primary btn-sm ml-1">Masuk</a>
                     @endauth

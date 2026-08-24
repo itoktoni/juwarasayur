@@ -9,7 +9,7 @@
             <div class="p-8 rounded-xl border border-outline-variant bg-surface-container-lowest text-center">
                 <span class="material-symbols-outlined text-5xl text-on-surface-variant/40">shopping_cart</span>
                 <p class="mt-3 text-on-surface-variant">Keranjang masih kosong.</p>
-                <a href="{{ route('shop.index') }}" class="btn btn-primary mt-4 inline-flex items-center gap-1">
+                <a href="{{ route('shop.index') }}" class="btn btn-primary mt-4 py-2 px-3 inline-flex items-center gap-1">
                     <span class="material-symbols-outlined text-base">storefront</span> Belanja Sekarang
                 </a>
             </div>
@@ -60,12 +60,6 @@
                                 <span class="material-symbols-outlined text-base">delete</span>
                             </button>
                         </div>
-
-                        {{-- form terpisah untuk hapus per item --}}
-                        <form method="POST" action="{{ route('cart.remove') }}" id="remove-form-{{ $item->id }}" class="hidden">
-                            @csrf
-                            <input type="hidden" name="cart_item_id" value="{{ $item->id }}">
-                        </form>
                     @endforeach
                 </div>
 
@@ -82,6 +76,14 @@
                     </a>
                 </div>
             </form>
+
+            {{-- form hapus per item — di luar form update agar HTML valid (form bersarang dibuang browser) --}}
+            @foreach($items as $item)
+                <form method="POST" action="{{ route('cart.remove') }}" id="remove-form-{{ $item->id }}" class="hidden">
+                    @csrf
+                    <input type="hidden" name="cart_item_id" value="{{ $item->id }}">
+                </form>
+            @endforeach
         @endif
     </div>
 

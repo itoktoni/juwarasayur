@@ -1,0 +1,5 @@
+[     536ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://mayur.test/_boost/browser-logs @ http://mayur.test/reseller/customer/table:274
+[    1116ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://mayur.test/notifications-web:0
+[   28961ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://mayur.test/reseller/customer/create:0
+[   29476ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://mayur.test/notifications-web:0
+[   31907ms] [WARNING] The resource http://mayur.test/build/assets/app-BhNcplDu.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://mayur.test/reseller/customer/create:0

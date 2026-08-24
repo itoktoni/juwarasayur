@@ -11,6 +11,8 @@ class SoDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            SoDiscountSeeder::class,
+        ]);
     }
 }

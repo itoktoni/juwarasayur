@@ -1,0 +1,288 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link [ref=e4] [cursor=pointer]:
+        - /url: http://mayur.test
+        - img "Juwara Sayur" [ref=e5]
+      - generic [ref=e6]:
+        - searchbox "Cari produk..." [ref=e7]
+        - button "search" [ref=e8]
+      - generic [ref=e10]:
+        - link "Belanja" [ref=e11] [cursor=pointer]:
+          - /url: http://mayur.test/product
+        - link "Blog" [ref=e12] [cursor=pointer]:
+          - /url: http://mayur.test/blog
+        - link "shopping_cart" [ref=e13] [cursor=pointer]:
+          - /url: http://mayur.test/cart
+        - link "Masuk" [ref=e15] [cursor=pointer]:
+          - /url: http://mayur.test/login
+  - generic [ref=e17]:
+    - heading "Sayur & Sembako Segar, Langsung dari Gudang" [level=1] [ref=e18]
+    - paragraph [ref=e19]: Harga grosir untuk semua. Pesan mudah, ambil di gudang atau kirim ke lokasi Anda.
+    - generic [ref=e20]:
+      - link "storefront Mulai Belanja" [ref=e21] [cursor=pointer]:
+        - /url: http://mayur.test/product
+        - generic [ref=e22]: storefront
+        - text: Mulai Belanja
+      - link "bolt Flash Sale" [ref=e23] [cursor=pointer]:
+        - /url: "#flash-sale"
+        - generic [ref=e24]: bolt
+        - text: Flash Sale
+  - generic [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]: bolt
+        - heading "Flash Sale" [level=2] [ref=e29]
+      - generic [ref=e30]:
+        - generic [ref=e31]: Berakhir dalam
+        - generic [ref=e32]:
+          - generic [ref=e33]: "18"
+          - text: ":"
+          - generic [ref=e34]: "11"
+          - text: ":"
+          - generic [ref=e35]: "02"
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: bolt
+          - text: Flash
+        - link "image" [ref=e40] [cursor=pointer]:
+          - /url: http://mayur.test/product/bayam-hijau-ikat
+        - link "Bayam Hijau Segar Ikat" [ref=e43] [cursor=pointer]:
+          - /url: http://mayur.test/product/bayam-hijau-ikat
+        - button "Rp 8.000 add_shopping_cart" [ref=e44]:
+          - generic [ref=e45]: Rp 8.000
+          - generic [ref=e46]: add_shopping_cart
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]: bolt
+          - text: Flash
+        - link "image" [ref=e51] [cursor=pointer]:
+          - /url: http://mayur.test/product/kangkung-cabut-ikat
+        - link "Kangkung Cabut Segar Ikat" [ref=e54] [cursor=pointer]:
+          - /url: http://mayur.test/product/kangkung-cabut-ikat
+        - button "Rp 9.000 add_shopping_cart" [ref=e55]:
+          - generic [ref=e56]: Rp 9.000
+          - generic [ref=e57]: add_shopping_cart
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: bolt
+          - text: Flash
+        - link "image" [ref=e62] [cursor=pointer]:
+          - /url: http://mayur.test/product/pakcoy-hidroponik-250g
+        - link "Pakcoy Hidroponik 250g" [ref=e65] [cursor=pointer]:
+          - /url: http://mayur.test/product/pakcoy-hidroponik-250g
+        - button "Rp 15.000 add_shopping_cart" [ref=e66]:
+          - generic [ref=e67]: Rp 15.000
+          - generic [ref=e68]: add_shopping_cart
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e72]: bolt
+          - text: Flash
+        - link "image" [ref=e73] [cursor=pointer]:
+          - /url: http://mayur.test/product/selada-keriting-hidroponik
+        - link "Selada Keriting Hidroponik 200g" [ref=e76] [cursor=pointer]:
+          - /url: http://mayur.test/product/selada-keriting-hidroponik
+        - button "Rp 18.000 add_shopping_cart" [ref=e77]:
+          - generic [ref=e78]: Rp 18.000
+          - generic [ref=e79]: add_shopping_cart
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - generic [ref=e83]: bolt
+          - text: Flash
+        - link "image" [ref=e84] [cursor=pointer]:
+          - /url: http://mayur.test/product/cabai-rawit-merah-250g
+        - link "Cabai Rawit Merah 250g" [ref=e87] [cursor=pointer]:
+          - /url: http://mayur.test/product/cabai-rawit-merah-250g
+        - button "Rp 35.000 add_shopping_cart" [ref=e88]:
+          - generic [ref=e89]: Rp 35.000
+          - generic [ref=e90]: add_shopping_cart
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]: bolt
+          - text: Flash
+        - link "image" [ref=e95] [cursor=pointer]:
+          - /url: http://mayur.test/product/bawang-merah-brebes-1kg
+        - link "Bawang Merah Brebes 1kg" [ref=e98] [cursor=pointer]:
+          - /url: http://mayur.test/product/bawang-merah-brebes-1kg
+        - button "Rp 28.000 add_shopping_cart" [ref=e99]:
+          - generic [ref=e100]: Rp 28.000
+          - generic [ref=e101]: add_shopping_cart
+  - generic [ref=e103]:
+    - generic [ref=e104]:
+      - generic [ref=e105]:
+        - generic [ref=e106]: local_fire_department
+        - heading "Paling Laris" [level=2] [ref=e107]
+      - link "Lihat Semua arrow_forward" [ref=e108] [cursor=pointer]:
+        - /url: http://mayur.test/product
+        - text: Lihat Semua
+        - generic [ref=e109]: arrow_forward
+    - generic [ref=e110]:
+      - generic [ref=e111]:
+        - link "image" [ref=e112] [cursor=pointer]:
+          - /url: http://mayur.test/product/bayam-hijau-ikat
+        - link "Bayam Hijau Segar Ikat" [ref=e115] [cursor=pointer]:
+          - /url: http://mayur.test/product/bayam-hijau-ikat
+        - button "Rp 8.000 add_shopping_cart" [ref=e116]:
+          - generic [ref=e117]: Rp 8.000
+          - generic [ref=e118]: add_shopping_cart
+      - generic [ref=e120]:
+        - link "image" [ref=e121] [cursor=pointer]:
+          - /url: http://mayur.test/product/kangkung-cabut-ikat
+        - link "Kangkung Cabut Segar Ikat" [ref=e124] [cursor=pointer]:
+          - /url: http://mayur.test/product/kangkung-cabut-ikat
+        - button "Rp 9.000 add_shopping_cart" [ref=e125]:
+          - generic [ref=e126]: Rp 9.000
+          - generic [ref=e127]: add_shopping_cart
+      - generic [ref=e129]:
+        - link "image" [ref=e130] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-sop-lengkap
+        - link "Paket Sayur Sop Lengkap" [ref=e133] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-sop-lengkap
+        - button "Rp 25.000 add_shopping_cart" [ref=e134]:
+          - generic [ref=e135]: Rp 25.000
+          - generic [ref=e136]: add_shopping_cart
+      - generic [ref=e138]:
+        - link "image" [ref=e139] [cursor=pointer]:
+          - /url: http://mayur.test/product/wortel-berastagi-1kg
+        - link "Wortel Berastagi 1kg" [ref=e142] [cursor=pointer]:
+          - /url: http://mayur.test/product/wortel-berastagi-1kg
+        - button "Rp 14.000 add_shopping_cart" [ref=e143]:
+          - generic [ref=e144]: Rp 14.000
+          - generic [ref=e145]: add_shopping_cart
+      - generic [ref=e147]:
+        - link "image" [ref=e148] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-asem-komplit
+        - link "Paket Sayur Asem Komplit" [ref=e151] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-asem-komplit
+        - button "Rp 22.000 add_shopping_cart" [ref=e152]:
+          - generic [ref=e153]: Rp 22.000
+          - generic [ref=e154]: add_shopping_cart
+      - generic [ref=e156]:
+        - link "image" [ref=e157] [cursor=pointer]:
+          - /url: http://mayur.test/product/cabai-rawit-merah-250g
+        - link "Cabai Rawit Merah 250g" [ref=e160] [cursor=pointer]:
+          - /url: http://mayur.test/product/cabai-rawit-merah-250g
+        - button "Rp 35.000 add_shopping_cart" [ref=e161]:
+          - generic [ref=e162]: Rp 35.000
+          - generic [ref=e163]: add_shopping_cart
+  - generic [ref=e165]:
+    - generic [ref=e166]:
+      - heading "Produk Terbaru" [level=2] [ref=e167]
+      - link "Lihat Semua arrow_forward" [ref=e168] [cursor=pointer]:
+        - /url: http://mayur.test/product
+        - text: Lihat Semua
+        - generic [ref=e169]: arrow_forward
+    - generic [ref=e170]:
+      - generic [ref=e171]:
+        - link "image" [ref=e172] [cursor=pointer]:
+          - /url: http://mayur.test/product/timun-segar-500g
+        - link "Timun Segar 500g" [ref=e175] [cursor=pointer]:
+          - /url: http://mayur.test/product/timun-segar-500g
+        - button "Rp 12.000 add_shopping_cart" [ref=e176]:
+          - generic [ref=e177]: Rp 12.000
+          - generic [ref=e178]: add_shopping_cart
+      - generic [ref=e180]:
+        - link "image" [ref=e181] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-asem-komplit
+        - link "Paket Sayur Asem Komplit" [ref=e184] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-asem-komplit
+        - button "Rp 22.000 add_shopping_cart" [ref=e185]:
+          - generic [ref=e186]: Rp 22.000
+          - generic [ref=e187]: add_shopping_cart
+      - generic [ref=e189]:
+        - link "image" [ref=e190] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-sop-lengkap
+        - link "Paket Sayur Sop Lengkap" [ref=e193] [cursor=pointer]:
+          - /url: http://mayur.test/product/paket-sayur-sop-lengkap
+        - button "Rp 25.000 add_shopping_cart" [ref=e194]:
+          - generic [ref=e195]: Rp 25.000
+          - generic [ref=e196]: add_shopping_cart
+      - generic [ref=e198]:
+        - link "image" [ref=e199] [cursor=pointer]:
+          - /url: http://mayur.test/product/jahe-gajah-500g
+        - link "Jahe Gajah Segar 500g" [ref=e202] [cursor=pointer]:
+          - /url: http://mayur.test/product/jahe-gajah-500g
+        - button "Rp 28.000 add_shopping_cart" [ref=e203]:
+          - generic [ref=e204]: Rp 28.000
+          - generic [ref=e205]: add_shopping_cart
+      - generic [ref=e207]:
+        - link "image" [ref=e208] [cursor=pointer]:
+          - /url: http://mayur.test/product/jamur-tiram-segar-250g
+        - link "Jamur Tiram Segar 250g" [ref=e211] [cursor=pointer]:
+          - /url: http://mayur.test/product/jamur-tiram-segar-250g
+        - button "Rp 22.000 add_shopping_cart" [ref=e212]:
+          - generic [ref=e213]: Rp 22.000
+          - generic [ref=e214]: add_shopping_cart
+      - generic [ref=e216]:
+        - link "image" [ref=e217] [cursor=pointer]:
+          - /url: http://mayur.test/product/brokoli-segar-500g
+        - link "Brokoli Segar 500g" [ref=e220] [cursor=pointer]:
+          - /url: http://mayur.test/product/brokoli-segar-500g
+        - button "Rp 25.000 add_shopping_cart" [ref=e221]:
+          - generic [ref=e222]: Rp 25.000
+          - generic [ref=e223]: add_shopping_cart
+  - contentinfo [ref=e225]:
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - generic [ref=e228]:
+          - img "Sayurin" [ref=e230]
+          - paragraph [ref=e231]: Sayur-mayur & bahan dapur segar — sayur, telur, ikan, ayam, daging. Pasar ke dapur Anda, setiap hari.
+          - generic [ref=e232]:
+            - link "Email" [ref=e233] [cursor=pointer]:
+              - /url: mailto:itok.toni@gmail.com
+              - generic [ref=e234]: mail
+            - link "Phone" [ref=e235] [cursor=pointer]:
+              - /url: tel:0853454354353
+              - generic [ref=e236]: call
+        - generic [ref=e237]:
+          - heading "Jelajahi" [level=5] [ref=e238]
+          - list [ref=e239]:
+            - listitem [ref=e240]:
+              - link "Beranda" [ref=e241] [cursor=pointer]:
+                - /url: http://mayur.test
+            - listitem [ref=e242]:
+              - link "Belanja" [ref=e243] [cursor=pointer]:
+                - /url: http://mayur.test/product
+            - listitem [ref=e244]:
+              - link "Blog" [ref=e245] [cursor=pointer]:
+                - /url: http://mayur.test/blog
+        - generic [ref=e246]:
+          - heading "Akun Saya" [level=5] [ref=e247]
+          - list [ref=e248]:
+            - listitem [ref=e249]:
+              - link "Keranjang" [ref=e250] [cursor=pointer]:
+                - /url: http://mayur.test/cart
+            - listitem [ref=e251]:
+              - link "Checkout" [ref=e252] [cursor=pointer]:
+                - /url: http://mayur.test/checkout
+            - listitem [ref=e253]:
+              - link "Pesanan Saya" [ref=e254] [cursor=pointer]:
+                - /url: http://mayur.test/account/orders
+        - generic [ref=e255]:
+          - heading "Bantuan" [level=5] [ref=e256]
+          - list [ref=e257]:
+            - listitem [ref=e258]:
+              - link "Hubungi Kami" [ref=e259] [cursor=pointer]:
+                - /url: http://mayur.test/contact
+            - listitem [ref=e260]:
+              - link "Pencarian" [ref=e261] [cursor=pointer]:
+                - /url: http://mayur.test/search
+            - listitem [ref=e262]:
+              - link "Masuk / Daftar" [ref=e263] [cursor=pointer]:
+                - /url: http://mayur.test/login
+        - generic [ref=e264]:
+          - heading "Kontak" [level=5] [ref=e265]
+          - list [ref=e266]:
+            - listitem [ref=e267]:
+              - generic [ref=e268]: location_on
+              - generic [ref=e269]: jalan tanah koja RT. 01/02 No,. 45
+            - listitem [ref=e270]:
+              - link "itok.toni@gmail.com" [ref=e271] [cursor=pointer]:
+                - /url: mailto:itok.toni@gmail.com
+            - listitem [ref=e272]:
+              - link "0853454354353" [ref=e273] [cursor=pointer]:
+                - /url: tel:0853454354353
+      - generic [ref=e274]:
+        - generic [ref=e275]: © 2026 Juwara Sayur. All rights reserved.
+        - generic [ref=e276]: Juwara Sayur

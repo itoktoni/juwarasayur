@@ -1,0 +1,4 @@
+[     380ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://mayur.test/_boost/browser-logs @ http://mayur.test/login:22
+[     402ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://mayur.test/login:0
+[   15670ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://mayur.test/_boost/browser-logs @ http://mayur.test/:38
+[   51401ms] [LOG] 🔍 Browser logger active (MCP server detected). Posting to: http://mayur.test/_boost/browser-logs @ http://mayur.test/:38

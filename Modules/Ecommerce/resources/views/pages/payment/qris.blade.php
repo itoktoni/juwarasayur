@@ -167,7 +167,6 @@
                         {{-- Rincian biaya --}}
                         @php
                             $subtotalProduk = (float) $so->has_details->sum(fn ($d) => $d->so_detail_qty * (float) $d->so_detail_harga);
-                            $isPercentDiscount = $so->so_discount_type === 'percent';
                         @endphp
                         <div class="flex items-center justify-between pt-3 border-t border-outline-variant/60 text-sm text-on-surface-variant">
                             <span>Subtotal</span>
@@ -175,8 +174,8 @@
                         </div>
                         @if((float) $so->so_discount > 0)
                             <div class="flex items-center justify-between text-sm text-on-surface-variant">
-                                <span>Diskon{{ $isPercentDiscount ? ' (' . rtrim(rtrim((string) $so->so_discount, '0'), '.') . '%)' : '' }}</span>
-                                <span class="font-mono text-success">- {{ formatAngka($isPercentDiscount ? $subtotalProduk * (float) $so->so_discount / 100 : (float) $so->so_discount, 'Rp') }}</span>
+                                <span>Diskon{{ $so->so_discount_note ? ' ('.$so->so_discount_note.')' : '' }}</span>
+                                <span class="font-mono text-success">- {{ formatAngka((float) $so->so_discount, 'Rp') }}</span>
                             </div>
                         @endif
                         @if((float) $so->so_ppn > 0)

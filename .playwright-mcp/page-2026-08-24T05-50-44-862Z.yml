@@ -1,0 +1,223 @@
+- generic [active] [ref=f4e1]:
+  - banner [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - button "Toggle sidebar" [ref=f4e4]:
+        - generic [ref=f4e5]: menu
+      - link "Sayurin" [ref=f4e6] [cursor=pointer]:
+        - /url: http://mayur.test
+    - generic [ref=f4e7]:
+      - button "notifications" [ref=f4e9]
+      - button "person" [ref=f4e12]
+  - complementary [ref=f4e14]:
+    - navigation [ref=f4e15]:
+      - generic [ref=f4e16]: Dashboard
+      - link "home Dashboard" [ref=f4e17] [cursor=pointer]:
+        - /url: http://mayur.test/admin/dashboard
+        - generic [ref=f4e18]: home
+        - generic [ref=f4e19]: Dashboard
+      - generic [ref=f4e20]: Master Data
+      - link "manage_accounts Users" [ref=f4e21] [cursor=pointer]:
+        - /url: http://mayur.test/admin/user/table
+        - generic [ref=f4e22]: manage_accounts
+        - generic [ref=f4e23]: Users
+      - link "local_shipping Pengiriman & COD" [ref=f4e24] [cursor=pointer]:
+        - /url: http://mayur.test/admin/shipping/table
+        - generic [ref=f4e25]: local_shipping
+        - generic [ref=f4e26]: Pengiriman & COD
+      - generic [ref=f4e27]: Catalog
+      - link "inventory_2 Products" [ref=f4e28] [cursor=pointer]:
+        - /url: http://mayur.test/admin/catalog/product/table
+        - generic [ref=f4e29]: inventory_2
+        - generic [ref=f4e30]: Products
+      - link "category Categories" [ref=f4e31] [cursor=pointer]:
+        - /url: http://mayur.test/admin/catalog/category/table
+        - generic [ref=f4e32]: category
+        - generic [ref=f4e33]: Categories
+      - link "branding_watermark Brands" [ref=f4e34] [cursor=pointer]:
+        - /url: http://mayur.test/admin/catalog/brand/table
+        - generic [ref=f4e35]: branding_watermark
+        - generic [ref=f4e36]: Brands
+      - link "straighten Satuan" [ref=f4e37] [cursor=pointer]:
+        - /url: http://mayur.test/admin/catalog/satuan/table
+        - generic [ref=f4e38]: straighten
+        - generic [ref=f4e39]: Satuan
+      - link "label Tags" [ref=f4e40] [cursor=pointer]:
+        - /url: http://mayur.test/admin/catalog/tag/table
+        - generic [ref=f4e41]: label
+        - generic [ref=f4e42]: Tags
+      - generic [ref=f4e43]: Sales
+      - link "receipt_long Sales Orders" [ref=f4e44] [cursor=pointer]:
+        - /url: http://mayur.test/admin/so/so/table
+        - generic [ref=f4e45]: receipt_long
+        - generic [ref=f4e46]: Sales Orders
+      - link "group Customers" [ref=f4e47] [cursor=pointer]:
+        - /url: http://mayur.test/admin/so/customer/table
+        - generic [ref=f4e48]: group
+        - generic [ref=f4e49]: Customers
+      - link "sell Diskon" [ref=f4e50] [cursor=pointer]:
+        - /url: http://mayur.test/admin/so/discount/table
+        - generic [ref=f4e51]: sell
+        - generic [ref=f4e52]: Diskon
+      - generic [ref=f4e53]: Reseller
+      - link "point_of_sale Order Reseller" [ref=f4e54] [cursor=pointer]:
+        - /url: http://mayur.test/admin/reseller/order/table
+        - generic [ref=f4e55]: point_of_sale
+        - generic [ref=f4e56]: Order Reseller
+      - link "person_add Customer Reseller" [ref=f4e57] [cursor=pointer]:
+        - /url: http://mayur.test/reseller/customer/table
+        - generic [ref=f4e58]: person_add
+        - generic [ref=f4e59]: Customer Reseller
+      - generic [ref=f4e60]: Chatbot
+      - link "smart_toy Chatbot Session" [ref=f4e61] [cursor=pointer]:
+        - /url: http://mayur.test/admin/chatbot
+        - generic [ref=f4e62]: smart_toy
+        - generic [ref=f4e63]: Chatbot Session
+      - generic [ref=f4e64]: Purchase
+      - link "local_shipping Suppliers" [ref=f4e65] [cursor=pointer]:
+        - /url: http://mayur.test/admin/po/supplier/table
+        - generic [ref=f4e66]: local_shipping
+        - generic [ref=f4e67]: Suppliers
+      - link "shopping_cart Purchase Orders" [ref=f4e68] [cursor=pointer]:
+        - /url: http://mayur.test/admin/po/po/table
+        - generic [ref=f4e69]: shopping_cart
+        - generic [ref=f4e70]: Purchase Orders
+      - generic [ref=f4e71]: Inventory
+      - link "warehouse Warehouse" [ref=f4e72] [cursor=pointer]:
+        - /url: http://mayur.test/admin/inventory/gudang/table
+        - generic [ref=f4e73]: warehouse
+        - generic [ref=f4e74]: Warehouse
+      - link "location_on Lokasi" [ref=f4e75] [cursor=pointer]:
+        - /url: http://mayur.test/admin/inventory/lokasi/table
+        - generic [ref=f4e76]: location_on
+        - generic [ref=f4e77]: Lokasi
+      - link "inventory Stock" [ref=f4e78] [cursor=pointer]:
+        - /url: http://mayur.test/admin/inventory/stock/table
+        - generic [ref=f4e79]: inventory
+        - generic [ref=f4e80]: Stock
+      - generic [ref=f4e81]: Production
+      - link "calendar_month Produksi Rutin" [ref=f4e82] [cursor=pointer]:
+        - /url: http://mayur.test/admin/production/routine/table
+        - generic [ref=f4e83]: calendar_month
+        - generic [ref=f4e84]: Produksi Rutin
+      - link "assignment Produksi dari SO" [ref=f4e85] [cursor=pointer]:
+        - /url: http://mayur.test/admin/production/order/table
+        - generic [ref=f4e86]: assignment
+        - generic [ref=f4e87]: Produksi dari SO
+      - generic [ref=f4e88]: CMS
+      - link "category Types" [ref=f4e89] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/type/table
+        - generic [ref=f4e90]: category
+        - generic [ref=f4e91]: Types
+      - link "input Fields" [ref=f4e92] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/field/table
+        - generic [ref=f4e93]: input
+        - generic [ref=f4e94]: Fields
+      - link "view_agenda Sections" [ref=f4e95] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/section/table
+        - generic [ref=f4e96]: view_agenda
+        - generic [ref=f4e97]: Sections
+      - link "article Content" [ref=f4e98] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/content/table
+        - generic [ref=f4e99]: article
+        - generic [ref=f4e100]: Content
+      - link "sell Categories" [ref=f4e101] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/category/table
+        - generic [ref=f4e102]: sell
+        - generic [ref=f4e103]: Categories
+      - link "label Tags" [ref=f4e104] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/tag/table
+        - generic [ref=f4e105]: label
+        - generic [ref=f4e106]: Tags
+      - link "menu Menus" [ref=f4e107] [cursor=pointer]:
+        - /url: http://mayur.test/admin/cms/menu/table
+        - generic [ref=f4e108]: menu
+        - generic [ref=f4e109]: Menus
+      - generic [ref=f4e110]: Settings
+      - link "language Website" [ref=f4e111] [cursor=pointer]:
+        - /url: http://mayur.test/admin/settings/website
+        - generic [ref=f4e112]: language
+        - generic [ref=f4e113]: Website
+      - link "settings Environment" [ref=f4e114] [cursor=pointer]:
+        - /url: http://mayur.test/settings/env
+        - generic [ref=f4e115]: settings
+        - generic [ref=f4e116]: Environment
+      - link "phone_android NativeBridge Test" [ref=f4e117] [cursor=pointer]:
+        - /url: http://mayur.test/admin/native-bridge-test
+        - generic [ref=f4e118]: phone_android
+        - generic [ref=f4e119]: NativeBridge Test
+  - main [ref=f4e120]:
+    - generic [ref=f4e121]:
+      - navigation "Breadcrumb" [ref=f4e122]:
+        - link "Home" [ref=f4e123] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=f4e124]: chevron_right
+        - generic [ref=f4e125]: Customer Reseller
+      - generic [ref=f4e126]:
+        - generic [ref=f4e128]:
+          - generic [ref=f4e129]:
+            - combobox [ref=f4e130] [cursor=pointer]:
+              - option "5 / page"
+              - option "10 / page"
+              - option "25 / page" [selected]
+              - option "50 / page"
+              - option "100 / page"
+            - generic: expand_more
+          - button "filter_alt Advanced" [ref=f4e131]:
+            - generic [ref=f4e132]: filter_alt
+            - text: Advanced
+          - generic [ref=f4e133]:
+            - combobox [ref=f4e134] [cursor=pointer]:
+              - option "Name" [selected]
+              - option "Email"
+              - option "Phone"
+              - option "Role"
+              - option "Type"
+            - generic: expand_more
+          - generic [ref=f4e135]:
+            - textbox "Search..." [ref=f4e136]
+            - button "search" [ref=f4e137]
+        - table [ref=f4e142]:
+          - rowgroup [ref=f4e143]:
+            - row [ref=f4e144]:
+              - columnheader [ref=f4e145]:
+                - checkbox [ref=f4e146]
+              - columnheader "Actions" [ref=f4e147]
+              - columnheader "Nama" [ref=f4e148]
+              - columnheader "Email" [ref=f4e149]
+              - columnheader "Phone" [ref=f4e150]
+              - columnheader "Total Order" [ref=f4e151]
+              - columnheader "Belum Bayar" [ref=f4e152]
+          - rowgroup [ref=f4e153]:
+            - row [ref=f4e154]:
+              - cell [ref=f4e155]:
+                - checkbox [ref=f4e156]
+              - cell [ref=f4e157]:
+                - generic [ref=f4e158]:
+                  - link "edit" [ref=f4e159] [cursor=pointer]:
+                    - /url: http://mayur.test/reseller/customer/update/7
+                  - link "delete" [ref=f4e161] [cursor=pointer]:
+                    - /url: http://mayur.test/reseller/customer/delete/7
+                  - link "add_shopping_cart" [ref=f4e163] [cursor=pointer]:
+                    - /url: http://mayur.test/cart
+              - cell "Cust A" [ref=f4e165]
+              - cell "c_1787497888@ex.com" [ref=f4e166]
+              - cell "08423432423" [ref=f4e167]
+              - cell "4" [ref=f4e168]
+              - cell "4" [ref=f4e169]
+        - generic [ref=f4e170]:
+          - generic [ref=f4e171]: Showing 1 items
+          - generic [ref=f4e172]:
+            - generic [ref=f4e173]: chevron_left
+            - generic [ref=f4e175]: chevron_right
+        - generic [ref=f4e179]:
+          - link "add Create" [ref=f4e180] [cursor=pointer]:
+            - /url: http://mayur.test/reseller/customer/create
+            - generic [ref=f4e181]: add
+            - generic [ref=f4e182]: Create
+          - button "delete Delete" [ref=f4e183]:
+            - generic [ref=f4e184]: delete
+            - generic [ref=f4e185]: Delete
+          - link "close Cancel" [ref=f4e186] [cursor=pointer]:
+            - /url: http://mayur.test
+            - generic [ref=f4e187]: close
+            - generic [ref=f4e188]: Cancel

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Ecommerce\Http\Controllers\AccountController;
 use Modules\Ecommerce\Http\Controllers\CartController;
 use Modules\Ecommerce\Http\Controllers\CheckoutController;
 use Modules\Ecommerce\Http\Controllers\OrderController;
@@ -47,4 +48,22 @@ Route::get('/payment/{token}/status', [PaymentController::class, 'status'])->nam
 Route::middleware('auth')->group(function () {
     Route::get('/account/orders', [OrderController::class, 'index'])->name('ecommerce.orders.index');
     Route::get('/account/orders/{id}', [OrderController::class, 'show'])->name('ecommerce.orders.show');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Auth — area akun (profile publik & customer reseller), tanpa 'admin'
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
+    Route::post('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::post('/account/profile/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+
+    Route::get('/account/customers', [AccountController::class, 'customers'])->name('account.customers');
+    Route::get('/account/customers/create', [AccountController::class, 'customerCreate'])->name('account.customers.create');
+    Route::post('/account/customers', [AccountController::class, 'customerStore'])->name('account.customers.store');
+    Route::get('/account/customers/{id}/edit', [AccountController::class, 'customerEdit'])->name('account.customers.edit');
+    Route::post('/account/customers/{id}', [AccountController::class, 'customerUpdate'])->name('account.customers.update');
+    Route::post('/account/customers/{id}/delete', [AccountController::class, 'customerDelete'])->name('account.customers.delete');
 });

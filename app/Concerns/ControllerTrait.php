@@ -15,7 +15,9 @@ trait ControllerTrait
 
     public function index(GeneralRequest $request)
     {
-        return redirect()->action([self::class, 'getTable']);
+        // static::class (bukan self) agar tetap menunjuk controller konkret
+        // meskipun index() diwarisi dari kelas Controller abstrak modul
+        return redirect()->action([static::class, 'getTable']);
     }
 
     public function getShow(GeneralRequest $request, $id)

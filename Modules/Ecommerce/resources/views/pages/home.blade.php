@@ -33,23 +33,36 @@
                     <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center {{ $cartCount <= 0 ? 'hidden' : '' }}">{{ max($cartCount, 0) }}</span>
                 </a>
                 @auth
-                    <details class="dropdown dropdown-end">
-                        <summary class="p-2 rounded-full hover:bg-surface-container flex items-center cursor-pointer list-none" title="Profile">
+                    <div class="relative" id="user-menu">
+                        <button type="button" id="user-menu-btn" class="p-2 rounded-full hover:bg-surface-container flex items-center cursor-pointer" title="Profile" aria-haspopup="true" aria-expanded="false">
                             <span class="material-symbols-outlined">person</span>
-                        </summary>
-                        <ul class="dropdown-content menu p-2 shadow-lg bg-white rounded-box w-52 border border-outline-variant z-50 mt-2">
-                            <li><a href="{{ route('profile.edit') }}" class="py-2 text-sm text-on-surface">Profile</a></li>
+                        </button>
+                        <div id="user-menu-panel" class="absolute right-0 top-full mt-2 w-52 bg-white border border-outline-variant rounded-xl shadow-lg z-50 overflow-hidden opacity-0 translate-y-2 pointer-events-none transition-all duration-150">
+                            <a href="{{ route('account.profile') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-xl text-on-surface-variant">person</span>
+                                Profile
+                            </a>
                             @if(auth()->user()->isReseller())
-                                <li><a href="{{ route('reseller-customer.getTable') }}" class="py-2 text-sm text-on-surface">Customer</a></li>
+                                <a href="{{ route('account.customers') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                    <span class="material-symbols-outlined text-xl text-on-surface-variant">group</span>
+                                    Customer
+                                </a>
                             @endif
-                            <li class="border-t border-outline-variant mt-1 pt-1">
+                            <a href="{{ route('ecommerce.orders.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-xl text-on-surface-variant">receipt_long</span>
+                                Pesanan
+                            </a>
+                            <div class="border-t border-outline-variant">
                                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                                     @csrf
-                                    <button type="submit" class="w-full text-left py-1 text-sm text-error font-medium">Logout</button>
+                                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-error font-medium hover:bg-error-container/30 transition-colors">
+                                        <span class="material-symbols-outlined text-xl">logout</span>
+                                        Logout
+                                    </button>
                                 </form>
-                            </li>
-                        </ul>
-                    </details>
+                            </div>
+                        </div>
+                    </div>
                 @else
                     <a href="{{ route('login') }}" class="btn btn-primary btn-sm">Masuk</a>
                 @endauth
@@ -191,6 +204,33 @@
 
     {{-- Footer --}}
     @include('cms::frontend.layouts.footer')
+
+    <script>
+        // Profile dropdown (mirror admin notification dropdown behavior)
+        (function () {
+            const btn = document.getElementById('user-menu-btn');
+            const menu = document.getElementById('user-menu-panel');
+            if (!btn || !menu) return;
+
+            const open = () => {
+                menu.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+                btn.setAttribute('aria-expanded', 'true');
+            };
+            const close = () => {
+                menu.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+                btn.setAttribute('aria-expanded', 'false');
+            };
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menu.classList.contains('opacity-0') ? open() : close();
+            });
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('user-menu').contains(e.target)) close();
+            });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+        })();
+    </script>
 
     <script>
         // Countdown flash sale (server-time based)

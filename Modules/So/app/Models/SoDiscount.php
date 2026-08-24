@@ -34,6 +34,7 @@ class SoDiscount extends BaseModel
     }
 
     public static $sortColumns = ['discount_code', 'discount_nama', 'discount_value'];
+
     public static $filterColumns = ['discount_code' => 'Kode', 'discount_nama' => 'Nama'];
 
     /**

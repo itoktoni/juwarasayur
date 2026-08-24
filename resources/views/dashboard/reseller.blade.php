@@ -69,7 +69,7 @@
         ]" />
 
         {{-- Chart --}}
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 form-card mt-5 min-w-0 overflow-hidden">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-6 form-card mt-5 min-w-0 overflow-hidden">
             <h3 class="font-headline-md text-headline-md text-on-surface pb-4 mb-4 border-b border-outline-variant flex items-center gap-2">
                 <span class="material-symbols-outlined text-success text-xl">trending_up</span>
                 Penjualan Saya
@@ -80,13 +80,13 @@
         </div>
 
         {{-- Pesanan terbaru --}}
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 form-card mt-5">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-6 form-card mt-5">
             <h3 class="font-headline-md text-headline-md text-on-surface pb-4 mb-4 border-b border-outline-variant flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
                 Pesanan Terbaru
             </h3>
             @if($recentOrders->isNotEmpty())
-            <div class="overflow-x-auto">
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs text-on-surface-variant uppercase border-b border-outline-variant">
@@ -111,6 +111,21 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+            <div class="md:hidden space-y-3">
+                @foreach($recentOrders as $order)
+                <div class="border border-outline-variant rounded-2xl p-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-on-surface">{{ $order->so_code }}</span>
+                        <span class="bg-surface-container text-xs px-2 py-1 rounded-full uppercase shrink-0">{{ $order->so_status }}</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant mt-2 truncate">{{ $order->so_customer_name ?: ($order->has_customer?->name ?? '-') }}</p>
+                    <div class="flex items-center justify-between gap-2 mt-3">
+                        <span class="text-xs text-on-surface-variant">{{ optional($order->so_tanggal)->format('d M Y') }}</span>
+                        <span class="font-semibold text-on-surface shrink-0">Rp {{ formatAngka($order->so_grand_total) }}</span>
+                    </div>
+                </div>
+                @endforeach
             </div>
             @else
             <div class="text-center py-8 text-on-surface-variant">

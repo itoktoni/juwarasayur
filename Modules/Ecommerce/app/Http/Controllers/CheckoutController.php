@@ -310,7 +310,11 @@ class CheckoutController extends Controller
         $subtotal = $this->cart->subtotal();
         $isGuest = $user === null;
 
-        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer) {
+        // Validasi ulang kode diskon di server — session tidak dipercaya mentah
+        $discount = $this->activeDiscount($subtotal);
+        $discountAmount = $discount?->hitungPotongan($subtotal) ?? 0.0;
+
+        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer, $discount, $discountAmount) {
             /** @var So $so */
             $so = So::create([
                 'so_tanggal' => now(),
@@ -328,11 +332,12 @@ class CheckoutController extends Controller
                 'so_lat' => $shipping['lat'],
                 'so_lng' => $shipping['lng'],
                 'so_subtotal' => $subtotal,
-                'so_discount' => 0,
-                'so_discount_type' => 'nominal',
+                'so_discount' => $discountAmount,
+                'so_discount_type' => $discount?->discount_type ?? 'nominal',
+                'so_discount_note' => $discount?->discount_code,
                 'so_ppn_rate' => 0,
                 'so_pph_rate' => 0,
-                'so_grand_total' => $subtotal + $shipping['fee'],
+                'so_grand_total' => max(0, $subtotal - $discountAmount + $shipping['fee']),
             ]);
 
             $seq = 1;
@@ -356,6 +361,9 @@ class CheckoutController extends Controller
         if ($isGuest) {
             session()->push('guest_orders', $so->id);
         }
+
+        // Kode diskon selesai dipakai
+        Session::forget(self::DISCOUNT_SESSION_KEY);
 
         if ($isReseller) {
             Session::forget('reseller_customer_id');
@@ -384,7 +392,7 @@ class CheckoutController extends Controller
 
         $link = url('/payment/'.$so->so_payment_token);
         // Sisa waktu pembayaran, sama dengan aturan di PaymentController
-        $secondsLeft = max(0, \Modules\Ecommerce\Http\Controllers\PaymentController::EXPIRY_MINUTES * 60
+        $secondsLeft = max(0, PaymentController::EXPIRY_MINUTES * 60
             - (int) $so->created_at?->diffInSeconds(now()));
 
         return view('ecommerce::pages.checkout.share', [

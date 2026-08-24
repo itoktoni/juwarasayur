@@ -70,7 +70,7 @@
 
         {{-- Charts --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-5">
-            <div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 form-card min-w-0 overflow-hidden">
+            <div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-6 form-card min-w-0 overflow-hidden">
                 <h3 class="font-headline-md text-headline-md text-on-surface pb-4 mb-4 border-b border-outline-variant flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-xl">trending_up</span>
                     Pendapatan Penjualan
@@ -79,7 +79,7 @@
                     {!! $salesChart->container() !!}
                 </div>
             </div>
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 form-card min-w-0 overflow-hidden">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-6 form-card min-w-0 overflow-hidden">
                 <h3 class="font-headline-md text-headline-md text-on-surface pb-4 mb-4 border-b border-outline-variant flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-xl">pie_chart</span>
                     Status Pesanan
@@ -91,13 +91,13 @@
         </div>
 
         {{-- Barang yang harus di-prepare --}}
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 form-card mt-5">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-6 form-card mt-5">
             <h3 class="font-headline-md text-headline-md text-on-surface pb-4 mb-4 border-b border-outline-variant flex items-center gap-2">
                 <span class="material-symbols-outlined text-warning text-xl">inventory_2</span>
                 Barang Yang Harus Di-prepare
             </h3>
             @if($toPrepare->isNotEmpty())
-            <div class="overflow-x-auto">
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs text-on-surface-variant uppercase border-b border-outline-variant">
@@ -123,6 +123,21 @@
                     </tbody>
                 </table>
             </div>
+            <div class="md:hidden space-y-3">
+                @foreach($toPrepare as $order)
+                <div class="border border-outline-variant rounded-2xl p-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-on-surface">{{ $order->so_code }}</span>
+                        <span class="bg-warning/10 text-warning text-xs px-2 py-1 rounded-full uppercase shrink-0">{{ $order->so_status }}</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant mt-2 truncate">{{ $order->so_customer_name ?: ($order->has_customer?->name ?? '-') }}</p>
+                    <div class="flex items-center justify-between gap-2 mt-3">
+                        <span class="text-xs text-on-surface-variant truncate">Reseller: {{ $order->has_reseller?->name ?? '-' }}</span>
+                        <span class="font-semibold text-on-surface shrink-0">Rp {{ formatAngka($order->so_grand_total) }}</span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
             @else
             <div class="text-center py-8 text-on-surface-variant">
                 <span class="material-symbols-outlined text-4xl mb-2 block">check_circle</span>
@@ -132,12 +147,12 @@
         </div>
 
         {{-- Pesanan terbaru --}}
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 form-card mt-5">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 sm:p-6 form-card mt-5">
             <h3 class="font-headline-md text-headline-md text-on-surface pb-4 mb-4 border-b border-outline-variant flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-xl">receipt_long</span>
                 Pesanan Terbaru
             </h3>
-            <div class="overflow-x-auto">
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs text-on-surface-variant uppercase border-b border-outline-variant">
@@ -162,6 +177,21 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+            <div class="md:hidden space-y-3">
+                @foreach($recentOrders as $order)
+                <div class="border border-outline-variant rounded-2xl p-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-medium text-on-surface">{{ $order->so_code }}</span>
+                        <span class="bg-surface-container text-xs px-2 py-1 rounded-full uppercase shrink-0">{{ $order->so_status }}</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant mt-2 truncate">{{ $order->so_customer_name ?: ($order->has_customer?->name ?? '-') }}</p>
+                    <div class="flex items-center justify-between gap-2 mt-3">
+                        <span class="text-xs text-on-surface-variant">{{ optional($order->so_tanggal)->format('d M Y') }}</span>
+                        <span class="font-semibold text-on-surface shrink-0">Rp {{ formatAngka($order->so_grand_total) }}</span>
+                    </div>
+                </div>
+                @endforeach
             </div>
         </div>
     </div>

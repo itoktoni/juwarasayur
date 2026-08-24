@@ -26,6 +26,17 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->mapApiRoutes();
         $this->mapWebRoutes();
+        $this->mapPublicRoutes();
+    }
+
+    /**
+     * Rute publik reseller (diakses dari halaman depan). Tidak pakai middleware 'admin'
+     * agar user reseller bisa memanage customer-nya sendiri.
+     */
+    protected function mapPublicRoutes(): void
+    {
+        Route::middleware(['web', 'auth', 'verified', 'access'])
+            ->group(module_path($this->name, '/routes/public.php'));
     }
 
     /**

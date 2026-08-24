@@ -1,7 +1,6 @@
-@include('ecommerce::components.brand')
 <?php /** @var \Modules\So\Models\So $model */ ?>
-<x-layouts::app :title="'Detail Pesanan'">
-    <div class="content mt-4 lg:mt-0">
+<x-ecommerce::account-layout :title="'Detail Pesanan'">
+    <div class="space-y-5">
         <div class="mb-6">
             <a href="{{ route('ecommerce.orders.index') }}" class="text-sm text-primary hover:underline inline-flex items-center gap-1 mb-2">
                 <span class="material-symbols-outlined text-base">arrow_back</span> Pesanan Saya
@@ -86,4 +85,4 @@
             </div>
         </div>
     </div>
-</x-layouts::app>
+</x-ecommerce::account-layout>

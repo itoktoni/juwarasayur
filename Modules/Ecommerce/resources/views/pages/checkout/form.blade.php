@@ -157,6 +157,24 @@
                 <div class="flex justify-between pt-3 mt-1 border-t border-outline-variant text-sm text-on-surface-variant">
                     <span>Subtotal</span><span class="font-mono">{{ formatAngka((int) $subtotal, 'Rp') }}</span>
                 </div>
+
+                {{-- Kode Diskon --}}
+                <div class="pt-2">
+                    <div class="flex gap-2" id="discount-input-row">
+                        <input type="text" id="discount-code" placeholder="Kode diskon (mis. HEMAT50K)" maxlength="50"
+                            value="{{ $discount?->discount_code }}"
+                            class="flex-1 h-10 px-3 bg-white border {{ $errors->has('cart') || $errors->has('discount') ? 'border-error' : 'border-outline-variant' }} rounded-lg text-sm uppercase outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <button type="button" id="btn-redeem" class="btn btn-soft h-10 px-4 text-sm shrink-0">Pakai</button>
+                    </div>
+                    <p id="discount-msg" class="text-xs mt-1 {{ $discount ? 'text-success hidden' : 'hidden' }}"></p>
+                    <input type="hidden" id="discount-amount" value="{{ (float) ($discount?->hitungPotongan((float) $subtotal) ?? 0) }}">
+                </div>
+
+                <div id="discount-row" class="hidden justify-between pt-1 text-sm text-on-surface-variant">
+                    <span>Diskon <span id="discount-row-code"></span></span>
+                    <span class="font-mono text-success" id="discount-row-amount"></span>
+                </div>
+
                 <div class="flex justify-between pt-1 text-sm text-on-surface-variant">
                     <span>Ongkir</span><span class="font-mono" id="co-shipping-fee">{{ formatAngka(0, 'Rp') }}</span>
                 </div>
@@ -307,9 +325,72 @@
                 feeEl.textContent = fmtRp(currentFee());
             }
 
+            function currentDiscount() {
+                return parseFloat(document.getElementById('discount-amount')?.value || '0') || 0;
+            }
+
             function updateTotal() {
                 const totalEl = document.querySelector('.font-bold .font-mono');
-                if (totalEl) totalEl.textContent = fmtRp(subtotal + currentFee());
+                if (totalEl) totalEl.textContent = fmtRp(Math.max(0, subtotal - currentDiscount() + currentFee()));
+            }
+
+            // ================= Kode Diskon =================
+            const discountInput = document.getElementById('discount-code');
+            const btnRedeem = document.getElementById('btn-redeem');
+            const discountMsg = document.getElementById('discount-msg');
+            const discountRow = document.getElementById('discount-row');
+
+            function showDiscountRow(code, amount) {
+                document.getElementById('discount-amount').value = amount;
+                document.getElementById('discount-row-code').textContent = code ? '(' + code + ')' : '';
+                document.getElementById('discount-row-amount').textContent = '- ' + fmtRp(amount);
+                if (amount > 0) { discountRow.classList.remove('hidden'); discountRow.classList.add('flex'); }
+                else { discountRow.classList.add('hidden'); discountRow.classList.remove('flex'); }
+                updateTotal();
+            }
+
+            async function redeemDiscount() {
+                const code = discountInput.value.trim();
+                if (!code) return;
+                btnRedeem.disabled = true;
+                try {
+                    const res = await fetch('{{ route("checkout.discount.redeem") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ code })
+                    });
+                    const json = await res.json();
+                    discountMsg.classList.remove('hidden');
+                    if (json.status) {
+                        discountMsg.textContent = '✓ ' + json.label + ': -' + fmtRp(json.amount);
+                        discountMsg.classList.add('text-success'); discountMsg.classList.remove('text-error');
+                        showDiscountRow(json.code, json.amount);
+                    } else {
+                        discountMsg.textContent = json.message || 'Kode tidak valid.';
+                        discountMsg.classList.add('text-error'); discountMsg.classList.remove('text-success');
+                        showDiscountRow('', 0);
+                    }
+                } catch (e) {
+                    discountMsg.classList.remove('hidden');
+                    discountMsg.textContent = 'Gagal menghubungi server.';
+                } finally {
+                    btnRedeem.disabled = false;
+                }
+            }
+
+            btnRedeem?.addEventListener('click', redeemDiscount);
+            discountInput?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); redeemDiscount(); } });
+
+            // Tampilkan diskon yang sudah diredeem sebelumnya
+            if (currentDiscount() > 0 && discountInput.value) {
+                showDiscountRow(discountInput.value, currentDiscount());
+                discountMsg.classList.remove('hidden');
+                discountMsg.textContent = '✓ Kode dipakai';
+                discountMsg.classList.add('text-success'); discountMsg.classList.remove('text-error');
             }
 
             radios.forEach(r => r.addEventListener('change', togglePanels));

@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Modules\Catalog\Database\Seeders\CatalogDatabaseSeeder;
 use Modules\Inventory\Database\Seeders\InventoryDatabaseSeeder;
 use Modules\Po\Database\Seeders\PoDatabaseSeeder;
+use Modules\So\Database\Seeders\SoDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,5 +21,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PoDatabaseSeeder::class);
         $this->call(InventoryDatabaseSeeder::class);
         $this->call(SayurBusinessSeeder::class);
+        $this->call(SoDatabaseSeeder::class);
     }
 }

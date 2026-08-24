@@ -25,6 +25,12 @@ class CustomerController extends SoCustomerController
             $action = $file;
         }
 
+        // Reuse So module's reseller-aware customer form (hides reseller select,
+        // forces reference_id = current reseller). Table stays in this module.
+        if ($action === 'form') {
+            return 'so::pages.customer.form';
+        }
+
         return 'reseller::pages.customer.'.$action;
     }
 }

@@ -18,7 +18,7 @@ class CartController extends Controller
 {
     public function __construct(private CartService $cart) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $items = $this->cart->items();
 
@@ -28,6 +28,17 @@ class CartController extends Controller
         $customers = $isReseller
             ? $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->get(['id', 'name', 'phone'])
             : collect();
+
+        // Preselect customer dari halaman "Customer Saya" (?customer_id=)
+        if ($isReseller && $request->filled('customer_id')) {
+            $owned = $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->find((int) $request->input('customer_id'));
+            if ($owned) {
+                Session::put('reseller_customer_id', $owned->id);
+            } else {
+                Session::forget('reseller_customer_id');
+            }
+        }
+
         $selectedCustomerId = $isReseller ? (int) Session::get('reseller_customer_id', 0) : 0;
 
         return view('ecommerce::pages.cart.index', [

@@ -1,0 +1,24 @@
+- generic [ref=f1e3]:
+  - link "Sayurin Sayurin" [ref=f1e4] [cursor=pointer]:
+    - /url: http://mayur.test
+    - img "Sayurin" [ref=f1e5]
+    - generic [ref=f1e6]: Sayurin
+  - generic [ref=f1e8]:
+    - generic [ref=f1e9]:
+      - heading "Log in to Sayurin" [level=1] [ref=f1e10]
+      - paragraph [ref=f1e11]: Enter your email and password below to log in
+    - generic [ref=f1e13]:
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: Email address
+        - textbox "email@example.com" [ref=f1e16]
+      - generic [ref=f1e17]:
+        - generic [ref=f1e18]: Password
+        - textbox "Password" [ref=f1e19]
+      - generic [ref=f1e21] [cursor=pointer]:
+        - checkbox "Remember me" [ref=f1e22]
+        - text: Remember me
+      - button "Log in" [ref=f1e23]
+    - generic [ref=f1e24]:
+      - text: Don't have an account?
+      - link "Sign up" [ref=f1e25] [cursor=pointer]:
+        - /url: http://mayur.test/register

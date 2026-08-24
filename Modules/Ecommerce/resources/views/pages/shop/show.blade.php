@@ -21,16 +21,15 @@
             <nav class="ml-auto flex items-center gap-1 sm:gap-2">
                 <a href="{{ route('shop.index') }}" class="text-sm font-medium px-2 py-1 rounded-lg {{ request()->is('product') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }} transition-colors">Katalog</a>
                 <a href="{{ route('blog') }}" class="hidden sm:block text-sm font-medium px-2 py-1 rounded-lg text-on-surface-variant hover:text-primary transition-colors">Blog</a>
-                @auth
-                    <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
-                        <span class="material-symbols-outlined">shopping_cart</span>
-                        @php $cartCount = \Modules\Ecommerce\Models\CartItem::where('user_id', auth()->id())->sum('qty'); @endphp
-                        @if($cartCount > 0)
-                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold grid place-items-center">{{ $cartCount }}</span>
-                        @endif
-                    </a>
-                @endauth
-                <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                {{-- Keranjang bisa dipakai guest (session) maupun login (DB) via CartService --}}
+                <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    @php $cartCount = app(\Modules\Ecommerce\Services\CartService::class)->count(); @endphp
+                    <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold grid place-items-center {{ $cartCount > 0 ? '' : 'hidden' }}">{{ $cartCount }}</span>
+                </a>
+                @if(auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isDeveloper()))
+                    <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                @endif
             </nav>
         </div>
     </header>
@@ -97,16 +96,11 @@
                             @if($product->has_satuan)<span class="badge badge-neutral">{{ $product->has_satuan->satuan_nama }}</span>@endif
                             @if($product->is_featured)<span class="badge badge-warning">Featured</span>@endif
                         </div>
-                        @auth
-                            <button type="button" onclick="addToCart({{ $product->id }}, this)" @disabled($product->product_stok <= 0)
-                                class="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-on-primary text-sm font-semibold py-3 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none">
-                                <span class="material-symbols-outlined text-base">add_shopping_cart</span> Tambah ke Keranjang
-                            </button>
-                        @else
-                            <a href="{{ route('login') }}" class="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-on-primary text-sm font-semibold py-3 hover:opacity-90 transition-opacity">
-                                <span class="material-symbols-outlined text-base">add_shopping_cart</span> Masuk untuk Membeli
-                            </a>
-                        @endauth
+                        {{-- Guest & login sama-sama bisa tambah ke keranjang (cart guest berbasis session) --}}
+                        <button type="button" onclick="addToCart({{ $product->id }}, this)" @disabled($product->product_stok <= 0)
+                            class="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-on-primary text-sm font-semibold py-3 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none">
+                            <span class="material-symbols-outlined text-base">add_shopping_cart</span> Tambah ke Keranjang
+                        </button>
                         @if($product->product_berat || $product->product_panjang)
                             <p class="text-xs text-on-surface-variant mt-2">
                                 @if($product->product_berat) Berat {{ $product->product_berat }} kg @endif
@@ -170,8 +164,7 @@
             </section>
         @endif
     </main>
-    @auth
-        @include('ecommerce::components.cart-button')
-    @endauth
+    @include('ecommerce::components.cart-button')
+
 </body>
 </html>

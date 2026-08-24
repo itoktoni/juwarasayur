@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\WebsiteSettingController;
 use App\Models\Notification;
 use App\Services\CentrifugoService;
@@ -43,7 +44,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
     Route::get('/settings/website', [WebsiteSettingController::class, 'index'])->name('settings.website');
     Route::post('/settings/website', [WebsiteSettingController::class, 'save'])->name('settings.website.save');
 
-    Route::auto('/shipping', \App\Http\Controllers\ShippingController::class, ['name' => 'shipping']);
+    Route::auto('/shipping', ShippingController::class, ['name' => 'shipping']);
 
     Route::prefix('notifications-web')->group(function () {
         Route::get('/', function (Request $request) {

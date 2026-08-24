@@ -1,9 +1,7 @@
-@include('ecommerce::components.brand')
-<?php /** @var \Illuminate\Pagination\LengthAwarePaginator $data */ ?>
-<x-layouts::app :title="'Pesanan Saya'">
-    <div class="content mt-4 lg:mt-0">
-        <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-2xl font-bold text-on-surface">Pesanan Saya</h2>
+<x-ecommerce::account-layout :title="'Pesanan'">
+    <div class="space-y-5">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-on-surface">{{ $isReseller ? 'Pesanan Customer' : 'Pesanan Saya' }}</h2>
             <a href="{{ route('shop.index') }}" class="btn btn-soft btn-sm">
                 <span class="material-symbols-outlined text-base">add_shopping_cart</span> Belanja Lagi
             </a>
@@ -34,4 +32,4 @@
             <x-pagination :paginator="$data" />
         @endif
     </div>
-</x-layouts::app>
+</x-ecommerce::account-layout>

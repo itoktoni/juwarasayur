@@ -167,14 +167,17 @@ class SoController extends Controller
     {
         $data = $request->validate((new So)->rules());
 
-        // Input kosong ("") → fallback ke user login
+        $customer = ! empty($data['so_id_customer']) ? User::findOrFail($data['so_id_customer']) : null;
+
+        // Input kosong ("") → pertahankan reseller lama saat update,
+        // turunkan dari customer terpilih, atau fallback ke user login
         if (empty($data['so_id_reseller'])) {
-            $data['so_id_reseller'] = Auth::id();
+            $data['so_id_reseller'] = $so?->so_id_reseller
+                ?? ($customer?->reference_id ?: Auth::id());
         }
 
         // Reseller hanya boleh order untuk customer-nya sendiri
-        if (! empty($data['so_id_customer'])) {
-            $customer = User::findOrFail($data['so_id_customer']);
+        if ($customer !== null) {
             abort_if((int) $customer->reference_id !== (int) $data['so_id_reseller'], 422, 'Customer bukan milik reseller ini.');
         }
 
