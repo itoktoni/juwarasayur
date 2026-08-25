@@ -15,3 +15,16 @@
 <link rel="manifest" href="/manifest.json">
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+{{-- Dynamic theme color dari website settings (sama dengan layouts/head) --}}
+@php
+    $primaryPalette = \App\Models\WebsiteSetting::palette();
+@endphp
+<style>
+    :root {
+        --color-primary: {{ \App\Models\WebsiteSetting::primaryColor() }};
+        --color-on-primary: {{ $primaryPalette['on_primary'] }};
+        --color-primary-container: {{ $primaryPalette['primary_container'] }};
+        --color-on-primary-container: {{ $primaryPalette['on_primary_container'] }};
+    }
+</style>

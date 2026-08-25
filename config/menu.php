@@ -30,12 +30,12 @@ return [
         [
             'label' => 'Catalog',
             'items' => [
-                ['route' => 'catalog-product-master.getTable', 'icon' => 'spa', 'label' => 'Product Masters', 'match' => ['catalog-product-master.*']],
-                ['route' => 'catalog-product.getTable', 'icon' => 'inventory_2', 'label' => 'Products', 'match' => ['catalog-product.*']],
-                ['route' => 'catalog-category.getTable', 'icon' => 'category', 'label' => 'Categories', 'match' => ['catalog-category.*']],
-                ['route' => 'catalog-brand.getTable', 'icon' => 'branding_watermark', 'label' => 'Brands', 'match' => ['catalog-brand.*']],
                 ['route' => 'catalog-satuan.getTable', 'icon' => 'straighten', 'label' => 'Satuan', 'match' => ['catalog-satuan.*']],
                 ['route' => 'catalog-tag.getTable', 'icon' => 'label', 'label' => 'Tags', 'match' => ['catalog-tag.*']],
+                ['route' => 'catalog-brand.getTable', 'icon' => 'branding_watermark', 'label' => 'Brands', 'match' => ['catalog-brand.*']],
+                ['route' => 'catalog-category.getTable', 'icon' => 'category', 'label' => 'Categories', 'match' => ['catalog-category.*']],
+                ['route' => 'catalog-product-master.getTable', 'icon' => 'spa', 'label' => 'Product Masters', 'match' => ['catalog-product-master.*']],
+                ['route' => 'catalog-product.getTable', 'icon' => 'inventory_2', 'label' => 'Products', 'match' => ['catalog-product.*']],
             ],
         ],
         [
@@ -71,13 +71,13 @@ return [
                 ['route' => 'inventory-stock.getTable', 'icon' => 'inventory', 'label' => 'Stock', 'match' => ['inventory-stock.*']],
             ],
         ],
-        [
-            'label' => 'Production',
-            'items' => [
-                ['route' => 'production-routine.getTable', 'icon' => 'calendar_month', 'label' => 'Produksi Rutin', 'match' => ['production-routine.*']],
-                ['route' => 'production-order.getTable', 'icon' => 'assignment', 'label' => 'Produksi dari SO', 'match' => ['production-order.*']],
-            ],
-        ],
+        // [
+        //     'label' => 'Production',
+        //     'items' => [
+        //         ['route' => 'production-routine.getTable', 'icon' => 'calendar_month', 'label' => 'Produksi Rutin', 'match' => ['production-routine.*']],
+        //         ['route' => 'production-order.getTable', 'icon' => 'assignment', 'label' => 'Produksi dari SO', 'match' => ['production-order.*']],
+        //     ],
+        // ],
         [
             'label' => 'CMS',
             'items' => [
@@ -95,7 +95,7 @@ return [
             'items' => [
                 ['route' => 'settings.website', 'icon' => 'language', 'label' => 'Website'],
                 ['route' => 'settings.env', 'icon' => 'settings', 'label' => 'Environment'],
-                ['route' => 'native-bridge-test', 'icon' => 'phone_android', 'label' => 'NativeBridge Test'],
+                ['route' => 'native-bridge-test', 'icon' => 'phone_android', 'label' => 'NativeBridge'],
             ],
         ],
     ],

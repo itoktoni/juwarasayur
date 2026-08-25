@@ -72,6 +72,15 @@ class WebsiteSetting
         return $settings['colors']['primary'] ?? '#00288e';
     }
 
+    /**
+     * Palet turunan dari warna primary website settings.
+     * Taxa token: primary, on_primary, primary_container, on_primary_container, primary_fixed, primary_fixed_dim.
+     */
+    public static function palette(): array
+    {
+        return static::generatePalette(static::primaryColor());
+    }
+
     public static function fileUrl(?string $path): ?string
     {
         if (empty($path)) {

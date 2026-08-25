@@ -23,9 +23,15 @@
     <script src="{{ asset('js/apexcharts.min.js') }}"></script>
     <script src="{{ asset('js/table.js') }}"></script>
     {{-- Dynamic theme color overrides from website settings --}}
+    @php
+        $primaryPalette = \App\Models\WebsiteSetting::palette();
+    @endphp
     <style>
         :root {
             --color-primary: {{ \App\Models\WebsiteSetting::primaryColor() }};
+            --color-on-primary: {{ $primaryPalette['on_primary'] }};
+            --color-primary-container: {{ $primaryPalette['primary_container'] }};
+            --color-on-primary-container: {{ $primaryPalette['on_primary_container'] }};
         }
     </style>
     @include('components.printer-js')
