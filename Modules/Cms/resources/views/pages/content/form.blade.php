@@ -981,14 +981,15 @@ $layoutColors = [
     </script>
 
     @push('scripts')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
         <script>
+            // TinyMCE di-load lokal via resources/js/wysiwyg.js (bundle Vite).
+            // Global boot memanggil window.initWysiwyg untuk tiap textarea.cms-wysiwyg.
             (function() {
                 var tries = 0;
                 var iv = setInterval(function() {
-                    if (window.tinymce) {
+                    if (window.wysiwygInitAll) {
                         clearInterval(iv);
-                        window.initAllWysiwyg();
+                        window.wysiwygInitAll();
                     } else if (++tries > 40) {
                         clearInterval(iv);
                     }

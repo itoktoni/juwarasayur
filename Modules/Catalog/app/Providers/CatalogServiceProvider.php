@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Gate;
 use Modules\Catalog\Models\Brand;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
+use Modules\Catalog\Models\ProductMaster;
 use Modules\Catalog\Models\Satuan;
 use Modules\Catalog\Models\Tag;
 use Modules\Catalog\Policies\BrandPolicy;
 use Modules\Catalog\Policies\CategoryPolicy;
+use Modules\Catalog\Policies\ProductMasterPolicy;
 use Modules\Catalog\Policies\ProductPolicy;
 use Modules\Catalog\Policies\SatuanPolicy;
 use Modules\Catalog\Policies\TagPolicy;
@@ -35,5 +37,6 @@ class CatalogServiceProvider extends ModuleServiceProvider
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Tag::class, TagPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(ProductMaster::class, ProductMasterPolicy::class);
     }
 }

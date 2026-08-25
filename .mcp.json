@@ -3,6 +3,10 @@
         "narsil-mcp": {
             "command": "narsil-mcp",
             "args": ["--repos", "."]
+        },
+        "blatui": {
+            "type": "http",
+            "url": "https://blatui.remix-it.com/mcp"
         }
     }
 }

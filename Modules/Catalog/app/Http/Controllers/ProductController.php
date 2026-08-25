@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\Catalog\Models\Brand;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
+use Modules\Catalog\Models\ProductMaster;
 use Modules\Catalog\Models\Satuan;
 use Modules\Catalog\Models\Tag;
 
@@ -23,6 +24,7 @@ class ProductController extends Controller
     {
         return array_merge([
             'model' => $this->model,
+            'masterOptions' => ProductMaster::getOptions(),
             'brandOptions' => Brand::getOptions(),
             'satuanOptions' => Satuan::getOptions(),
             'categoryOptions' => Category::getOptions(),

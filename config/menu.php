@@ -30,6 +30,7 @@ return [
         [
             'label' => 'Catalog',
             'items' => [
+                ['route' => 'catalog-product-master.getTable', 'icon' => 'spa', 'label' => 'Product Masters', 'match' => ['catalog-product-master.*']],
                 ['route' => 'catalog-product.getTable', 'icon' => 'inventory_2', 'label' => 'Products', 'match' => ['catalog-product.*']],
                 ['route' => 'catalog-category.getTable', 'icon' => 'category', 'label' => 'Categories', 'match' => ['catalog-category.*']],
                 ['route' => 'catalog-brand.getTable', 'icon' => 'branding_watermark', 'label' => 'Brands', 'match' => ['catalog-brand.*']],
@@ -59,6 +60,7 @@ return [
             'items' => [
                 ['route' => 'po-supplier.getTable', 'icon' => 'local_shipping', 'label' => 'Suppliers', 'match' => ['po-supplier.*']],
                 ['route' => 'po-po.getTable', 'icon' => 'shopping_cart', 'label' => 'Purchase Orders', 'match' => ['po-po.*', 'po-detail.*']],
+                ['route' => 'po-generate.preview', 'icon' => 'auto_awesome', 'label' => 'Generate PO dari SO', 'match' => ['po-generate.*']],
             ],
         ],
         [

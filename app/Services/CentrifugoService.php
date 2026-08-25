@@ -8,7 +8,7 @@ class CentrifugoService
 {
     public function publish(string $channel, array $data): void
     {
-        if (! config('langkahkecil.notification_enable')) {
+        if (! config('centrifugo.enabled')) {
             return;
         }
 

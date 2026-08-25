@@ -1,3 +1,11 @@
+import TomSelect from 'tom-select';
+import 'tom-select/dist/css/tom-select.css';
+import './wysiwyg';
+// BlatUI engine — registrasi directive/store Alpine via alpine:init (Livewire punya Alpine sendiri)
+import './blatui.js';
+
+window.TomSelect = TomSelect;
+
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 const userId = document.querySelector('meta[name="user-id"]')?.content;
 const notificationEnabled = document.querySelector('meta[name="notification-enabled"]')?.content === 'true';

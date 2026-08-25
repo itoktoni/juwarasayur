@@ -9,7 +9,7 @@
 </style>
 <div class="action-bar fixed left-0 right-0 lg:left-72 bg-surface-container-lowest border-t border-outline-variant shadow-[0_-4px_12px_rgba(0,0,0,0.08)] px-3 md:px-6 py-2 md:py-3 z-[45]" style="bottom: 4rem">
     <div class="flex items-center justify-between max-w-full mx-auto gap-2 md:gap-3">
-        <div class="flex items-center gap-1.5 md:gap-3 flex-nowrap overflow-x-auto">
+        <div class="flex flex-1 items-center justify-end gap-1.5 md:gap-3 flex-nowrap overflow-x-auto">
             {{ $slot }}
         </div>
         <div class="flex items-center gap-1.5 md:gap-3 flex-nowrap">

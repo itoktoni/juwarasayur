@@ -17,7 +17,7 @@ class BasePolicy
         $this->restrict = config('permision');
     }
 
-    private function accessProtected($user, $permision)
+    protected function accessProtected($user, $permision)
     {
         $role = $user->role ?? 'guest';
 

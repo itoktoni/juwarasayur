@@ -4,6 +4,7 @@ namespace Modules\Po\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Modules\Catalog\Database\Seeders\ProductMasterSeeder;
 use Modules\Catalog\Models\Product;
 use Modules\Po\Models\Po;
 use Modules\Po\Models\PoDetail;
@@ -14,6 +15,10 @@ class PoDatabaseSeeder extends Seeder
     public function run(): void
     {
         $suppliers = $this->seedSuppliers();
+
+        // Supplier sudah ada — pasang rekomendasi master↔supplier (idempotent)
+        app(ProductMasterSeeder::class)->attachSuppliers($suppliers);
+
         $this->seedPos($suppliers);
     }
 

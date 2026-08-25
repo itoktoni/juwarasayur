@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Catalog\Models\Product;
 
-#[Fillable(['so_detail_code', 'so_detail_id_so', 'so_detail_id_product', 'so_detail_qty', 'so_detail_harga', 'so_detail_keterangan'])]
+#[Fillable(['so_detail_code', 'so_detail_id_so', 'so_detail_id_product', 'so_detail_qty', 'so_detail_harga', 'so_detail_keterangan', 'po_generated_at'])]
 class SoDetail extends BaseModel
 {
     protected $table = 'so_order_details';
@@ -25,6 +25,7 @@ class SoDetail extends BaseModel
     {
         return [
             'so_detail_harga' => 'decimal:2',
+            'po_generated_at' => 'datetime',
         ];
     }
 

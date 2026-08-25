@@ -4,8 +4,10 @@ namespace Modules\Po\Models;
 
 use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Catalog\Models\ProductMaster;
 
 #[Fillable(['supplier_nama', 'supplier_kode', 'supplier_telepon', 'supplier_email', 'supplier_alamat', 'supplier_kontak_person', 'supplier_npwp', 'is_active', 'sort_order'])]
 class Supplier extends BaseModel
@@ -33,6 +35,12 @@ class Supplier extends BaseModel
     public function has_pos(): HasMany
     {
         return $this->hasMany(Po::class, 'po_id_supplier');
+    }
+
+    public function has_product_masters(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductMaster::class, 'catalog_product_master_supplier', 'supplier_id', 'product_master_id')
+            ->withPivot('is_recommended');
     }
 
     public function rules(): array

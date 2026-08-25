@@ -11,10 +11,12 @@
     "require": {
         "php": "^8.3",
         "abbasudo/laravel-purity": "*",
+        "anousss007/blatui": "^1.28",
         "arielmejiadev/larapex-charts": "^10.0",
         "barryvdh/laravel-dompdf": "*",
         "bensampo/laravel-enum": "^6.14",
         "doctrine/dbal": "^4.4",
+        "gehrisandro/tailwind-merge-laravel": "^1.4",
         "izniburak/laravel-auto-routes": "^2.1",
         "kirschbaum-development/eloquent-power-joins": "*",
         "laravel/ai": "^0.11.0",
@@ -26,6 +28,7 @@
         "livewire/flux": "^2.13.1",
         "livewire/livewire": "^4.1",
         "lorisleiva/laravel-actions": "^2.10",
+        "mallardduck/blade-lucide-icons": "^2.0",
         "milon/barcode": "^13.1",
         "nwidart/laravel-modules": "*",
         "riverskies/laravel-mobile-detect": "^1.3"

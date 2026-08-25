@@ -12,7 +12,7 @@ use Modules\Ecommerce\Http\Controllers\HomeController;
 use Modules\Ecommerce\Http\Controllers\StorefrontController;
 
 Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {
-    if (! config('langkahkecil.notification_enable')) {
+    if (! config('centrifugo.enabled')) {
         return response()->json(['token' => 'disabled']);
     }
 

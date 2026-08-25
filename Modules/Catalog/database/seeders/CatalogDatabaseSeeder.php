@@ -22,7 +22,8 @@ class CatalogDatabaseSeeder extends Seeder
         $satuans = $this->seedSatuans();
         $categories = $this->seedCategories();
         $tags = $this->seedTags();
-        $this->seedProducts($brands, $satuans, $categories, $tags);
+        $masters = app(ProductMasterSeeder::class)->run();
+        $this->seedProducts($brands, $satuans, $categories, $tags, $masters);
     }
 
     private function pruneLegacy(): void
@@ -166,29 +167,29 @@ class CatalogDatabaseSeeder extends Seeder
         return Tag::whereIn('tag_slug', collect($data)->pluck('tag_slug'))->get()->keyBy('tag_slug');
     }
 
-    private function seedProducts($brands, $satuans, $categories, $tags): void
+    private function seedProducts($brands, $satuans, $categories, $tags, $masters): void
     {
         $tagIds = $tags->pluck('id')->all();
 
         $items = [
-            ['nama' => 'Bayam Hijau Segar Ikat', 'slug' => 'bayam-hijau-ikat', 'harga' => 8000, 'stok' => 120, 'brand' => 'tani-lokal', 'cat' => 'bayam', 'satuan' => 'IKAT', 'berat' => 0.25, 'featured' => true],
-            ['nama' => 'Kangkung Cabut Segar Ikat', 'slug' => 'kangkung-cabut-ikat', 'harga' => 9000, 'stok' => 100, 'brand' => 'tani-lokal', 'cat' => 'kangkung', 'satuan' => 'IKAT', 'berat' => 0.25, 'featured' => true],
-            ['nama' => 'Sawi Hijau Segar 500g', 'slug' => 'sawi-hijau-500g', 'harga' => 12000, 'stok' => 80, 'brand' => 'mayur-fresh', 'cat' => 'sawi-pakcoy', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false],
-            ['nama' => 'Pakcoy Hidroponik 250g', 'slug' => 'pakcoy-hidroponik-250g', 'harga' => 15000, 'stok' => 60, 'brand' => 'hidroponik-segar', 'cat' => 'sawi-pakcoy', 'satuan' => 'PACK', 'berat' => 0.25, 'featured' => true],
-            ['nama' => 'Selada Keriting Hidroponik 200g', 'slug' => 'selada-keriting-hidroponik', 'harga' => 18000, 'stok' => 55, 'brand' => 'hidroponik-segar', 'cat' => 'selada', 'satuan' => 'PACK', 'berat' => 0.2, 'featured' => true],
-            ['nama' => 'Tomat Merah Segar 1kg', 'slug' => 'tomat-merah-1kg', 'harga' => 16000, 'stok' => 90, 'brand' => 'mitra-petani', 'cat' => 'tomat', 'satuan' => 'KG', 'berat' => 1, 'featured' => false],
-            ['nama' => 'Cabai Rawit Merah 250g', 'slug' => 'cabai-rawit-merah-250g', 'harga' => 35000, 'stok' => 40, 'brand' => 'mitra-petani', 'cat' => 'cabai', 'satuan' => 'PACK', 'berat' => 0.25, 'featured' => true],
-            ['nama' => 'Cabai Merah Keriting 500g', 'slug' => 'cabai-merah-keriting-500g', 'harga' => 32000, 'stok' => 35, 'brand' => 'mitra-petani', 'cat' => 'cabai', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false],
-            ['nama' => 'Bawang Merah Brebes 1kg', 'slug' => 'bawang-merah-brebes-1kg', 'harga' => 28000, 'stok' => 70, 'brand' => 'mitra-petani', 'cat' => 'bawang', 'satuan' => 'KG', 'berat' => 1, 'featured' => true],
-            ['nama' => 'Bawang Putih Kating 500g', 'slug' => 'bawang-putih-kating-500g', 'harga' => 30000, 'stok' => 45, 'brand' => 'mitra-petani', 'cat' => 'bawang', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false],
-            ['nama' => 'Kentang Dieng 1kg', 'slug' => 'kentang-dieng-1kg', 'harga' => 18000, 'stok' => 85, 'brand' => 'mitra-petani', 'cat' => 'kentang', 'satuan' => 'KG', 'berat' => 1, 'featured' => false],
-            ['nama' => 'Wortel Berastagi 1kg', 'slug' => 'wortel-berastagi-1kg', 'harga' => 14000, 'stok' => 95, 'brand' => 'mitra-petani', 'cat' => 'wortel', 'satuan' => 'KG', 'berat' => 1, 'featured' => false],
-            ['nama' => 'Brokoli Segar 500g', 'slug' => 'brokoli-segar-500g', 'harga' => 25000, 'stok' => 30, 'brand' => 'kebun-organik', 'cat' => 'sayuran-daun', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => true],
-            ['nama' => 'Jamur Tiram Segar 250g', 'slug' => 'jamur-tiram-segar-250g', 'harga' => 22000, 'stok' => 50, 'brand' => 'kebun-organik', 'cat' => 'jamur-tiram', 'satuan' => 'PACK', 'berat' => 0.25, 'featured' => false],
-            ['nama' => 'Jahe Gajah Segar 500g', 'slug' => 'jahe-gajah-500g', 'harga' => 28000, 'stok' => 38, 'brand' => 'tani-lokal', 'cat' => 'jahe-rimpang', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false],
-            ['nama' => 'Paket Sayur Sop Lengkap', 'slug' => 'paket-sayur-sop-lengkap', 'harga' => 25000, 'stok' => 60, 'brand' => 'mayur-fresh', 'cat' => 'paket-sayur', 'satuan' => 'PACK', 'berat' => 0.8, 'featured' => true],
-            ['nama' => 'Paket Sayur Asem Komplit', 'slug' => 'paket-sayur-asem-komplit', 'harga' => 22000, 'stok' => 55, 'brand' => 'mayur-fresh', 'cat' => 'paket-sayur', 'satuan' => 'PACK', 'berat' => 0.8, 'featured' => true],
-            ['nama' => 'Timun Segar 500g', 'slug' => 'timun-segar-500g', 'harga' => 12000, 'stok' => 75, 'brand' => 'tani-lokal', 'cat' => 'terong-timun', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false],
+            ['nama' => 'Bayam Hijau Segar Ikat', 'slug' => 'bayam-hijau-ikat', 'harga' => 8000, 'stok' => 120, 'brand' => 'tani-lokal', 'cat' => 'bayam', 'satuan' => 'IKAT', 'berat' => 0.25, 'featured' => true, 'master' => 'bayam'],
+            ['nama' => 'Kangkung Cabut Segar Ikat', 'slug' => 'kangkung-cabut-ikat', 'harga' => 9000, 'stok' => 100, 'brand' => 'tani-lokal', 'cat' => 'kangkung', 'satuan' => 'IKAT', 'berat' => 0.25, 'featured' => true, 'master' => 'kangkung'],
+            ['nama' => 'Sawi Hijau Segar 500g', 'slug' => 'sawi-hijau-500g', 'harga' => 12000, 'stok' => 80, 'brand' => 'mayur-fresh', 'cat' => 'sawi-pakcoy', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false, 'master' => 'sawi'],
+            ['nama' => 'Pakcoy Hidroponik 250g', 'slug' => 'pakcoy-hidroponik-250g', 'harga' => 15000, 'stok' => 60, 'brand' => 'hidroponik-segar', 'cat' => 'sawi-pakcoy', 'satuan' => 'PACK', 'berat' => 0.25, 'featured' => true, 'master' => 'pakcoy'],
+            ['nama' => 'Selada Keriting Hidroponik 200g', 'slug' => 'selada-keriting-hidroponik', 'harga' => 18000, 'stok' => 55, 'brand' => 'hidroponik-segar', 'cat' => 'selada', 'satuan' => 'PACK', 'berat' => 0.2, 'featured' => true, 'master' => 'selada'],
+            ['nama' => 'Tomat Merah Segar 1kg', 'slug' => 'tomat-merah-1kg', 'harga' => 16000, 'stok' => 90, 'brand' => 'mitra-petani', 'cat' => 'tomat', 'satuan' => 'KG', 'berat' => 1, 'featured' => false, 'master' => 'tomat'],
+            ['nama' => 'Cabai Rawit Merah 250g', 'slug' => 'cabai-rawit-merah-250g', 'harga' => 35000, 'stok' => 40, 'brand' => 'mitra-petani', 'cat' => 'cabai', 'satuan' => 'PACK', 'berat' => 0.25, 'featured' => true, 'master' => 'cabai'],
+            ['nama' => 'Cabai Merah Keriting 500g', 'slug' => 'cabai-merah-keriting-500g', 'harga' => 32000, 'stok' => 35, 'brand' => 'mitra-petani', 'cat' => 'cabai', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false, 'master' => 'cabai'],
+            ['nama' => 'Bawang Merah Brebes 1kg', 'slug' => 'bawang-merah-brebes-1kg', 'harga' => 28000, 'stok' => 70, 'brand' => 'mitra-petani', 'cat' => 'bawang', 'satuan' => 'KG', 'berat' => 1, 'featured' => true, 'master' => 'bawang-merah'],
+            ['nama' => 'Bawang Putih Kating 500g', 'slug' => 'bawang-putih-kating-500g', 'harga' => 30000, 'stok' => 45, 'brand' => 'mitra-petani', 'cat' => 'bawang', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false, 'master' => 'bawang-putih'],
+            ['nama' => 'Kentang Dieng 1kg', 'slug' => 'kentang-dieng-1kg', 'harga' => 18000, 'stok' => 85, 'brand' => 'mitra-petani', 'cat' => 'kentang', 'satuan' => 'KG', 'berat' => 1, 'featured' => false, 'master' => 'kentang'],
+            ['nama' => 'Wortel Berastagi 1kg', 'slug' => 'wortel-berastagi-1kg', 'harga' => 14000, 'stok' => 95, 'brand' => 'mitra-petani', 'cat' => 'wortel', 'satuan' => 'KG', 'berat' => 1, 'featured' => false, 'master' => 'wortel'],
+            ['nama' => 'Brokoli Segar 500g', 'slug' => 'brokoli-segar-500g', 'harga' => 25000, 'stok' => 30, 'brand' => 'kebun-organik', 'cat' => 'sayuran-daun', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => true, 'master' => 'brokoli'],
+            ['nama' => 'Jamur Tiram Segar 250g', 'slug' => 'jamur-tiram-segar-250g', 'harga' => 22000, 'stok' => 50, 'brand' => 'kebun-organik', 'cat' => 'jamur-tiram', 'satuan' => 'PACK', 'berat' => 0.25, 'featured' => false, 'master' => 'jamur-tiram'],
+            ['nama' => 'Jahe Gajah Segar 500g', 'slug' => 'jahe-gajah-500g', 'harga' => 28000, 'stok' => 38, 'brand' => 'tani-lokal', 'cat' => 'jahe-rimpang', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false, 'master' => 'jahe'],
+            ['nama' => 'Paket Sayur Sop Lengkap', 'slug' => 'paket-sayur-sop-lengkap', 'harga' => 25000, 'stok' => 60, 'brand' => 'mayur-fresh', 'cat' => 'paket-sayur', 'satuan' => 'PACK', 'berat' => 0.8, 'featured' => true, 'master' => 'paket-sayur'],
+            ['nama' => 'Paket Sayur Asem Komplit', 'slug' => 'paket-sayur-asem-komplit', 'harga' => 22000, 'stok' => 55, 'brand' => 'mayur-fresh', 'cat' => 'paket-sayur', 'satuan' => 'PACK', 'berat' => 0.8, 'featured' => true, 'master' => 'paket-sayur'],
+            ['nama' => 'Timun Segar 500g', 'slug' => 'timun-segar-500g', 'harga' => 12000, 'stok' => 75, 'brand' => 'tani-lokal', 'cat' => 'terong-timun', 'satuan' => 'PACK', 'berat' => 0.5, 'featured' => false, 'master' => 'timun'],
         ];
 
         foreach ($items as $idx => $item) {
@@ -215,6 +216,7 @@ class CatalogDatabaseSeeder extends Seeder
                     'is_featured' => $item['featured'],
                     'is_active' => true,
                     'sort_order' => $idx,
+                    'product_id_product_master' => $masters[$item['master']]->id ?? null,
                     'product_id_brand' => $brandId,
                     'product_id_satuan' => $satuanId,
                     'product_id_category' => $catId,

@@ -28359,6 +28359,64 @@ namespace Illuminate\Database\Eloquent\Relations {
 namespace Illuminate\View {
     /**
      */
+    class ComponentAttributeBag {
+        /**
+         * @see \TailwindMerge\Laravel\TailwindMergeServiceProvider::registerAttributesBagMacros()
+         * @param mixed $args
+         * @return \Illuminate\View\ComponentAttributeBag
+         * @static
+         */
+        public static function twMerge(...$args)
+        {
+            return \Illuminate\View\ComponentAttributeBag::twMerge(...$args);
+        }
+
+        /**
+         * @see \TailwindMerge\Laravel\TailwindMergeServiceProvider::registerAttributesBagMacros()
+         * @param string $for
+         * @param mixed $args
+         * @return \Illuminate\View\ComponentAttributeBag
+         * @static
+         */
+        public static function twMergeFor($for, ...$args)
+        {
+            return \Illuminate\View\ComponentAttributeBag::twMergeFor($for, ...$args);
+        }
+
+        /**
+         * @see \TailwindMerge\Laravel\TailwindMergeServiceProvider::registerAttributesBagMacros()
+         * @return \Illuminate\View\ComponentAttributeBag
+         * @static
+         */
+        public static function withoutTwMergeClasses()
+        {
+            return \Illuminate\View\ComponentAttributeBag::withoutTwMergeClasses();
+        }
+
+        /**
+         * @see \Flux\FluxServiceProvider::bootMacros()
+         * @param mixed $key
+         * @param mixed $default
+         * @static
+         */
+        public static function pluck($key, $default = null)
+        {
+            return \Illuminate\View\ComponentAttributeBag::pluck($key, $default);
+        }
+
+        /**
+         * @see \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::provide()
+         * @param mixed $name
+         * @static
+         */
+        public static function wire($name)
+        {
+            return \Illuminate\View\ComponentAttributeBag::wire($name);
+        }
+
+            }
+    /**
+     */
     class Factory {
         /**
          * @see \Livewire\Blaze\BlazeServiceProvider::registerBladeMacros()
@@ -28386,31 +28444,6 @@ namespace Illuminate\View {
         public static function getCurrentComponentData()
         {
             return \Illuminate\View\Factory::getCurrentComponentData();
-        }
-
-            }
-    /**
-     */
-    class ComponentAttributeBag {
-        /**
-         * @see \Flux\FluxServiceProvider::bootMacros()
-         * @param mixed $key
-         * @param mixed $default
-         * @static
-         */
-        public static function pluck($key, $default = null)
-        {
-            return \Illuminate\View\ComponentAttributeBag::pluck($key, $default);
-        }
-
-        /**
-         * @see \Livewire\Features\SupportBladeAttributes\SupportBladeAttributes::provide()
-         * @param mixed $name
-         * @static
-         */
-        public static function wire($name)
-        {
-            return \Illuminate\View\ComponentAttributeBag::wire($name);
         }
 
             }

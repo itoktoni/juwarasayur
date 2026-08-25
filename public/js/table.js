@@ -156,9 +156,10 @@ window.deleteSelected = function() {
     if (!ids.length) return alert('No items selected');
     if (!confirm('Delete ' + ids.length + ' item(s)?')) return;
     var form = document.createElement('form');
-    var moduleEl = document.querySelector('input.module');
-    var module = moduleEl ? moduleEl.value : '';
-    form.method = 'POST'; form.action = '/' + module + '/delete';
+    // Turunkan endpoint dari URL halaman tabel: /admin/{prefix}/{module}/table -> .../delete
+    // (nama route tidak sama dengan path karena prefix /admin)
+    var base = location.pathname.replace(/\/table\/?$/, '');
+    form.method = 'POST'; form.action = base + '/delete';
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     if (csrfMeta) form.innerHTML += '<input type="hidden" name="_token" value="' + csrfMeta.content + '">';
     ids.forEach(function(id) { form.innerHTML += '<input type="hidden" name="ids[]" value="' + id + '">'; });

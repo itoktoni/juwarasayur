@@ -12,4 +12,14 @@ class PoPolicy extends BasePolicy
     {
         return $this->prepare($user);
     }
+
+    public function previewgeneratefromso(User $user): Response
+    {
+        return $this->accessProtected($user, __FUNCTION__) ? Response::deny() : Response::allow();
+    }
+
+    public function dogeneratefromso(User $user): Response
+    {
+        return $this->accessProtected($user, __FUNCTION__) ? Response::deny() : Response::allow();
+    }
 }

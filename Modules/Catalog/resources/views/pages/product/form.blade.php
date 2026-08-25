@@ -15,6 +15,7 @@ use Modules\Catalog\Models\Product;
                 <x-input col="4" name="product_sku" label="SKU" />
                 <x-input col="4" name="product_barcode" label="Barcode" />
 
+                <x-select col="4" name="product_id_product_master" label="Product Master" :options="$masterOptions" class="search" />
                 <x-select col="4" name="product_id_category" label="Kategori" :options="$categoryOptions" />
                 <x-select col="4" name="product_id_brand" label="Brand" :options="$brandOptions" />
                 <x-select col="4" name="product_id_satuan" label="Satuan" :options="$satuanOptions" />
@@ -57,33 +58,4 @@ use Modules\Catalog\Models\Product;
 
         <x-action :model="$model" :action="['save']"/>
     </x-form>
-
-    @push('scripts')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
-        <script>
-            (function () {
-                function initTiny() {
-                    var el = document.querySelector('textarea[name="product_deskripsi_lengkap"]');
-                    if (!el || el.dataset.wysiwygInit || !window.tinymce) return;
-                    el.dataset.wysiwygInit = '1';
-                    tinymce.init({
-                        target: el,
-                        height: 320,
-                        menubar: false,
-                        plugins: 'lists link image table code autolink fullscreen media',
-                        toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist | link image table | removeformat code fullscreen',
-                        branding: false,
-                        promotion: false,
-                        relative_urls: false,
-                        block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4; Preformatted=pre',
-                    });
-                }
-
-                // Jalankan saat load normal maupun setelah navigasi wire:navigate (Livewire)
-                initTiny();
-                document.addEventListener('DOMContentLoaded', initTiny);
-                document.addEventListener('livewire:navigated', initTiny);
-            })();
-        </script>
-    @endpush
 </x-layouts::app>

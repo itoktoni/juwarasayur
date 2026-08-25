@@ -2,7 +2,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
     <meta name="csrf-token" content="{{ csrf_token() }}"/>
-    <meta name="notification-enabled" content="{{ config('langkahkecil.notification_enable') ? 'true' : 'false' }}"/>
+    <meta name="notification-enabled" content="{{ config('centrifugo.enabled') ? 'true' : 'false' }}"/>
     @if(config('centrifugo.url'))
     <meta name="centrifugo-url" content="{{ str_replace(['http://', 'https://'], ['ws://', 'wss://'], config('centrifugo.url')) }}/connection/websocket"/>
     @endif

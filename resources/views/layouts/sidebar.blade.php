@@ -7,3 +7,30 @@
         <x-menu-items />
     </nav>
 </aside>
+
+<script>
+    // Auto-scroll sidebar ke menu yang aktif saat load maupun navigasi wire:navigate
+    (function () {
+        function scrollToActiveMenu() {
+            var nav = document.querySelector('.sidebar-scroll');
+            var active = nav ? nav.querySelector('a.bg-primary') : null;
+            if (!nav || !active) return;
+
+            var navRect = nav.getBoundingClientRect();
+            var elRect = active.getBoundingClientRect();
+
+            // Hanya scroll kalau item di luar area terlihat
+            if (elRect.top >= navRect.top && elRect.bottom <= navRect.bottom) return;
+
+            // Posisikan item aktif di tengah viewport sidebar (dibatasi atas/bawah)
+            var target = nav.scrollTop + (elRect.top - navRect.top)
+                - (nav.clientHeight / 2 - elRect.height / 2);
+            nav.scrollTop = Math.max(0, target);
+        }
+
+        document.addEventListener('DOMContentLoaded', scrollToActiveMenu);
+        document.addEventListener('livewire:navigated', function () {
+            setTimeout(scrollToActiveMenu, 50);
+        });
+    })();
+</script>

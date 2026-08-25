@@ -20,7 +20,7 @@
 <div class="col-span-12 md:col-span-{{ $col }}">
     <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">{{ $label }}</label>
     <div class="relative">
-        <select name="{{ $name }}" {{ $multiple ? 'multiple' : '' }} id="select-{{ $name }}" class="{{ $selectClass }}" {{ $attributes->except('class') }}>
+        <select name="{{ $name }}" {{ $multiple ? 'multiple' : '' }} id="select-{{ $name }}" data-has-error="{{ $hasError ? '1' : '0' }}" class="{{ $selectClass }}" {{ $attributes->except('class') }}>
             @if(!$multiple && $placeholder !== false)
             <option value="">{{ $placeholder ?: '-- Silahkan Pilih --' }}</option>
             @endif
@@ -37,8 +37,6 @@
 </div>
 @if($isTomSelect)
 @once
-<link href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.3.1/css/tom-select.css" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.3.1/js/tom-select.complete.min.js"></script>
 <style>
     .ts-wrapper {
         display: block !important;
@@ -141,6 +139,50 @@
     }
 </style>
 @endonce
+<script>
+(function () {
+    function build(el) {
+        var multiple = el.multiple;
+        var ts = new TomSelect(el, {
+            create: multiple,
+            plugins: multiple ? ['remove_button'] : [],
+            allowEmptyOption: true,
+        });
+        if (el.dataset.hasError === '1') {
+            ts.wrapper.classList.add('has-error');
+        }
+
+        return ts;
+    }
+
+    function initEl(el) {
+        if (!window.TomSelect) return;
+
+        // Snapshot dari cache wire:navigate membawa .ts-wrapper bekas tanpa
+        // event listener — pulihkan <select> asli lalu inisialisasi ulang.
+        var stale = el.closest('.ts-wrapper');
+        if (stale && !el.tomselect) {
+            stale.replaceWith(el);
+        }
+
+        if (el.tomselect) return;
+        build(el);
+    }
+
+    function initAll() {
+        if (!window.TomSelect) return;
+        document.querySelectorAll('select.search').forEach(initEl);
+    }
+
+    // Boot global sekali — menangani halaman yang dipulihkan wire:navigate
+    if (!window.__tomSelectBooted) {
+        window.__tomSelectBooted = true;
+        window.tomSelectInit = initAll;
+        document.addEventListener('livewire:navigated', initAll);
+        document.addEventListener('DOMContentLoaded', initAll);
+    }
+})();
+</script>
 <script>
 (function () {
     function init() {

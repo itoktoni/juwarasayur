@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode', 'product_deskripsi', 'product_deskripsi_lengkap', 'product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'product_gambar', 'product_galeri', 'product_status', 'is_featured', 'is_active', 'sort_order', 'product_id_brand', 'product_id_satuan', 'product_id_category'])]
+#[Fillable(['product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode', 'product_deskripsi', 'product_deskripsi_lengkap', 'product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'product_gambar', 'product_galeri', 'product_status', 'is_featured', 'is_active', 'sort_order', 'product_id_product_master', 'product_id_brand', 'product_id_satuan', 'product_id_category'])]
 class Product extends BaseModel
 {
     use SoftDeletes;
@@ -44,6 +44,11 @@ class Product extends BaseModel
     public function getProductGambarUrlAttribute(): string
     {
         return fileUrl($this->product_gambar);
+    }
+
+    public function has_product_master(): BelongsTo
+    {
+        return $this->belongsTo(ProductMaster::class, 'product_id_product_master');
     }
 
     public function has_brand(): BelongsTo
@@ -124,6 +129,7 @@ class Product extends BaseModel
             'is_featured' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer'],
+            'product_id_product_master' => ['nullable', 'exists:catalog_product_masters,id'],
             'product_id_brand' => ['nullable', 'exists:catalog_brands,id'],
             'product_id_satuan' => ['nullable', 'exists:catalog_satuans,id'],
             'product_id_category' => ['nullable', 'exists:catalog_categories,id'],

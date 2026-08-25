@@ -21,7 +21,7 @@ $icons = [
 {{-- Toast container — session-based toasts (form success/error) --}}
 <div
     id="toast-container"
-    class="fixed bottom-4 right-4 z-50 space-y-2 w-80"
+    class="fixed top-4 right-4 z-50 space-y-2 w-80"
 >
     @foreach ($toasts as $toast)
         @php
@@ -34,11 +34,11 @@ $icons = [
             x-init="setTimeout(() => show = false, {{ $dur }})"
             x-show="show"
             x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-2"
+            x-transition:enter-start="opacity-0 -translate-y-2"
             x-transition:enter-end="opacity-100 translate-y-0"
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 translate-y-2"
+            x-transition:leave-end="opacity-0 -translate-y-2"
             class="flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg text-sm font-medium border {{ $cls }}"
         >
             <span class="material-symbols-outlined text-base mt-0.5">{{ $icon }}</span>

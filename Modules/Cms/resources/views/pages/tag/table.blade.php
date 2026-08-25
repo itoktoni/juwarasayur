@@ -1,4 +1,4 @@
-﻿<?php /** @var Modules\Cms\Models\Tag $table */ ?>
+<?php /** @var Modules\Cms\Models\Tag $table */ ?>
 
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => ucfirst(modules())]]" />
@@ -56,6 +56,7 @@
     </div>
 
     <input type="hidden" class="module" value="{{ modules() }}">
-    <script src="/js/table.js?v=3"></script>
+    <script src="/js/table.js?v=4"></script>
     <script>initTable('{{ $sortField }}', '{{ $sortDir }}');</script>
 </x-layouts::app>
+

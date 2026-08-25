@@ -3,14 +3,19 @@
 namespace Modules\Po\Http\Controllers;
 
 use App\Http\Requests\GeneralRequest;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Models\Product;
+use Modules\Catalog\Models\ProductMaster;
 use Modules\Inventory\Models\Lokasi;
 use Modules\Po\Actions\PreparePoDetailAction;
 use Modules\Po\Enums\PoStatusEnum;
 use Modules\Po\Models\Po;
 use Modules\Po\Models\PoDetail;
 use Modules\Po\Models\Supplier;
+use Modules\So\Enums\SoStatusEnum;
+use Modules\So\Models\So;
+use Modules\So\Models\SoDetail;
 
 class PoController extends Controller
 {
@@ -141,6 +146,173 @@ class PoController extends Controller
         } catch (\Throwable $th) {
             return $this->response($this->payload(TOAST_FAILED, $th->getMessage()));
         }
+    }
+
+    public function previewGenerateFromSo(GeneralRequest $request)
+    {
+        $tanggal = $request->input('tanggal');
+        $groups = collect();
+        $warnings = collect();
+
+        if ($tanggal) {
+            [$groups, $warnings] = $this->buildSoGroups($tanggal);
+        }
+
+        return $this->views('po::pages.po.generate-from-so', [
+            'tanggal' => $tanggal,
+            'groups' => $groups,
+            'warnings' => $warnings,
+        ]);
+    }
+
+    public function doGenerateFromSo(GeneralRequest $request)
+    {
+        $validated = $request->validate([
+            'tanggal' => ['required', 'date'],
+        ]);
+        $tanggal = $validated['tanggal'];
+
+        [$masterGroups, $warnings] = $this->buildSoGroups($tanggal);
+
+        $valid = $masterGroups->filter(fn ($group) => $group['supplier'] !== null);
+
+        if ($valid->isEmpty()) {
+            return back()->withErrors(['tanggal' => 'Tidak ada item dengan supplier rekomendasi untuk tanggal '.$tanggal.'.'])->withInput();
+        }
+
+        try {
+            $poCodes = DB::transaction(function () use ($valid, $tanggal) {
+                $codes = [];
+                $coveredDetailIds = [];
+
+                // Gabungkan grup master per supplier — 1 PO = 1 supplier multi-baris produk
+                $bySupplier = [];
+                foreach ($valid as $group) {
+                    $sid = $group['supplier']->id;
+                    $bySupplier[$sid] ??= [
+                        'supplier' => $group['supplier'],
+                        'masters' => [],
+                        'lines' => [],
+                    ];
+                    $bySupplier[$sid]['masters'][] = $group['nama'];
+
+                    foreach ($group['items'] as $item) {
+                        $pid = $item['product_id'];
+                        $bySupplier[$sid]['lines'][$pid] ??= [
+                            'product_id' => $pid,
+                            'qty' => 0,
+                            'harga' => (float) ($item['harga_modal'] ?? $item['harga']),
+                        ];
+                        $bySupplier[$sid]['lines'][$pid]['qty'] += (int) $item['qty'];
+                        $coveredDetailIds[] = $item['so_detail_id'];
+                    }
+                }
+
+                foreach ($bySupplier as $data) {
+                    $po = Po::create([
+                        'po_tanggal' => $tanggal,
+                        'po_id_supplier' => $data['supplier']->id,
+                        'po_keterangan' => 'Generate dari SO tanggal '.$tanggal.' — master: '.implode(', ', array_unique($data['masters'])),
+                    ]);
+
+                    $seq = 1;
+                    foreach ($data['lines'] as $line) {
+                        PoDetail::create([
+                            'po_detail_id_po' => $po->id,
+                            'po_detail_id_product' => $line['product_id'],
+                            'po_detail_code' => sprintf('%s-%03d', $po->po_code, $seq++),
+                            'po_detail_qty' => $line['qty'],
+                            'po_detail_harga' => $line['harga'],
+                            'po_detail_keterangan' => null,
+                        ]);
+                    }
+
+                    $po->recalculateTotals();
+                    $codes[] = $po->po_code;
+                }
+
+                // Tandai tiap SO detail yang sudah dibuatkan PO (anti dobel-generate
+                // di level detail — SO parsial tetap bisa digenerate sisanya)
+                SoDetail::whereIn('id', array_unique($coveredDetailIds))
+                    ->update(['po_generated_at' => now()]);
+
+                // Tandai juga level SO bila seluruh detailnya ter-cover (indikator UI)
+                $soIds = SoDetail::whereIn('id', array_unique($coveredDetailIds))->pluck('so_detail_id_so')->unique();
+                foreach ($soIds as $soId) {
+                    $totalDetails = SoDetail::where('so_detail_id_so', $soId)->count();
+                    $coveredCount = SoDetail::whereIn('id', $coveredDetailIds)->where('so_detail_id_so', $soId)->count();
+                    if ($coveredCount === $totalDetails) {
+                        So::whereKey($soId)->update(['so_po_generated_at' => now()]);
+                    }
+                }
+
+                return $codes;
+            });
+
+            flash()->success('PO berhasil dibuat: '.implode(', ', $poCodes));
+
+            // Arahkan ke daftar PO — preview tanggal ini kini kosong karena SO sudah ditandai
+            return redirect()->route('po-po.getTable');
+        } catch (\Throwable $th) {
+            return back()->withErrors(['tanggal' => $th->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Kelompokkan detail SO pada satu tanggal berdasarkan product master.
+     * Return [groups, warnings] — group tanpa supplier rekomendasi masuk warnings.
+     *
+     * @return array{0: Collection, 1: Collection}
+     */
+    private function buildSoGroups(string $tanggal): array
+    {
+        $details = SoDetail::query()
+            ->whereHas('has_so', fn ($q) => $q
+                ->whereDate('so_tanggal', $tanggal)
+                ->where('so_status', '!=', SoStatusEnum::CANCELLED)
+                ->whereNull('so_po_generated_at'))
+            // Detail yang sudah pernah dibuatkan PO tidak boleh digenerate ulang
+            ->whereNull('po_generated_at')
+            ->with(['has_so', 'has_product.has_product_master.has_suppliers'])
+            ->get();
+
+        $groups = collect();
+        $warnings = collect();
+
+        foreach ($details->groupBy(fn ($d) => optional($d->has_product?->has_product_master)->id ?? 0) as $items) {
+            $first = $items->first();
+            $master = $first->has_product?->has_product_master;
+
+            $rows = $items->map(fn ($d) => [
+                'so_detail_id' => $d->id,
+                'so_code' => $d->has_so->so_code,
+                'product_id' => $d->so_detail_id_product,
+                'product_nama' => $d->has_product?->product_nama,
+                'berat' => (float) ($d->has_product?->product_berat ?? 0),
+                'qty' => (int) $d->so_detail_qty,
+                'total_berat' => (float) ($d->has_product?->product_berat ?? 0) * (int) $d->so_detail_qty,
+                'harga' => (float) ($d->has_product?->product_harga ?? 0),
+                'harga_modal' => $d->has_product?->product_harga_modal,
+            ])->values();
+
+            $group = [
+                'master' => $master,
+                'nama' => $master?->{ProductMaster::field_name()} ?? $first->has_product?->product_nama.' (tanpa master)',
+                'items' => $rows,
+                'total_berat' => $rows->sum('total_berat'),
+                'supplier' => $master?->has_suppliers->firstWhere('pivot.is_recommended', true),
+                // Produk tanpa master ATAU master tanpa supplier rekomendasi tidak boleh digenerate
+                'reason' => $master === null ? 'Tanpa Product Master' : 'Tanpa Supplier Rekomendasi',
+            ];
+
+            if ($group['supplier'] === null) {
+                $warnings->push($group);
+            } else {
+                $groups->push($group);
+            }
+        }
+
+        return [$groups, $warnings];
     }
 
     private function syncDetails(Po $po, array $details): void

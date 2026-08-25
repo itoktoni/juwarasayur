@@ -7,6 +7,10 @@
             unreadCount: 0,
 
             init() {
+                // Hormati flag NOTIFICATION_ENABLE — jangan panggil endpoint saat disabled
+                if (document.querySelector('meta[name="notification-enabled"]')?.content !== 'true') {
+                    return;
+                }
                 this.fetchNotifications();
                 window.addEventListener('new-notification', (e) => this.handleRealtimeNotification(e.detail));
             },
@@ -114,7 +118,7 @@
         if (!container) {
             container = document.createElement('div');
             container.id = 'toast-container';
-            container.className = 'fixed bottom-4 right-4 z-50 space-y-2 w-80';
+            container.className = 'fixed top-4 right-4 z-50 space-y-2 w-80';
             document.body.appendChild(container);
         }
 
@@ -134,7 +138,7 @@
 
         setTimeout(function() {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(0.5rem)';
+            toast.style.transform = 'translateY(-0.5rem)';
             setTimeout(function() { toast.remove(); }, 300);
         }, duration);
     };
