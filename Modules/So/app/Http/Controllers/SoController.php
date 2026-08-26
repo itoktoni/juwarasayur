@@ -5,6 +5,7 @@ namespace Modules\So\Http\Controllers;
 use App\Enums\UserTypeEnum;
 use App\Http\Requests\GeneralRequest;
 use App\Models\User;
+use App\Services\Commission\FeeResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Models\Product;
@@ -17,7 +18,7 @@ use Modules\So\Services\DistanceService;
 
 class SoController extends Controller
 {
-    public function __construct(So $model)
+    public function __construct(So $model, protected FeeResolver $fees)
     {
         $this->model = $model::getModel();
     }
@@ -249,6 +250,32 @@ class SoController extends Controller
             $data['so_shipping_fee'] = 0;
         }
 
+        // Terapkan FeeResolver per baris: reseller dapat harga diskon, affiliator dapat snapshot komisi
+        if (! empty($data['details']) && is_array($data['details'])) {
+            $user = Auth::user();
+            foreach ($data['details'] as $idx => $row) {
+                $product = Product::find((int) ($row['so_detail_id_product'] ?? 0));
+                if (! $product) continue;
+                $harga = (float) ($row['so_detail_harga'] ?? $product->product_harga);
+                $qty = (int) ($row['so_detail_qty'] ?? 1);
+                $res = $this->fees->resolve($product, $user, $qty, $harga);
+                // Reseller: harga sudah didiskon, affiliator: harga tetap
+                $data['details'][$idx]['so_detail_harga'] = $res->hargaEfektif;
+                if ($user?->isAffiliator()) {
+                    $data['details'][$idx]['fee_percent'] = $res->percent;
+                    $data['details'][$idx]['fee_amount'] = $res->amount;
+                    $data['details'][$idx]['fee_source'] = $res->source;
+                    $data['details'][$idx]['applied_role'] = $res->role;
+                } else {
+                    // Reseller/user biasa: tidak ada komisi snapshot, tapi simpan role untuk audit
+                    $data['details'][$idx]['fee_percent'] = null;
+                    $data['details'][$idx]['fee_amount'] = 0;
+                    $data['details'][$idx]['fee_source'] = $res->source;
+                    $data['details'][$idx]['applied_role'] = $res->role;
+                }
+            }
+        }
+
         return $data;
     }
 
@@ -264,6 +291,10 @@ class SoController extends Controller
                 'so_detail_id_product' => (int) $row['so_detail_id_product'],
                 'so_detail_qty' => (int) $row['so_detail_qty'],
                 'so_detail_harga' => (float) ($row['so_detail_harga'] ?? 0),
+                'fee_percent' => isset($row['fee_percent']) ? (float) $row['fee_percent'] : null,
+                'fee_amount' => (float) ($row['fee_amount'] ?? 0),
+                'fee_source' => $row['fee_source'] ?? null,
+                'applied_role' => $row['applied_role'] ?? null,
                 'so_detail_keterangan' => $row['so_detail_keterangan'] ?? null,
             ];
 
@@ -304,7 +335,7 @@ class SoController extends Controller
     {
         $user = Auth::user();
 
-        if ($user && $user->type === UserTypeEnum::RESELLER) {
+        if ($user && in_array($user->type, [UserTypeEnum::RESELLER, UserTypeEnum::AFFILIATOR], true)) {
             return $user->hasCustomers()->orderBy('name')->pluck('name', 'id')->all();
         }
 

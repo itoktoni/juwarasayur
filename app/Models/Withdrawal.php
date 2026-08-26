@@ -42,15 +42,31 @@ class Withdrawal extends BaseModel
     }
 
     /**
-     * Komisi yang dihasilkan reseller (belum dikurangi withdraw).
-     * Rate pakai fee milik reseller; jika NULL fallback ke config global.
+     * Komisi yang dihasilkan affiliator (belum dikurangi withdraw).
+     * Reseller tidak dapat komisi (hanya diskon harga), return 0.
+     * Untuk affiliator: sum fee_amount snapshot per so_detail, fallback ke rumus lama untuk data sebelum migration.
      */
-    public static function earned(User $reseller): float
+    public static function earned(User $user): float
     {
+        if (! $user->isAffiliator()) {
+            return 0;
+        }
+
+        $sum = (float) \Illuminate\Support\Facades\DB::table('so_order_details')
+            ->join('so_orders', 'so_orders.id', '=', 'so_order_details.so_detail_id_so')
+            ->where('so_orders.so_id_reseller', $user->id)
+            ->whereNot('so_orders.so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+            ->sum('so_order_details.fee_amount');
+
+        if ($sum > 0) {
+            return $sum;
+        }
+
+        // Fallback untuk data lama sebelum snapshot fee_amount
         return (float) \Modules\So\Models\So::query()
-            ->where('so_id_reseller', $reseller->id)
+            ->where('so_id_reseller', $user->id)
             ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
-            ->sum('so_grand_total') * $reseller->effectiveFee() / 100;
+            ->sum('so_grand_total') * $user->effectiveFee() / 100;
     }
 
     /**
