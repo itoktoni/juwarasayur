@@ -27,6 +27,8 @@
                 <th>Nama</th>
                 <th>Kode</th>
                 <th>Harga</th>
+                <th>Diskon Reseller</th>
+                <th>Komisi Affiliator</th>
                 <th>Stok</th>
                 <th>Status</th>
             </x-slot:head>
@@ -45,6 +47,8 @@
                     <td>{{ $table->product_nama }}</td>
                     <td>{{ $table->product_kode ?? '-' }}</td>
                     <td>{{ formatAngka((int) $table->product_harga, 'Rp ') }}</td>
+                    <td>{{ $table->reseller_fee_percent ? $table->reseller_fee_percent . '%' : '-' }}</td>
+                    <td>{{ $table->affiliator_fee_percent ? $table->affiliator_fee_percent . '%' : '-' }}</td>
                     <td>{{ $table->product_stok }}</td>
                     <td><x-badge :label="ucfirst($table->product_status)" :variant="$table->product_status === 'active' ? 'success' : 'soft'" /></td>
                 </tr>
@@ -65,6 +69,18 @@
                                 <span class="text-xs text-on-surface-variant">Harga</span>
                                 <span class="text-sm font-medium text-right">{{ formatAngka((int) $table->product_harga, 'Rp ') }}</span>
                             </div>
+                            @if($table->reseller_fee_percent)
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs text-on-surface-variant">Diskon Reseller</span>
+                                <span class="text-sm font-medium text-right">{{ $table->reseller_fee_percent }}%</span>
+                            </div>
+                            @endif
+                            @if($table->affiliator_fee_percent)
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs text-on-surface-variant">Komisi Affiliator</span>
+                                <span class="text-sm font-medium text-right">{{ $table->affiliator_fee_percent }}%</span>
+                            </div>
+                            @endif
                             <div class="flex justify-between items-center gap-2">
                                 <span class="text-xs text-on-surface-variant">Stok</span>
                                 <span class="text-sm font-medium text-right">{{ $table->product_stok }}</span>

@@ -2,7 +2,9 @@
 
 namespace Modules\Ecommerce\Http\Controllers;
 
+use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Modules\Catalog\Models\Product;
@@ -76,12 +78,17 @@ class HomeController extends Controller
         $hours = (int) ($settings['flash_sale_hours'] ?? 0);
         $flashSaleEndsAt = $hours > 0 ? now()->addHours($hours) : now()->endOfDay();
 
+        $user = Auth::user();
+        $isReseller = $user && $user->type === UserTypeEnum::RESELLER;
+
         return view('ecommerce::pages.home', [
             'flashSaleProducts' => $flashSaleProducts,
             'latestProducts' => $latestProducts,
             'bestSellingProducts' => $bestSellingProducts,
             'flashSaleEndsAt' => $flashSaleEndsAt,
             'settings' => $settings,
+            'user' => $user,
+            'isReseller' => $isReseller,
         ]);
     }
 

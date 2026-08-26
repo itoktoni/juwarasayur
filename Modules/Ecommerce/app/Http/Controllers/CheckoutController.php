@@ -85,11 +85,12 @@ class CheckoutController extends Controller
 
         $user = Auth::user();
         $isReseller = $user && $user->isReseller();
+        $isAffiliator = $user && $user->isAffiliator();
 
         $customers = collect();
         $customer = $user;
 
-        if ($isReseller) {
+        if ($isAffiliator) {
             $customers = $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->get(['id', 'name', 'phone']);
             $selectedId = (int) Session::get('reseller_customer_id', 0);
             // Tanpa pilihan customer = belanja untuk diri sendiri → pakai data user login
@@ -98,13 +99,21 @@ class CheckoutController extends Controller
                 : $user;
         }
 
-        $subtotal = $this->cart->subtotal();
+        // Hitung subtotal dengan diskon reseller
+        $subtotal = $items->sum(function ($item) use ($isReseller) {
+            $harga = (float) ($item->has_product?->product_harga ?? 0);
+            $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
+            $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+
+            return $item->qty * $hargaEfektif;
+        });
 
         return view('ecommerce::pages.checkout.form', [
             'items' => $items,
             'subtotal' => $subtotal,
             'customer' => $customer,
             'isReseller' => $isReseller,
+            'isAffiliator' => $isAffiliator,
             'customers' => $customers,
             // Kode diskon yang sedang diredeem (jika valid)
             'discount' => $this->activeDiscount($subtotal),

@@ -24,13 +24,14 @@ class CartController extends Controller
 
         $user = Auth::user();
         $isReseller = $user && $user->isReseller();
-        // Hanya user bertipe customer yang jadi opsi (bukan diri reseller sendiri)
-        $customers = $isReseller
+        $isAffiliator = $user && $user->isAffiliator();
+        // Hanya user bertipe customer yang jadi opsi (bukan diri sendiri)
+        $customers = $isAffiliator
             ? $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->get(['id', 'name', 'phone'])
             : collect();
 
         // Preselect customer dari halaman "Customer Saya" (?customer_id=)
-        if ($isReseller && $request->filled('customer_id')) {
+        if ($isAffiliator && $request->filled('customer_id')) {
             $owned = $user->hasCustomers()->where('type', UserTypeEnum::CUSTOMER)->find((int) $request->input('customer_id'));
             if ($owned) {
                 Session::put('reseller_customer_id', $owned->id);
@@ -39,12 +40,22 @@ class CartController extends Controller
             }
         }
 
-        $selectedCustomerId = $isReseller ? (int) Session::get('reseller_customer_id', 0) : 0;
+        $selectedCustomerId = $isAffiliator ? (int) Session::get('reseller_customer_id', 0) : 0;
+
+        // Hitung subtotal dengan diskon reseller
+        $subtotal = $items->sum(function ($item) use ($isReseller) {
+            $harga = (float) ($item->has_product?->product_harga ?? 0);
+            $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
+            $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+
+            return $item->qty * $hargaEfektif;
+        });
 
         return view('ecommerce::pages.cart.index', [
             'items' => $items,
-            'subtotal' => $this->cart->subtotal(),
+            'subtotal' => $subtotal,
             'isReseller' => $isReseller,
+            'isAffiliator' => $isAffiliator,
             'customers' => $customers,
             'selectedCustomerId' => $selectedCustomerId,
         ]);
@@ -61,7 +72,7 @@ class CartController extends Controller
         $user = Auth::user();
         $selectedId = 0;
 
-        if ($user && $user->isReseller()) {
+        if ($user && $user->isAffiliator()) {
             if ($request->customer_id) {
                 // find → kalau id tidak valid, anggap tidak memilih apa-apa
                 $customer = User::where('type', UserTypeEnum::CUSTOMER)

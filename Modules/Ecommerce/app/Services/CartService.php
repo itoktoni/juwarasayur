@@ -56,6 +56,7 @@ class CartService
         }
 
         return CartItem::with('has_product.has_satuan')
+            ->where('so_cart_items.user_id', Auth::id())
             ->join('catalog_products', 'catalog_products.id', '=', 'so_cart_items.product_id')
             ->orderBy('catalog_products.product_nama')
             ->select('so_cart_items.*')

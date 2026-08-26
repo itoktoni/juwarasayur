@@ -148,9 +148,21 @@
                 <h3 class="font-bold text-on-surface mb-3">Ringkasan ({{ $items->count() }} produk)</h3>
                 <div class="divide-y divide-outline-variant/60 text-sm max-h-64 overflow-auto">
                     @foreach($items as $item)
+                        @php
+                            $itemHarga = (float) ($item->has_product?->product_harga ?? 0);
+                            $itemResellerPct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
+                            $itemHargaEfektif = $itemResellerPct > 0 ? $itemHarga * (1 - $itemResellerPct / 100) : $itemHarga;
+                        @endphp
                         <div class="flex items-center justify-between py-2 gap-2">
                             <span class="truncate text-on-surface">{{ $item->has_product?->product_nama }} <span class="text-on-surface-variant">× {{ $item->qty }}</span></span>
-                            <span class="font-mono shrink-0">{{ formatAngka((int) ($item->qty * (float) ($item->has_product?->product_harga ?? 0)), 'Rp') }}</span>
+                            <span class="font-mono shrink-0">
+                                @if($isReseller && $itemResellerPct > 0)
+                                    <span class="line-through opacity-60 text-xs">{{ formatAngka((int) ($item->qty * $itemHarga), 'Rp') }}</span>
+                                    <span class="text-primary font-semibold">{{ formatAngka((int) ($item->qty * $itemHargaEfektif), 'Rp') }}</span>
+                                @else
+                                    {{ formatAngka((int) ($item->qty * $itemHarga), 'Rp') }}
+                                @endif
+                            </span>
                         </div>
                     @endforeach
                 </div>
@@ -182,7 +194,7 @@
                     <span>Total Bayar</span>
                     <span class="font-mono text-primary text-base">{{ formatAngka((int) $subtotal, 'Rp') }}</span>
                 </div>
-                <button type="submit" id="btn-submit" class="btn btn-primary w-full h-12 mt-4 text-base">
+                <button type="submit" id="btn-submit" class="btn bg-green-600 hover:bg-green-700 text-white w-full h-12 mt-4 text-base">
                     <span class="material-symbols-outlined text-base">qr_code_2</span> Buat Pesanan &amp; Bayar
                 </button>
                 <p class="text-[11px] text-center text-on-surface-variant mt-2 flex items-center justify-center gap-1">

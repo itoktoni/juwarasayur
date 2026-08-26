@@ -2,8 +2,10 @@
 
 namespace Modules\Ecommerce\Http\Controllers;
 
+use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Modules\Catalog\Models\Brand;
 use Modules\Catalog\Models\Category;
@@ -71,7 +73,10 @@ class StorefrontController extends Controller
         $activeTag = $tagSlug !== '' ? Tag::where('tag_slug', $tagSlug)->first() : null;
         $activeBrand = $brandSlug !== '' ? Brand::where('brand_slug', $brandSlug)->first() : null;
 
-        return view('ecommerce::pages.shop.index', compact('products', 'categories', 'brands', 'tags', 'activeCategory', 'activeTag', 'activeBrand', 'q', 'sort', 'perPage', 'categorySlug', 'tagSlug', 'brandSlug'));
+        $user = Auth::user();
+        $isReseller = $user && $user->type === UserTypeEnum::RESELLER;
+
+        return view('ecommerce::pages.shop.index', compact('products', 'categories', 'brands', 'tags', 'activeCategory', 'activeTag', 'activeBrand', 'q', 'sort', 'perPage', 'categorySlug', 'tagSlug', 'brandSlug', 'user', 'isReseller'));
     }
 
     public function show(string $slug): View
@@ -93,7 +98,10 @@ class StorefrontController extends Controller
             ->limit(8)
             ->get();
 
-        return view('ecommerce::pages.shop.show', compact('product', 'related'));
+        $user = Auth::user();
+        $isReseller = $user && $user->type === UserTypeEnum::RESELLER;
+
+        return view('ecommerce::pages.shop.show', compact('product', 'related', 'user', 'isReseller'));
     }
 
     private function categoryWithDescendants(Category $category): array

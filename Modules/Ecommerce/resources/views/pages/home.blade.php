@@ -44,7 +44,7 @@
                                 <span class="material-symbols-outlined text-xl text-on-surface-variant">person</span>
                                 Profile
                             </a>
-                            @if(auth()->user()->isReseller())
+                            @if(auth()->user()->isAffiliator())
                                 <a href="{{ route('account.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
                                     <span class="material-symbols-outlined text-xl text-on-surface-variant">space_dashboard</span> Dashboard
                                 </a>
@@ -115,6 +115,12 @@
         @else
             <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($flashSaleProducts as $p)
+                    @php
+                        $harga = (int) $p->product_harga;
+                        $resellerPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
+                        $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        $showDualPrice = $isReseller && $hargaReseller > 0;
+                    @endphp
                     <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
                         <span class="absolute left-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-error px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest text-on-error shadow-lg shadow-error/40"><span class="material-symbols-outlined text-[11px]" style="font-variation-settings: 'FILL' 1;">bolt</span>Flash</span>
                         <a href="{{ route('shop.show', $p->product_slug) }}" class="relative block aspect-square overflow-hidden bg-surface-container">
@@ -124,14 +130,22 @@
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
-<button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
-    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
-    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
-        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
-    </span>
-</button>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                        <div class="px-3 pb-2 mt-auto">
+                            @if($showDualPrice)
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</span>
+                                    <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $resellerPct }}%</span>
+                                </div>
+                                <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
+                            @else
+                                <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($harga, 'Rp ') }}</p>
+                            @endif
+                        </div>
+                        <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+                            class="flex w-full items-center justify-center gap-1.5 bg-primary text-on-primary text-xs font-semibold py-2 transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50">
+                            <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span> Keranjang
+                        </button>
                     </div>
                 @endforeach
             </div>
@@ -152,6 +166,12 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($bestSellingProducts as $p)
+                    @php
+                        $harga = (int) $p->product_harga;
+                        $resellerPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
+                        $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        $showDualPrice = $isReseller && $hargaReseller > 0;
+                    @endphp
                     <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
                         <a href="{{ route('shop.show', $p->product_slug) }}" class="relative block aspect-square overflow-hidden bg-surface-container">
                             @if($p->product_gambar)
@@ -160,14 +180,22 @@
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
-<button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
-    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
-    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
-        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
-    </span>
-</button>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                        <div class="px-3 pb-2 mt-auto">
+                            @if($showDualPrice)
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</span>
+                                    <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $resellerPct }}%</span>
+                                </div>
+                                <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
+                            @else
+                                <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($harga, 'Rp ') }}</p>
+                            @endif
+                        </div>
+                        <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+                            class="flex w-full items-center justify-center gap-1.5 bg-primary text-on-primary text-xs font-semibold py-2 transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50">
+                            <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span> Keranjang
+                        </button>
                     </div>
                 @endforeach
             </div>
@@ -185,6 +213,12 @@
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($latestProducts as $p)
+                    @php
+                        $harga = (int) $p->product_harga;
+                        $resellerPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
+                        $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        $showDualPrice = $isReseller && $hargaReseller > 0;
+                    @endphp
                     <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
                         <a href="{{ route('shop.show', $p->product_slug) }}" class="relative block aspect-square overflow-hidden bg-surface-container">
                             @if($p->product_gambar)
@@ -193,14 +227,22 @@
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-2 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
-<button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
-    class="mt-auto flex w-full items-center justify-between gap-2 bg-primary px-3 py-2.5 text-on-primary transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50" title="Tambah ke keranjang">
-    <span class="text-sm font-extrabold tracking-tight">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</span>
-    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/20 shadow-inner">
-        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
-    </span>
-</button>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                        <div class="px-3 pb-2 mt-auto">
+                            @if($showDualPrice)
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</span>
+                                    <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $resellerPct }}%</span>
+                                </div>
+                                <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
+                            @else
+                                <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($harga, 'Rp ') }}</p>
+                            @endif
+                        </div>
+                        <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+                            class="flex w-full items-center justify-center gap-1.5 bg-primary text-on-primary text-xs font-semibold py-2 transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50">
+                            <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span> Keranjang
+                        </button>
                     </div>
                 @endforeach
             </div>

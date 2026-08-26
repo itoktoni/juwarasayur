@@ -85,9 +85,20 @@
                     </p>
                 </div>
 
-                <div class="card">
+                    <div class="card">
                     <div class="card-body">
-                        <p class="text-2xl font-bold text-primary">{{ formatAngka((int) $product->product_harga, 'Rp ') }}</p>
+                        @php
+                            $harga = (int) $product->product_harga;
+                            $resellerPct = $isReseller ? (float) ($product->reseller_fee_percent ?? 0) : 0;
+                            $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        @endphp
+                        @if($isReseller && $hargaReseller > 0)
+                            <p class="text-sm text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</p>
+                            <p class="text-2xl font-bold text-primary">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
+                            <p class="text-xs text-on-surface-variant mt-0.5">Harga reseller (diskon {{ $resellerPct }}%)</p>
+                        @else
+                            <p class="text-2xl font-bold text-primary">{{ formatAngka($harga, 'Rp ') }}</p>
+                        @endif
                         @if($product->product_harga_grosir)
                             <p class="text-xs text-on-surface-variant">Grosir: {{ formatAngka((int) $product->product_harga_grosir, 'Rp ') }}</p>
                         @endif
@@ -139,25 +150,39 @@
                 <h2 class="font-semibold mb-3">Produk terkait</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                     @foreach($related as $p)
-                        <div class="card overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                        @php
+                            $relHarga = (int) $p->product_harga;
+                            $relPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
+                            $relHargaReseller = $relPct > 0 ? (int) ($relHarga * (1 - $relPct / 100)) : 0;
+                            $relShowDual = $isReseller && $relHargaReseller > 0;
+                        @endphp
+                        <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
                             <a href="{{ route('shop.show', $p->product_slug) }}" class="aspect-[4/3] bg-surface-container overflow-hidden block">
                                 @if($p->product_gambar)
-                                    <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover" loading="lazy">
+                                    <img src="{{ $p->product_gambar_url }}" alt="{{ $p->product_nama }}" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" loading="lazy">
                                 @else
                                     <div class="w-full h-full grid place-items-center text-outline"><span class="material-symbols-outlined">image</span></div>
                                 @endif
                             </a>
-                            <div class="p-3 flex flex-col gap-1 flex-1">
+                            <div class="px-3 pb-1 pt-2.5 flex-1">
                                 <p class="text-xs text-on-surface-variant line-clamp-1">{{ $p->has_category?->category_nama ?? '' }}</p>
                                 <a href="{{ route('shop.show', $p->product_slug) }}" class="font-medium text-sm line-clamp-2 leading-tight hover:text-primary transition-colors">{{ $p->product_nama }}</a>
-                                <p class="font-bold text-sm text-primary mt-1">{{ formatAngka((int) $p->product_harga, 'Rp ') }}</p>
-                                <button type="button"
-                                    onclick="addToCart({{ $p->id }}, this)"
-                                    @disabled($p->product_stok <= 0)
-                                    class="mt-auto pt-2 w-full inline-flex items-center justify-center gap-1 rounded-lg bg-primary text-on-primary text-xs font-semibold py-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none">
-                                    <span class="material-symbols-outlined text-sm">add_shopping_cart</span> Keranjang
-                                </button>
                             </div>
+                            <div class="px-3 pb-2 mt-auto">
+                                @if($relShowDual)
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($relHarga, 'Rp ') }}</span>
+                                        <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $relPct }}%</span>
+                                    </div>
+                                    <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($relHargaReseller, 'Rp ') }}</p>
+                                @else
+                                    <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($relHarga, 'Rp ') }}</p>
+                                @endif
+                            </div>
+                            <button type="button" onclick="addToCart({{ $p->id }}, this)" @disabled($p->product_stok <= 0)
+                                class="flex w-full items-center justify-center gap-1.5 bg-primary text-on-primary text-xs font-semibold py-2 transition-colors duration-200 hover:bg-primary-container disabled:pointer-events-none disabled:opacity-50">
+                                <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span> Keranjang
+                            </button>
                         </div>
                     @endforeach
                 </div>

@@ -14,7 +14,7 @@
                 </a>
             </div>
         @else
-            @if($isReseller)
+            @if($isAffiliator)
                 <div class="mb-5 p-4 rounded-xl border border-primary/40 bg-primary/5">
                     <div class="flex items-center justify-between mb-1">
                         <p class="text-sm font-semibold text-on-surface">Pesan untuk Customer</p>
@@ -35,55 +35,106 @@
                 @csrf
                 <div class="space-y-3">
                     @foreach($items as $item)
-                        <div class="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
-                            <img src="{{ $item->has_product?->product_gambar_url ?: asset('images/placeholder.png') }}" alt=""
-                                class="w-16 h-16 rounded-lg object-cover border border-outline-variant shrink-0"
-                                onerror="this.style.display='none'">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ route('shop.show', $item->has_product?->product_slug) }}" class="font-semibold text-on-surface hover:text-primary truncate block">{{ $item->has_product?->product_nama }}</a>
-                                <p class="text-xs font-mono text-on-surface-variant mt-0.5">{{ formatAngka((int) ($item->has_product?->product_harga ?? 0), 'Rp') }} / {{ $item->has_product?->has_satuan?->satuan_nama ?? 'pcs' }}</p>
-                            </div>
-                            <div class="w-24">
-                                <label class="text-[10px] uppercase tracking-wide text-on-surface-variant block mb-1">Qty</label>
-                                <input type="number" name="qty[{{ $item->id }}]" value="{{ $item->qty }}" min="0" max="999"
-                                    data-price="{{ (float) ($item->has_product?->product_harga ?? 0) }}"
-                                    data-row-subtotal="row-subtotal-{{ $item->id }}"
-                                    class="cart-qty w-full h-10 px-3 bg-white border border-outline-variant rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                            </div>
-                            <div class="text-right w-32">
-                                <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Subtotal</p>
-                                <p class="font-mono font-bold text-on-surface" id="row-subtotal-{{ $item->id }}">{{ formatAngka((int) ($item->qty * (float) ($item->has_product?->product_harga ?? 0)), 'Rp') }}</p>
-                            </div>
+                        @php
+                            $itemHarga = (float) ($item->has_product?->product_harga ?? 0);
+                            $itemResellerPct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
+                            $itemHargaReseller = $itemResellerPct > 0 ? $itemHarga * (1 - $itemResellerPct / 100) : $itemHarga;
+                        @endphp
+                        <div class="relative flex gap-3 p-3 rounded-2xl border border-outline-variant/60 bg-white shadow-sm">
+
+                            {{-- Hapus button (pojok kanan atas) --}}
                             <button type="button" title="Hapus"
                                 onclick="if(confirm('Hapus produk ini dari keranjang?')){ document.getElementById('remove-form-{{ $item->id }}').submit(); }"
-                                class="btn btn-soft h-10 w-10 !px-0 text-error shrink-0">
-                                <span class="material-symbols-outlined text-base">delete</span>
+                                class="absolute top-2 right-2 p-1 rounded-full hover:bg-error-container/30 text-on-surface-variant hover:text-error transition-colors z-10">
+                                <span class="material-symbols-outlined text-lg">close</span>
                             </button>
+
+                            {{-- Gambar --}}
+                            <a href="{{ route('shop.show', $item->has_product?->product_slug) }}" class="shrink-0">
+                                <img src="{{ $item->has_product?->product_gambar_url ?: asset('images/placeholder.png') }}" alt=""
+                                    class="w-20 h-20 rounded-xl object-cover border border-outline-variant"
+                                    onerror="this.style.display='none'">
+                            </a>
+
+                            {{-- Info produk --}}
+                            <div class="flex-1 min-w-0 pr-6">
+                                <a href="{{ route('shop.show', $item->has_product?->product_slug) }}" class="font-semibold text-sm text-on-surface hover:text-on-surface-variant line-clamp-2 leading-snug block">{{ $item->has_product?->product_nama }}</a>
+
+                                {{-- Harga --}}
+                                <div class="mt-1">
+                                    @if($isReseller && $itemResellerPct > 0)
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-xs text-on-surface-variant line-through">{{ formatAngka((int) $itemHarga, 'Rp') }}</span>
+                                            <span class="text-[10px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $itemResellerPct }}%</span>
+                                        </div>
+                                        <p class="text-sm font-bold text-primary">{{ formatAngka((int) $itemHargaReseller, 'Rp') }}</p>
+                                    @else
+                                        <p class="text-sm font-bold text-primary">{{ formatAngka((int) $itemHarga, 'Rp') }}</p>
+                                    @endif
+                                    <span class="text-[11px] text-on-surface-variant">/ {{ $item->has_product?->has_satuan?->satuan_nama ?? 'pcs' }}</span>
+                                </div>
+
+                                {{-- Qty + Subtotal --}}
+                                <div class="mt-2.5 flex items-center justify-between gap-3">
+                                    <div class="flex items-center gap-0 border border-outline-variant rounded-xl overflow-hidden bg-surface-container-low">
+                                        <button type="button" onclick="changeQty({{ $item->id }}, -1)"
+                                            class="w-9 h-9 flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors">
+                                            <span class="material-symbols-outlined text-lg">remove</span>
+                                        </button>
+                                        <input type="number" name="qty[{{ $item->id }}]" value="{{ $item->qty }}" min="0" max="999"
+                                            data-price="{{ $itemHargaReseller }}"
+                                            data-row-subtotal="row-subtotal-{{ $item->id }}"
+                                            id="qty-{{ $item->id }}"
+                                            class="cart-qty w-12 h-9 text-center text-sm font-semibold bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                        <button type="button" onclick="changeQty({{ $item->id }}, 1)"
+                                            class="w-9 h-9 flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors">
+                                            <span class="material-symbols-outlined text-lg">add</span>
+                                        </button>
+                                    </div>
+                                    <p class="font-mono font-bold text-sm text-on-surface" id="row-subtotal-{{ $item->id }}">{{ formatAngka((int) ($item->qty * $itemHargaReseller), 'Rp') }}</p>
+                                </div>
+                            </div>
                         </div>
                     @endforeach
                 </div>
-
-                <div class="mt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
-                    <button type="submit" class="btn btn-soft px-4 py-2">
-                        <span class="material-symbols-outlined text-base">refresh</span> Update Keranjang
-                    </button>
-                    <div class="text-right">
-                        <p class="text-xs text-on-surface-variant">Total sementara (belum termasuk ongkir)</p>
-                        <p class="text-xl font-bold font-mono text-primary" id="cart-total">{{ formatAngka((int) $subtotal, 'Rp') }}</p>
-                    </div>
-                    <a href="{{ route('checkout.show') }}" class="btn btn-primary px-4 py-2">
-                        Lanjut ke Checkout <span class="material-symbols-outlined text-base">arrow_forward</span>
-                    </a>
-                </div>
             </form>
 
-            {{-- form hapus per item — di luar form update agar HTML valid (form bersarang dibuang browser) --}}
+            {{-- Total + Checkout --}}
+            <div class="mt-6">
+                <div class="bg-white border border-outline-variant rounded-2xl shadow-sm p-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="min-w-0">
+                            <p class="text-xs text-on-surface-variant">Total</p>
+                            <p class="text-lg font-bold font-mono text-primary truncate" id="cart-total">{{ formatAngka((int) $subtotal, 'Rp') }}</p>
+                            <p class="text-[11px] text-on-surface-variant hidden md:block">belum termasuk ongkir</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="submit" form="cart-update-form" class="btn btn-soft btn-sm hidden md:inline-flex">
+                                <span class="material-symbols-outlined text-base">refresh</span> Update
+                            </button>
+                            <a href="{{ route('checkout.show') }}" class="btn bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-1.5">
+                                Checkout <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- form hapus per item --}}
             @foreach($items as $item)
                 <form method="POST" action="{{ route('cart.remove') }}" id="remove-form-{{ $item->id }}" class="hidden">
                     @csrf
                     <input type="hidden" name="cart_item_id" value="{{ $item->id }}">
                 </form>
             @endforeach
+
+            {{-- form update (hidden, triggered from bottom bar) --}}
+            <form method="POST" action="{{ route('cart.update') }}" id="cart-update-form" class="hidden">
+                @csrf
+                @foreach($items as $item)
+                    <input type="hidden" name="qty[{{ $item->id }}]" value="{{ $item->qty }}">
+                @endforeach
+            </form>
         @endif
     </div>
 
@@ -102,6 +153,10 @@
                     const row = document.getElementById(input.dataset.rowSubtotal);
                     if (row) row.textContent = fmtRp(price * qty);
                     total += price * qty;
+
+                    // Sync hidden form
+                    const hiddenInput = document.querySelector('#cart-update-form input[name="qty[' + input.name.match(/\d+/) + ']"]');
+                    if (hiddenInput) hiddenInput.value = qty;
                 });
                 if (totalEl) totalEl.textContent = fmtRp(total);
             }
@@ -146,5 +201,14 @@
                 });
             }
         })();
+
+        // Qty +/- buttons
+        function changeQty(id, delta) {
+            const input = document.getElementById('qty-' + id);
+            if (!input) return;
+            const newVal = Math.max(0, Math.min(999, parseInt(input.value || '0', 10) + delta));
+            input.value = newVal;
+            input.dispatchEvent(new Event('input'));
+        }
     </script>
 </x-ecommerce::public-layout>
