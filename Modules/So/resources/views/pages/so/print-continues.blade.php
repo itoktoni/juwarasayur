@@ -143,6 +143,7 @@
             <div class="footer">
                 ~~ Terima kasih ~~
             </div>
+            .
         </div>
     @endforeach
 
