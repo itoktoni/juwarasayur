@@ -138,7 +138,7 @@
             <div class="footer">
                 ~~ Terima kasih ~~
             </div>
-            <div class="titik" style="margin-top: 10px;">
+            <div class="titik" style="margin-top: 30px;">
                 .
             </div>
         </div>
