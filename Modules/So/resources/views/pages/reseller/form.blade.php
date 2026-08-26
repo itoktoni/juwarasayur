@@ -14,6 +14,14 @@
                     label="Fee Komisi (%)"
                     placeholder="{{ rtrim(rtrim((string) config('commission.rate', 2), '0'), '.') }}"
                     helper="Khusus reseller ini. Kosongkan untuk pakai default komisi ({{ rtrim(rtrim((string) config('commission.rate', 2), '0'), '.') }}%)" />
+                <div class="col-span-12 md:col-span-6">
+                    <label class="flex items-center gap-3 h-12 px-4 bg-white border border-outline-variant rounded-lg cursor-pointer">
+                        <input type="hidden" name="consignasi_check" value="1">
+                        <input type="checkbox" name="consignasi" value="1" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container" @checked(old('consignasi') || $model?->consignasi)>
+                        <span class="text-sm font-semibold text-on-surface">Ikut skema Titip Jual (konsinyasi)</span>
+                    </label>
+                    <p class="text-xs text-on-surface-variant mt-1">Reseller muncul di menu Konsinyasi Hari Ini untuk pencatatan titip barang & tarik uang.</p>
+                </div>
 
                 <x-file
                     name="avatar"

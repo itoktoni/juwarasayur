@@ -5,11 +5,11 @@
 
     <div class="space-y-6">
         {{-- Greeting --}}
-        <div class="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-primary to-green-600 text-on-primary">
+        <div class="relative overflow-hidden p-6 rounded-2xl bg-primary text-on-primary">
             <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10"></div>
-            <p class="text-sm text-white/80">{{ now()->translatedFormat('l, d F Y') }}</p>
+            <p class="text-sm text-on-primary/80">{{ now()->translatedFormat('l, d F Y') }}</p>
             <h1 class="text-2xl font-extrabold mt-1">Halo, {{ $user->name }} 👋</h1>
-            <p class="text-sm text-white/80 mt-1">Pantau performa penjualan tokohmu di sini.</p>
+            <p class="text-sm text-on-primary/80 mt-1">Pantau performa penjualan tokohmu di sini.</p>
         </div>
 
         {{-- Stat cards --}}

@@ -2,6 +2,8 @@
 
 @php
     $menu = config('menu.sidebar');
+    $currentRoute = request()->route()?->getName();
+    $allMenuRoutes = collect($menu)->flatMap(fn ($section) => collect($section['items'])->pluck('route'))->all();
 @endphp
 
 @foreach($menu as $section)
@@ -16,6 +18,11 @@
             $isActive = request()->routeIs($routeName)
                 || request()->routeIs($routeName . '.*')
                 || collect($matchRoutes)->contains(fn ($m) => request()->routeIs($m));
+            // Halaman aktif adalah item menu lain secara eksak?
+            // Matikan highlight wildcard agar tidak dua menu aktif sekaligus.
+            if ($isActive && $routeName !== $currentRoute && in_array($currentRoute, $allMenuRoutes, true)) {
+                $isActive = false;
+            }
         @endphp
         <a
             href="{{ $url }}"

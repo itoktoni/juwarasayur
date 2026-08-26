@@ -26,7 +26,7 @@ use Laravel\Sanctum\HasApiTokens;
 /**
  * @mixin IdeHelperUser
  */
-#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'phone', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee'])]
+#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'phone', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee', 'consignasi'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -51,6 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'verified_at' => 'datetime',
             'password' => 'hashed',
             'fee' => 'decimal:2',
+            'consignasi' => 'boolean',
         ];
     }
 
@@ -147,6 +148,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasCustomers(): HasMany
     {
         return $this->hasMany(User::class, 'reference_id');
+    }
+
+    /**
+     * Titip jual (konsinyasi) milik reseller ini.
+     */
+    public function has_consignments(): HasMany
+    {
+        return $this->hasMany(\Modules\So\Models\Consignment::class, 'user_id');
     }
 
     /**
