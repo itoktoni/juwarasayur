@@ -22,4 +22,10 @@ class PoPolicy extends BasePolicy
     {
         return $this->accessProtected($user, __FUNCTION__) ? Response::deny() : Response::allow();
     }
+
+    // Print continues struk PO 80mm (GET /po/po/print-continues)
+    public function printcontinues(User $user): Response
+    {
+        return $this->table($user);
+    }
 }

@@ -146,7 +146,15 @@
             </div>
         </x-card>
 
-        <x-action :model="$model" :action="['save']"/>
+        <x-action :model="$model" :action="['save']">
+            @if($isEdit)
+                <a href="{{ route('po-po.getPrintContinues', ['ids' => $model->id]) }}" target="_blank" title="Print Struk 80mm"
+                    class="inline-flex items-center justify-center gap-1 h-8 md:h-10 px-2.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-all active:scale-95 shrink-0">
+                    <span class="material-symbols-outlined text-base md:text-xl">print</span>
+                    <span class="hidden sm:inline">Print</span>
+                </a>
+            @endif
+        </x-action>
     </x-form>
 
     <template id="po-row-template">

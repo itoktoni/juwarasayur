@@ -39,7 +39,12 @@
                 @foreach($data as $table)
                 <tr>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
-                    <x-table-action :model="$model" :id="$table->field_primary" />
+                    <x-table-action :model="$model" :id="$table->field_primary">
+                        <a href="{{ route('so-so.getPrintContinues', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Struk 80mm"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
+                            <span class="material-symbols-outlined text-lg">print</span>
+                        </a>
+                    </x-table-action>
                     <td>{{ $table->so_code }}</td>
                     <td>{{ formatDate($table->so_tanggal) }}</td>
                     <td>{{ $table->has_reseller?->name ?? '-' }}</td>
@@ -78,6 +83,10 @@
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">
                             <span class="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">{{ $table->field_primary }}</span>
                             <div class="flex gap-1" onclick="event.stopPropagation()">
+                                <a href="{{ route('so-so.getPrintContinues', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Struk 80mm"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">print</span>
+                                </a>
                                 <x-table-action :model="$model" :id="$table->field_primary" />
                             </div>
                         </div>

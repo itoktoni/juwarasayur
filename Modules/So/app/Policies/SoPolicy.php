@@ -19,4 +19,10 @@ class SoPolicy extends BasePolicy
     {
         return $this->table($user);
     }
+
+    // Print continues struk 80mm (GET /so/so/print-continues)
+    public function printcontinues(User $user): Response
+    {
+        return $this->table($user);
+    }
 }

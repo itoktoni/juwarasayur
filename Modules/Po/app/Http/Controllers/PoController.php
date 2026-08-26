@@ -102,6 +102,31 @@ class PoController extends Controller
         ]);
     }
 
+    /**
+     * Print continues struk PO 80mm dengan garis potong antar struk.
+     */
+    public function getPrintContinues(GeneralRequest $request)
+    {
+        $ids = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        abort_if($ids->isEmpty(), 404, 'Tidak ada PO untuk dicetak.');
+
+        $list = $this->model->with(['has_details.has_product', 'has_supplier'])
+            ->whereIn('id', $ids)
+            ->orderBy('po_code')
+            ->get();
+
+        abort_if($list->isEmpty(), 404, 'Tidak ada PO untuk dicetak.');
+
+        return response()->view('po::pages.po.print-continues', [
+            'list' => $list,
+        ]);
+    }
+
     public function postCreate(GeneralRequest $request)
     {
         $data = $request->validate((new Po)->rules());

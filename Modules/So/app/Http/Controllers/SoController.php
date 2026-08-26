@@ -120,6 +120,31 @@ class SoController extends Controller
         ]);
     }
 
+    /**
+     * Print continues: banyak struk 80mm sekaligus dengan garis potong di antara struk.
+     * ids kosong → pakai data tabel saat ini (filter/halaman aktif).
+     */
+    public function getPrintContinues(GeneralRequest $request)
+    {
+        $ids = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $query = $this->model->with(['has_details.has_product']);
+
+        $list = $ids->isNotEmpty()
+            ? $query->whereIn('id', $ids)->orderBy('so_code')->get()
+            : $this->getData()->get();
+
+        abort_if($list->isEmpty(), 404, 'Tidak ada SO untuk dicetak.');
+
+        return response()->view('so::pages.so.print-continues', [
+            'list' => $list,
+        ]);
+    }
+
     public function postCreate(GeneralRequest $request)
     {
         $data = $this->validatedWithShipping($request);
