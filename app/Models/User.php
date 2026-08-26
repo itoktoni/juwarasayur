@@ -133,6 +133,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->type === UserTypeEnum::CUSTOMER;
     }
 
+    public function isAffiliator(): bool
+    {
+        return $this->type === UserTypeEnum::AFFILIATOR;
+    }
+
     /**
      * Fee komisi efektif (%): fee khusus reseller, fallback ke config global.
      * Hanya admin yang boleh mengubah fee ini (via menu Reseller).
