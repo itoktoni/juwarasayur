@@ -169,6 +169,20 @@
                 </div>
             </div>
 
+            {{-- Printer Struk (print continues 58mm / 80mm) --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Printer Struk</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Ukuran Kertas Struk</label>
+                    <select name="struk_paper_width"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                        <option value="80" @selected((string) old('struk_paper_width', config('printer.web.paper_width', 80)) === '80')>80 mm</option>
+                        <option value="58" @selected((string) old('struk_paper_width', config('printer.web.paper_width', 80)) === '58')>58 mm</option>
+                    </select>
+                    <p class="text-xs text-on-surface-variant mt-1">Dipakai untuk print continues struk SO &amp; PO. Default dari .env: STRUK_PAPER_WIDTH.</p>
+                </div>
+            </div>
+
             <div class="flex items-center gap-3 pt-4 border-t border-outline-variant">
                 <button type="submit" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity">
                     Save Settings

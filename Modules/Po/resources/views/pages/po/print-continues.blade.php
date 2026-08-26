@@ -2,6 +2,10 @@
     $site = \App\Models\WebsiteSetting::merged();
     $fmt = fn ($v) => number_format((float) $v, 0, ',', '.');
     $pct = fn ($v) => rtrim(rtrim((string) $v, '0'), '.');
+    // Ukuran kertas dari settings (.env STRUK_PAPER_WIDTH): 58 atau 80
+    $paper = (int) config('printer.web.paper_width', 80) === 58 ? 58 : 80;
+    $contentW = $paper === 58 ? 52 : 72;
+    $cutW = $paper === 58 ? 56 : 76;
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -22,7 +26,7 @@
             align-items: center;
         }
         .struk {
-            width: 72mm;
+            width: {{ $contentW }}mm;
             padding: 2mm 1mm;
         }
         .struk .center { text-align: center; }
@@ -41,7 +45,7 @@
 
         /* Garis potong antar struk */
         .cut-line {
-            width: 76mm;
+            width: {{ $cutW }}mm;
             text-align: center;
             padding: 2mm 0;
             white-space: nowrap;
@@ -68,7 +72,7 @@
         .btn-print { background: #2563eb; color: #fff; }
         .btn-back { background: #e5e7eb; color: #374151; text-decoration: none; display: inline-flex; align-items: center; }
 
-        @page { size: 80mm auto; margin: 0; }
+        @page { size: {{ $paper }}mm auto; margin: 0; }
 
         @media print {
             .toolbar { display: none; }

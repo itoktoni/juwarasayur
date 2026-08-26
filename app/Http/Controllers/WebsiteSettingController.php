@@ -46,6 +46,8 @@ class WebsiteSettingController extends Controller
             'warehouse_address' => ['nullable', 'string'],
             'warehouse_lat' => ['required', 'numeric', 'between:-90,90'],
             'warehouse_lng' => ['required', 'numeric', 'between:-180,180'],
+            // Ukuran kertas struk print continues (58mm / 80mm)
+            'struk_paper_width' => ['required', 'integer', 'in:58,80'],
         ]);
 
         $existing = WebsiteSetting::raw();
@@ -93,6 +95,7 @@ class WebsiteSettingController extends Controller
                 'SO_WAREHOUSE_ADDRESS' => (string) $validated['warehouse_address'],
                 'SO_WAREHOUSE_LAT' => (string) $validated['warehouse_lat'],
                 'SO_WAREHOUSE_LNG' => (string) $validated['warehouse_lng'],
+                'STRUK_PAPER_WIDTH' => (string) $validated['struk_paper_width'],
             ]);
         } else {
             flash()->warning(__('The .env file is not writable. Warehouse location was not saved.'));

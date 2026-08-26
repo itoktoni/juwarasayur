@@ -31,6 +31,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Web Print (Struk Browser)
+    |--------------------------------------------------------------------------
+    |
+    | Ukuran kertas struk untuk print continues via browser (SO/PO).
+    | Bisa di-override dari Settings → Website (tersimpan ke .env).
+    |
+    */
+
+    'web' => [
+        'paper_width' => env('STRUK_PAPER_WIDTH', 80), // 58mm atau 80mm
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Label Settings
     |--------------------------------------------------------------------------
     |
