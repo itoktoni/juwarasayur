@@ -316,14 +316,23 @@ class CheckoutController extends Controller
             $shipping['address'] = $validated['so_address'] ?? null;
         }
 
-        $subtotal = $this->cart->subtotal();
+        // Subtotal wajib sama dengan tampilan checkout: pakai harga efektif
+        // per item (termasuk diskon reseller) supaya total bayar tidak berubah
+        // saat masuk ke halaman pembayaran/QRIS.
+        $subtotal = $cartItems->sum(function ($item) use ($isReseller) {
+            $harga = (float) ($item->has_product?->product_harga ?? 0);
+            $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
+            $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+
+            return $item->qty * $hargaEfektif;
+        });
         $isGuest = $user === null;
 
         // Validasi ulang kode diskon di server — session tidak dipercaya mentah
         $discount = $this->activeDiscount($subtotal);
         $discountAmount = $discount?->hitungPotongan($subtotal) ?? 0.0;
 
-        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer, $discount, $discountAmount) {
+        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer, $discount, $discountAmount, $isReseller) {
             /** @var So $so */
             $so = So::create([
                 'so_tanggal' => now(),
@@ -351,12 +360,16 @@ class CheckoutController extends Controller
 
             $seq = 1;
             foreach ($cartItems as $item) {
+                $harga = (float) ($item->has_product?->product_harga ?? 0);
+                $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
+                $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+
                 SoDetail::create([
                     'so_detail_code' => sprintf('%s-%03d', $so->so_code, $seq),
                     'so_detail_id_so' => $so->id,
                     'so_detail_id_product' => $item->has_product->id,
                     'so_detail_qty' => (int) $item->qty,
-                    'so_detail_harga' => (float) ($item->has_product?->product_harga ?? 0),
+                    'so_detail_harga' => $hargaEfektif,
                 ]);
                 $seq++;
             }
@@ -400,6 +413,12 @@ class CheckoutController extends Controller
         }
 
         $link = url('/payment/'.$so->so_payment_token);
+        $qrisPayload = ! empty(config('ecommerce.qris_payload'))
+            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_grand_total)
+            : null;
+        $qrDownload = $qrisPayload
+            ? $this->buildQrWithInfo($qrisPayload, $so->so_code, (float) $so->so_grand_total, 400)
+            : '';
         // Sisa waktu pembayaran, sama dengan aturan di PaymentController
         $secondsLeft = max(0, PaymentController::EXPIRY_MINUTES * 60
             - (int) $so->created_at?->diffInSeconds(now()));
@@ -407,8 +426,60 @@ class CheckoutController extends Controller
         return view('ecommerce::pages.checkout.share', [
             'so' => $so,
             'link' => $link,
+            'qrisPayload' => $qrisPayload,
+            'qrDownload' => $qrDownload,
             'secondsLeft' => $secondsLeft,
             'methodLabel' => ShippingMethodEnum::getDescription($so->so_shipping_method),
         ]);
+    }
+
+    /**
+     * Build a downloadable QR PNG that also embeds the SO number and price.
+     */
+    private function buildQrWithInfo(string $qrText, string $soCode, float $amount, int $qrSize = 400): string
+    {
+        $renderer = new \BaconQrCode\Renderer\GDLibRenderer($qrSize, 10);
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrPng = $writer->writeString(
+            $qrText,
+            \BaconQrCode\Encoder\Encoder::DEFAULT_BYTE_MODE_ENCODING,
+            \BaconQrCode\Common\ErrorCorrectionLevel::H()
+        );
+
+        $qrImg = @imagecreatefromstring($qrPng);
+        if ($qrImg === false) {
+            return 'data:image/png;base64,'.base64_encode($qrPng);
+        }
+
+        $qW = imagesx($qrImg);
+        $qH = imagesy($qrImg);
+        $pad = 20;
+        $gap = 12;
+        $textArea = 60;
+        $W = $qW + $pad * 2;
+        $H = $qH + $pad + $gap + $textArea;
+
+        $canvas = imagecreatetruecolor($W, $H);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        $black = imagecolorallocate($canvas, 0, 0, 0);
+        $gray = imagecolorallocate($canvas, 90, 90, 90);
+        imagefill($canvas, 0, 0, $white);
+        imagecopy($canvas, $qrImg, $pad, $pad, 0, 0, $qW, $qH);
+
+        $soText = 'SO: '.$soCode;
+        $priceText = 'Rp '.number_format($amount, 0, ',', '.');
+        $font = 5;
+        $sx = (int) (($W - imagefontwidth($font) * strlen($soText)) / 2);
+        imagestring($canvas, $font, max(0, $sx), $pad + $qH + $gap + 8, $soText, $black);
+        $px = (int) (($W - imagefontwidth($font) * strlen($priceText)) / 2);
+        imagestring($canvas, $font, max(0, $px), $pad + $qH + $gap + 34, $priceText, $gray);
+
+        ob_start();
+        imagepng($canvas);
+        $out = ob_get_clean();
+        imagedestroy($canvas);
+        imagedestroy($qrImg);
+
+        return 'data:image/png;base64,'.base64_encode($out);
     }
 }

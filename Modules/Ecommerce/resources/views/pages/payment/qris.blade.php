@@ -1,9 +1,3 @@
-@php
-    // QRIS asli dari .env (QRIS=...) dengan nominal sesuai total pembayaran
-    $qrisPayload = ! empty(config('ecommerce.qris_payload'))
-        ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_grand_total)
-        : null;
-@endphp
 <x-ecommerce::public-layout :title="'Pembayaran'">
     <div class="content mt-4 lg:mt-0">
         <div class="max-w-md mx-auto">
@@ -99,21 +93,28 @@
 
                     @if($secondsLeft > 0)
                         {{-- QRIS asli — scan sesuai total pembayaran --}}
-                        <div id="qris-box" class="mt-5 mx-auto w-56 p-3 bg-white rounded-xl border-2 border-outline-variant shadow-sm select-none">
-                            <div class="flex items-center justify-between px-1 mb-2">
-                                <span class="text-[10px] font-black tracking-widest text-red-700">QRIS</span>
-                                <span class="text-[9px] text-on-surface-variant font-semibold">{{ strtoupper($so->so_code) }}</span>
+                        <div id="qris-box" class="mt-5 mx-auto w-80 bg-white rounded-xl border-2 border-outline-variant shadow-sm select-none">
+                            <div class="w-full aspect-square flex items-center justify-center p-0 m-0">
+                                @if($qrisPayload)
+                                    <img src="{{ qrCodeDataUri($qrisPayload, 400) }}"
+                                        alt="QRIS Pembayaran"
+                                        class="block w-full h-full object-contain select-none">
+                                @else
+                                    <div class="w-full aspect-square flex items-center justify-center text-xs text-error text-center p-2">
+                                        QRIS belum dikonfigurasi (set QRIS di .env)
+                                    </div>
+                                @endif
                             </div>
                             @if($qrisPayload)
-                                <div class="w-full aspect-square flex items-center justify-center">
-                                    {!! DNS2D::getBarcodeSVG($qrisPayload, 'QRCODE', 5, 5) !!}
-                                </div>
-                            @else
-                                <div class="w-full aspect-square flex items-center justify-center text-xs text-error text-center p-2">
-                                    QRIS belum dikonfigurasi (set QRIS di .env)
+                                <div class="px-3 pb-3">
+                                    <a href="{{ $qrDownload }}"
+                                        download="qris-{{ strtolower($so->so_code) }}.png"
+                                        class="mt-2 flex w-full items-center justify-center gap-2 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:opacity-90">
+                                        <span class="material-symbols-outlined text-base">download</span>
+                                        Unduh QR
+                                    </a>
                                 </div>
                             @endif
-                            <p class="text-[10px] text-on-surface-variant mt-2 font-mono text-right">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</p>
                         </div>
                     @else
                         {{-- Waktu habis: QR disembunyikan --}}

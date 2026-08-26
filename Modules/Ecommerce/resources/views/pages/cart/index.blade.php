@@ -40,7 +40,7 @@
                             $itemResellerPct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
                             $itemHargaReseller = $itemResellerPct > 0 ? $itemHarga * (1 - $itemResellerPct / 100) : $itemHarga;
                         @endphp
-                        <div class="relative flex gap-3 p-3 rounded-2xl border border-outline-variant/60 bg-white shadow-sm">
+                        <div class="relative flex gap-3 p-3 rounded-2xl border border-outline-variant/60 bg-white shadow-sm" id="cart-row-{{ $item->id }}">
 
                             {{-- Hapus button (pojok kanan atas) --}}
                             <button type="button" title="Hapus"
@@ -144,6 +144,7 @@
             const inputs = document.querySelectorAll('.cart-qty');
             if (!inputs.length) return;
             const totalEl = document.getElementById('cart-total');
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
             function recalc() {
                 let total = 0;
@@ -161,7 +162,48 @@
                 if (totalEl) totalEl.textContent = fmtRp(total);
             }
 
-            inputs.forEach(input => input.addEventListener('input', recalc));
+            function bumpBadge(count) {
+                document.querySelectorAll('[data-cart-count]').forEach(el => {
+                    const next = Math.max(0, (parseInt(count, 10) || 0));
+                    el.textContent = next;
+                    el.classList.toggle('hidden', next <= 0);
+                });
+            }
+
+            // Auto-save qty ke server (debounce). Jika 0 -> item otomatis terhapus.
+            let saveTimer;
+            function autoSave(input) {
+                const id = input.name.match(/\d+/);
+                if (!id) return;
+                const qty = Math.max(0, Math.min(999, parseInt(input.value || '0', 10) || 0));
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(async () => {
+                    const body = new FormData();
+                    body.append('_token', csrf);
+                    body.append('qty[' + id + ']', qty);
+                    try {
+                        const res = await fetch('{{ route('cart.update') }}', {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                            body,
+                        });
+                        const json = await res.json();
+                        if (!json.status) throw new Error(json.message ?? 'Gagal');
+                        if (typeof json.cart_count !== 'undefined') bumpBadge(json.cart_count);
+                        // Jika qty 0, server menghapus item -> buang baris dari DOM
+                        if (qty <= 0) {
+                            const row = document.getElementById('cart-row-' + id);
+                            if (row) row.remove();
+                            const remaining = document.querySelectorAll('.cart-qty');
+                            if (remaining.length === 0) location.reload();
+                        }
+                    } catch (e) {
+                        // Biarkan user menekan Update manual jika gagal
+                    }
+                }, 600);
+            }
+
+            inputs.forEach(input => input.addEventListener('input', () => { recalc(); autoSave(input); }));
 
             // AJAX: simpan pilihan customer tanpa refresh
             const customerForm = document.getElementById('set-customer-form');

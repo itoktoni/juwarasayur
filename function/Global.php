@@ -202,6 +202,37 @@ function crc16($data)
     return $crc;
 }
 
+/**
+ * Generate a QR code PNG data URI with a baked-in quiet zone (margin).
+ *
+ * Uses BaconQrCode (GD backend) instead of milon/barcode, because
+ * milon's QRCODE output has NO quiet zone inside the image data, which
+ * makes strict payment / QR scanners reject it as unreadable. The margin
+ * here is part of the PNG itself, so the code stays scannable regardless
+ * of surrounding CSS.
+ *
+ * @param  string  $text   Content to encode (URL, QRIS string, etc.)
+ * @param  int     $size   Image size in px (default 300)
+ * @param  int     $margin Quiet zone in modules (default 10)
+ * @return string data:image/png;base64,.... Empty string if $text is empty.
+ */
+function qrCodeDataUri(string $text, int $size = 300, int $margin = 10): string
+{
+    if ($text === '') {
+        return '';
+    }
+
+    $renderer = new \BaconQrCode\Renderer\GDLibRenderer($size, $margin);
+    $writer = new \BaconQrCode\Writer($renderer);
+    $png = $writer->writeString(
+        $text,
+        \BaconQrCode\Encoder\Encoder::DEFAULT_BYTE_MODE_ENCODING,
+        \BaconQrCode\Common\ErrorCorrectionLevel::H()
+    );
+
+    return 'data:image/png;base64,'.base64_encode($png);
+}
+
 function showSql($query = null): string
 {
     if ($query === null) {

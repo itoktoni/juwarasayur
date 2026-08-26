@@ -135,7 +135,7 @@ class CartController extends Controller
         return redirect()->route('cart.index');
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'qty' => ['required', 'array'],
@@ -143,6 +143,14 @@ class CartController extends Controller
         ]);
 
         $this->cart->updateQty($validated['qty']);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Keranjang diperbarui.',
+                'cart_count' => $this->cart->count(),
+            ]);
+        }
 
         flash()->success('Keranjang diperbarui.');
 

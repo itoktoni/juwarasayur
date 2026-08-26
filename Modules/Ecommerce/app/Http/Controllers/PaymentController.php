@@ -26,11 +26,70 @@ class PaymentController extends Controller
             flash()->warning('Waktu pembayaran habis. Pesanan tetap tersimpan dengan status Pending.');
         }
 
+        $qrisPayload = ! empty(config('ecommerce.qris_payload'))
+            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_grand_total)
+            : null;
+        $qrDownload = $qrisPayload
+            ? $this->buildQrWithInfo($qrisPayload, $so->so_code, (float) $so->so_grand_total, 400)
+            : '';
+
         return view('ecommerce::pages.payment.qris', [
             'so' => $so,
+            'qrisPayload' => $qrisPayload,
+            'qrDownload' => $qrDownload,
             'secondsLeft' => $this->secondsLeft($so),
             'methodLabel' => ShippingMethodEnum::getDescription($so->so_shipping_method),
         ]);
+    }
+
+    /**
+     * Build a downloadable QR PNG that also embeds the SO number and price.
+     */
+    private function buildQrWithInfo(string $qrText, string $soCode, float $amount, int $qrSize = 400): string
+    {
+        $renderer = new \BaconQrCode\Renderer\GDLibRenderer($qrSize, 10);
+        $writer = new \BaconQrCode\Writer($renderer);
+        $qrPng = $writer->writeString(
+            $qrText,
+            \BaconQrCode\Encoder\Encoder::DEFAULT_BYTE_MODE_ENCODING,
+            \BaconQrCode\Common\ErrorCorrectionLevel::H()
+        );
+
+        $qrImg = @imagecreatefromstring($qrPng);
+        if ($qrImg === false) {
+            return 'data:image/png;base64,'.base64_encode($qrPng);
+        }
+
+        $qW = imagesx($qrImg);
+        $qH = imagesy($qrImg);
+        $pad = 20;
+        $gap = 12;
+        $textArea = 60;
+        $W = $qW + $pad * 2;
+        $H = $qH + $pad + $gap + $textArea;
+
+        $canvas = imagecreatetruecolor($W, $H);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        $black = imagecolorallocate($canvas, 0, 0, 0);
+        $gray = imagecolorallocate($canvas, 90, 90, 90);
+        imagefill($canvas, 0, 0, $white);
+        imagecopy($canvas, $qrImg, $pad, $pad, 0, 0, $qW, $qH);
+
+        $soText = 'SO: '.$soCode;
+        $priceText = 'Rp '.number_format($amount, 0, ',', '.');
+        $font = 5;
+        $sx = (int) (($W - imagefontwidth($font) * strlen($soText)) / 2);
+        imagestring($canvas, $font, max(0, $sx), $pad + $qH + $gap + 8, $soText, $black);
+        $px = (int) (($W - imagefontwidth($font) * strlen($priceText)) / 2);
+        imagestring($canvas, $font, max(0, $px), $pad + $qH + $gap + 34, $priceText, $gray);
+
+        ob_start();
+        imagepng($canvas);
+        $out = ob_get_clean();
+        imagedestroy($canvas);
+        imagedestroy($qrImg);
+
+        return 'data:image/png;base64,'.base64_encode($out);
     }
 
     /**

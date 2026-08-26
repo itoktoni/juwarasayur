@@ -49,15 +49,31 @@
             </div>
 
             @if($secondsLeft > 0)
-                <div id="qr-box" class="mt-5 mx-auto w-56 p-3 bg-white rounded-xl border-2 border-outline-variant shadow-sm select-none">
-                    <div class="flex items-center justify-between px-1 mb-2">
-                        <span class="text-[10px] font-black tracking-widest text-red-700">QRIS</span>
-                        <span class="text-[9px] text-on-surface-variant font-semibold">{{ strtoupper($so->so_code) }}</span>
+                @php
+                    $qrUri = $qrisPayload ? qrCodeDataUri($qrisPayload, 400) : '';
+                @endphp
+                <div id="qr-box" class="mt-5 mx-auto w-80 bg-white rounded-xl border-2 border-outline-variant shadow-sm select-none">
+                    <div class="w-full aspect-square flex items-center justify-center p-0 m-0">
+                        @if($qrisPayload)
+                            <img src="{{ $qrUri }}"
+                                alt="QRIS Pembayaran"
+                                class="block w-full h-full object-contain select-none">
+                        @else
+                            <div class="w-full aspect-square flex items-center justify-center text-xs text-error text-center p-2">
+                                QRIS belum dikonfigurasi (set QRIS di .env)
+                            </div>
+                        @endif
                     </div>
-                    <div class="w-full aspect-square flex items-center justify-center">
-                        {!! DNS2D::getBarcodeSVG($link, 'QRCODE', 5, 5) !!}
-                    </div>
-                    <p class="text-[10px] text-on-surface-variant mt-2 font-mono text-right">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</p>
+                    @if($qrisPayload)
+                        <div class="px-3 pb-3">
+                            <a href="{{ $qrDownload }}"
+                                download="qris-{{ strtolower($so->so_code) }}.png"
+                                class="mt-2 flex w-full items-center justify-center gap-2 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:opacity-90">
+                                <span class="material-symbols-outlined text-base">download</span>
+                                Unduh QR
+                            </a>
+                        </div>
+                    @endif
                 </div>
             @else
                 <div id="qr-box" class="mt-4 mx-auto w-56 p-6 bg-surface-container rounded-xl border-2 border-dashed border-outline-variant select-none">
