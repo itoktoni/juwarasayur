@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode', 'product_deskripsi', 'product_deskripsi_lengkap', 'product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'product_gambar', 'product_galeri', 'product_status', 'is_featured', 'is_active', 'sort_order', 'product_id_product_master', 'product_id_brand', 'product_id_satuan', 'product_id_category'])]
+#[Fillable(['product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode', 'product_deskripsi', 'product_deskripsi_lengkap', 'product_harga', 'product_harga_modal', 'product_harga_grosir', 'reseller_fee_percent', 'affiliator_fee_percent', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'product_gambar', 'product_galeri', 'product_status', 'is_featured', 'is_active', 'sort_order', 'product_id_product_master', 'product_id_brand', 'product_id_satuan', 'product_id_category'])]
 class Product extends BaseModel
 {
     use SoftDeletes;
@@ -31,6 +31,8 @@ class Product extends BaseModel
             'product_harga' => 'decimal:2',
             'product_harga_modal' => 'decimal:2',
             'product_harga_grosir' => 'decimal:2',
+            'reseller_fee_percent' => 'decimal:2',
+            'affiliator_fee_percent' => 'decimal:2',
             'product_berat' => 'decimal:2',
             'product_panjang' => 'decimal:2',
             'product_lebar' => 'decimal:2',
@@ -117,6 +119,8 @@ class Product extends BaseModel
             'product_harga' => ['required', 'numeric', 'min:0'],
             'product_harga_modal' => ['nullable', 'numeric', 'min:0'],
             'product_harga_grosir' => ['nullable', 'numeric', 'min:0'],
+            'reseller_fee_percent' => ['nullable', 'numeric', 'between:0,100'],
+            'affiliator_fee_percent' => ['nullable', 'numeric', 'between:0,100'],
             'product_berat' => ['nullable', 'numeric', 'min:0'],
             'product_panjang' => ['nullable', 'numeric', 'min:0'],
             'product_lebar' => ['nullable', 'numeric', 'min:0'],
