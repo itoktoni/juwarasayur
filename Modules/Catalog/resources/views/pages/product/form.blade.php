@@ -30,6 +30,8 @@ use Modules\Catalog\Models\Product;
                 <x-input col="4" name="product_harga" label="Harga Jual" type="number" step="0.01" />
                 <x-input col="4" name="product_harga_modal" label="Harga Modal" type="number" step="0.01" />
                 <x-input col="4" name="product_harga_grosir" label="Harga Grosir" type="number" step="0.01" />
+                <x-input col="6" name="reseller_fee_percent" label="Diskon Reseller (%)" type="number" step="0.01" min="0" max="100" helper="Harga reseller = harga - diskon. 10% → Rp100.000 jadi Rp90.000. 0 = tanpa diskon." />
+                <x-input col="6" name="affiliator_fee_percent" label="Komisi Affiliator (%)" type="number" step="0.01" min="0" max="100" helper="Komisi per baris order, cair via Withdraw. Kosong = fallback ke fee user/config global." />
                 <x-input col="4" name="product_stok" label="Stok" type="number" />
                 <x-input col="4" name="product_stok_minimum" label="Stok Minimum" type="number" />
                 <x-select col="4" name="product_status" label="Status" :options="['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft', 'archived' => 'Archived']" />
