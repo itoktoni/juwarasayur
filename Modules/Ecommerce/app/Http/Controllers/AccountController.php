@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Modules\So\Models\So;
 
 /**
  * Controller publik untuk area akun (profile, customer reseller).
@@ -18,6 +19,129 @@ use Illuminate\View\View;
  */
 class AccountController extends Controller
 {
+    // ------------------------------------------------------------------
+    // Dashboard (khusus reseller)
+    // ------------------------------------------------------------------
+    public function dashboard(): View
+    {
+        $this->authorizeReseller();
+
+        $user = Auth::user();
+        $today = now()->today();
+
+        $baseSo = fn () => So::where('so_id_reseller', $user->id);
+
+        $stats = [
+            'orders_today' => (clone $baseSo())->whereDate('so_tanggal', $today)->count(),
+            'revenue_today' => (float) (clone $baseSo())
+                ->whereDate('so_tanggal', $today)
+                ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+                ->sum('so_grand_total'),
+            'unpaid' => (clone $baseSo())->where('so_status', \Modules\So\Enums\SoStatusEnum::PENDING)->count(),
+            'to_prepare' => (clone $baseSo())
+                ->whereIn('so_status', [\Modules\So\Enums\SoStatusEnum::PAID, \Modules\So\Enums\SoStatusEnum::CONFIRMED])
+                ->count(),
+            'total_orders' => (clone $baseSo())->count(),
+            'revenue_total' => (float) (clone $baseSo())
+                ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+                ->sum('so_grand_total'),
+            'customers' => User::where('type', UserTypeEnum::CUSTOMER)
+                ->where('reference_id', $user->id)->count(),
+        ];
+
+        // Tren penjualan 7 hari terakhir untuk bar chart CSS
+        $dailySales = collect(range(6, 0))->map(function (int $i) use ($baseSo) {
+            $day = now()->today()->subDays($i);
+
+            return [
+                'label' => $day->translatedFormat('D'),
+                'total' => (float) (clone $baseSo())
+                    ->whereDate('so_tanggal', $day)
+                    ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+                    ->sum('so_grand_total'),
+            ];
+        });
+
+        $recentOrders = (clone $baseSo)()
+            ->with(['has_customer'])
+            ->orderByDesc('so_tanggal')
+            ->limit(6)
+            ->get();
+
+        return view('ecommerce::pages.account.dashboard', [
+            'stats' => $stats,
+            'dailySales' => $dailySales,
+            'recentOrders' => $recentOrders,
+            'salesChart' => $this->omzetBarChart($dailySales),
+            // Komisi reseller (fee khusus per-reseller, fallback config global)
+            'commissionRate' => $user->effectiveFee(),
+            'commissionEarned' => \App\Models\Withdrawal::earned($user),
+            'commissionBalance' => \App\Models\Withdrawal::balance($user),
+            'withdrawals' => $user->has_withdrawals()->orderByDesc('id')->limit(5)->get(),
+        ]);
+    }
+
+    /**
+     * Simpan/ubah rekening bank reseller.
+     */
+    public function updateBank(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'bank_name' => ['required', 'string', 'max:50'],
+            'bank_account_name' => ['required', 'string', 'max:100'],
+            'bank_account_no' => ['required', 'string', 'max:30'],
+        ]);
+
+        Auth::user()->update($data);
+
+        flash()->success('Rekening berhasil disimpan.');
+
+        return redirect()->route('account.dashboard');
+    }
+
+    /**
+     * Ajukan withdraw komisi. Saldo = earned - (pending + paid).
+     */
+    public function withdraw(Request $request): RedirectResponse
+    {
+        $this->authorizeReseller();
+
+        $user = Auth::user();
+
+        $request->validate([
+            'amount' => ['required', 'numeric', 'min:1'],
+        ]);
+
+        $balance = \App\Models\Withdrawal::balance($user);
+        $amount = (float) $request->input('amount');
+        $min = (float) config('commission.min_withdraw', 50000);
+
+        if ($amount < $min) {
+            return back()->withErrors(['amount' => 'Minimal pencairan Rp '.number_format($min, 0, ',', '.').'.']);
+        }
+
+        if ($amount > $balance) {
+            return back()->withErrors(['amount' => 'Jumlah melebihi saldo yang bisa dicairkan (Rp '.number_format($balance, 0, ',', '.').').']);
+        }
+
+        if (empty($user->bank_account_no)) {
+            return back()->withErrors(['amount' => 'Lengkapi data rekening bank terlebih dahulu.']);
+        }
+
+        \App\Models\Withdrawal::create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'bank_name' => $user->bank_name,
+            'bank_account_name' => $user->bank_account_name,
+            'bank_account_no' => $user->bank_account_no,
+            'status' => \App\Models\Withdrawal::STATUS_PENDING,
+        ]);
+
+        flash()->success('Pengajuan withdraw berhasil dikirim dan menunggu persetujuan admin.');
+
+        return redirect()->route('account.dashboard');
+    }
+
     // ------------------------------------------------------------------
     // Profile
     // ------------------------------------------------------------------
@@ -160,6 +284,32 @@ class AccountController extends Controller
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
+
+    /**
+     * Bar chart omzet 7 hari (Larapex/ApexCharts) dengan tinggi tetap.
+     */
+    private function omzetBarChart($dailySales)
+    {
+        $chart = new \ArielMejiaDev\LarapexCharts\LarapexChart;
+
+        return $chart->barChart()
+            ->addData($dailySales->pluck('total')->map(fn ($v) => round((float) $v))->toArray())
+            ->setXAxis($dailySales->pluck('label')->toArray())
+            ->setColors(['#388e3c'])
+            ->setGrid()
+            ->setHeight(300)
+            // Placeholder __Y_FORMAT__ diganti fungsi JS di view karena
+            // formatter harus berupa function, bukan JSON biasa.
+            ->setOptions([
+                'chart' => ['background' => '#ffffff', 'fontFamily' => 'inherit'],
+                'grid' => ['borderColor' => '#e5e7eb', 'opacity' => 0.6],
+                'yaxis' => [
+                    'labels' => [
+                        'formatter' => '__Y_FORMAT__',
+                    ],
+                ],
+            ]);
+    }
 
     private function authorizeReseller(): void
     {

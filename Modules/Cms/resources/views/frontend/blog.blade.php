@@ -1,33 +1,84 @@
 @extends('cms::frontend.layouts.public')
 
-@section('title', isset($category) ? 'Berita - ' . $category->name : (isset($tag) ? 'Berita - ' . $tag->name : 'Berita & Informasi'))
+@section('title', isset($category) ? 'Berita - ' . $category->name : (isset($tag) ? 'Berita - ' . $tag->name : 'Blog & Profil Bisnis'))
+
+@php
+    $site = \App\Models\WebsiteSetting::merged();
+    $logoUrl = \App\Models\WebsiteSetting::fileUrl($site['logo'] ?? null);
+@endphp
 
 @section('content')
-<section class="py-24 bg-surface-container-highest">
-    <div class="max-w-7xl mx-auto px-8">
-        {{-- Header --}}
-        <div class="flex items-center gap-4 mb-12">
-            <div class="h-px bg-outline-variant flex-grow"></div>
-            <h1 class="font-headline-lg text-headline-lg text-on-surface shrink-0 px-4">
-                @if(isset($category))
-                    Kategori: {{ $category->name }}
-                @elseif(isset($tag))
-                    Tag: {{ $tag->name }}
-                @else
-                    Berita & Informasi
-                @endif
-            </h1>
-            <div class="h-px bg-outline-variant flex-grow"></div>
-        </div>
+{{-- ===== PROFIL BISNIS ===== --}}
+<section class="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-green-700 text-on-primary">
+    {{-- Dekorasi lingkaran --}}
+    <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10"></div>
+    <div class="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-black/10"></div>
 
-        {{-- Search Bar --}}
-        <div class="max-w-2xl mx-auto mb-12">
-            <form action="{{ route('search') }}" method="GET" class="flex gap-3">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari berita..."
-                    class="flex-1 px-6 py-3.5 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md" />
-                <button type="submit" class="bg-primary text-on-primary px-6 py-3.5 rounded-xl font-label-md hover:opacity-90 active:scale-95 transition-all flex items-center gap-2">
+    <div class="relative max-w-7xl mx-auto px-8 py-16">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-10">
+            {{-- Logo + Nama --}}
+            <div class="flex items-center gap-5 shrink-0">
+                @if($logoUrl)
+                    <img src="{{ $logoUrl }}" alt="{{ $site['name'] ?? '' }}" class="h-20 w-20 rounded-2xl object-contain bg-white p-2 shadow-lg" />
+                @else
+                    <div class="h-20 w-20 rounded-2xl bg-white/20 backdrop-blur grid place-items-center shadow-lg">
+                        <span class="material-symbols-outlined text-4xl">storefront</span>
+                    </div>
+                @endif
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">{{ $site['name'] ?? config('app.name') }}</h1>
+                    <p class="text-white/80 font-medium mt-1">{{ $site['tagline'] }}</p>
+                </div>
+            </div>
+
+            {{-- Deskripsi --}}
+            <div class="lg:border-l lg:border-white/25 lg:pl-10 flex-1">
+                <p class="text-white/90 leading-relaxed max-w-2xl">{{ $site['description'] }}</p>
+                <div class="flex flex-wrap gap-2 mt-5">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur text-sm">
+                        <span class="material-symbols-outlined text-base">location_on</span>
+                        {{ $site['alamat'] }}
+                    </span>
+                    <a href="tel:{{ $site['telepon'] }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur text-sm hover:bg-white/25 transition-colors">
+                        <span class="material-symbols-outlined text-base">call</span>
+                        {{ $site['telepon'] }}
+                    </a>
+                    <a href="mailto:{{ $site['email'] }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur text-sm hover:bg-white/25 transition-colors">
+                        <span class="material-symbols-outlined text-base">mail</span>
+                        {{ $site['email'] }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- ===== ARTIKEL / BERITA ===== --}}
+<section class="py-16 bg-surface-container-highest min-h-[50vh]">
+    <div class="max-w-7xl mx-auto px-8">
+        {{-- Header artikel --}}
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+                <p class="text-primary font-bold text-sm uppercase tracking-widest mb-2">Blog & Berita</p>
+                <h2 class="font-headline-lg text-headline-lg text-on-surface">
+                    @if(isset($category))
+                        Kategori: {{ $category->name }}
+                    @elseif(isset($tag))
+                        Tag: {{ $tag->name }}
+                    @else
+                        Artikel Terbaru
+                    @endif
+                </h2>
+                <p class="text-on-surface-variant mt-2">Informasi terkini seputar bisnis dan tips sayuran segar</p>
+            </div>
+
+            {{-- Search Bar --}}
+            <form action="{{ route('search') }}" method="GET" class="flex gap-2 w-full md:w-auto">
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari artikel..."
+                    class="flex-1 md:w-64 px-5 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md" />
+                <button type="submit" class="bg-primary text-on-primary px-5 py-3 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center gap-2">
                     <span class="material-symbols-outlined text-lg">search</span>
-                    Cari
+                    <span class="hidden sm:inline">Cari</span>
                 </button>
             </form>
         </div>
@@ -36,32 +87,35 @@
         @if($posts->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($posts as $post)
-                    <a href="{{ route('blog.post', $post->slug) }}" class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all group border border-outline-variant/30">
+                    <a href="{{ route('blog.post', $post->slug) }}" class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group border border-outline-variant/30">
                         @if(!empty($post->featured_image))
                             <div class="h-52 overflow-hidden">
                                 <img src="{{ fileUrl($post->featured_image) }}" alt="{{ $post->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                             </div>
                         @else
-                            <div class="h-52 bg-surface-container-low flex items-center justify-center">
-                                <span class="material-symbols-outlined text-5xl text-outline">article</span>
+                            <div class="h-52 bg-gradient-to-br from-primary/15 to-green-100 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-5xl text-primary/50">article</span>
                             </div>
                         @endif
                         <div class="p-6">
                             <div class="flex items-center gap-3 text-xs text-outline mb-3">
                                 @if($post->published_at)
-                                    <span>{{ $post->published_at->format('d M Y') }}</span>
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">calendar_today</span>
+                                        {{ $post->published_at->format('d M Y') }}
+                                    </span>
                                 @endif
                                 @if($post->has_type)
                                     <span class="w-1 h-1 bg-outline rounded-full"></span>
-                                    <span class="text-primary font-medium">{{ $post->has_type->name }}</span>
+                                    <span class="text-primary font-semibold uppercase tracking-wide">{{ $post->has_type->name }}</span>
                                 @endif
                             </div>
                             <h3 class="font-headline-md text-headline-md text-on-surface mb-3 group-hover:text-primary transition-colors line-clamp-2">{{ $post->title }}</h3>
                             @if($post->excerpt)
                                 <p class="text-on-surface-variant text-sm line-clamp-3">{{ $post->excerpt }}</p>
                             @endif
-                            <div class="mt-4 flex items-center gap-2 text-primary font-label-md text-sm">
-                                Baca Selengkapnya <span class="material-symbols-outlined text-lg">arrow_right_alt</span>
+                            <div class="mt-4 flex items-center gap-2 text-primary font-label-md text-sm font-medium">
+                                Baca Selengkapnya <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_right_alt</span>
                             </div>
                         </div>
                     </a>
@@ -75,7 +129,7 @@
         @else
             <div class="text-center py-20">
                 <span class="material-symbols-outlined text-6xl text-outline mb-4">newspaper</span>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Belum Ada Berita</h3>
+                <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Belum Ada Artikel</h3>
                 <p class="text-on-surface-variant">Belum ada artikel yang tersedia untuk saat ini.</p>
             </div>
         @endif

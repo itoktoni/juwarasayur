@@ -11,8 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Modules\Ecommerce\Http\Controllers\HomeController;
 use Modules\Ecommerce\Http\Controllers\StorefrontController;
 
-Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {
-    if (! config('centrifugo.enabled')) {
+// Halaman khusus pendaftaran reseller (POST tetap ditangani Fortify: register.store)
+Route::middleware('guest')->get('/register/reseller', fn () => view('pages::auth.register-reseller'))
+    ->name('register.reseller');
+
+Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {    if (! config('centrifugo.enabled')) {
         return response()->json(['token' => 'disabled']);
     }
 
@@ -45,6 +48,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
     Route::post('/settings/website', [WebsiteSettingController::class, 'save'])->name('settings.website.save');
 
     Route::auto('/shipping', ShippingController::class, ['name' => 'shipping']);
+    Route::auto('/withdrawal', 'WithdrawalController', ['name' => 'withdrawal']);
 
     Route::prefix('notifications-web')->group(function () {
         Route::get('/', function (Request $request) {

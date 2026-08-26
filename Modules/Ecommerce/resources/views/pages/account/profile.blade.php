@@ -2,6 +2,35 @@
     <div class="space-y-5">
         <h2 class="text-2xl font-bold text-on-surface">Profil Saya</h2>
 
+        {{-- Status verifikasi email --}}
+        @if(! auth()->user()->hasVerifiedEmail())
+            <div class="p-4 rounded-xl border border-warning/40 bg-warning/10">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-warning text-xl mt-0.5">mark_email_unread</span>
+                    <div class="flex-1">
+                        <p class="font-bold text-sm text-on-surface">Email belum diverifikasi</p>
+                        <p class="text-xs text-on-surface-variant mt-0.5">
+                            Verifikasi email Anda untuk mengakses semua fitur.
+                            @if(session('status') === 'verification-link-sent')
+                                <span class="text-primary font-semibold">Link verifikasi baru sudah dikirim ke email Anda.</span>
+                            @endif
+                        </p>
+                        <form method="POST" action="{{ route('verification.send') }}" class="mt-2">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                                <span class="material-symbols-outlined text-sm">send</span> Kirim ulang link verifikasi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary/30 bg-primary/5 w-fit">
+                <span class="material-symbols-outlined text-primary text-base">verified</span>
+                <span class="text-xs font-semibold text-on-surface">Email terverifikasi</span>
+            </div>
+        @endif
+
         {{-- Info profil --}}
         <form method="POST" action="{{ route('account.profile.update') }}"
             class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">

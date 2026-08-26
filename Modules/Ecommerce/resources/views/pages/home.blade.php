@@ -45,6 +45,9 @@
                                 Profile
                             </a>
                             @if(auth()->user()->isReseller())
+                                <a href="{{ route('account.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                    <span class="material-symbols-outlined text-xl text-on-surface-variant">space_dashboard</span> Dashboard
+                                </a>
                                 <a href="{{ route('account.customers') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
                                     <span class="material-symbols-outlined text-xl text-on-surface-variant">group</span>
                                     Customer

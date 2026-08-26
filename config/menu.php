@@ -49,6 +49,12 @@ return [
             ],
         ],
         [
+            'label' => 'Keuangan',
+            'items' => [
+                ['route' => 'withdrawal.getTable', 'icon' => 'account_balance_wallet', 'label' => 'Pencairan Komisi', 'match' => ['withdrawal.*']],
+            ],
+        ],
+        [
             'label' => 'Chatbot',
             'items' => [
                 ['route' => 'chatbot.getTable', 'icon' => 'smart_toy', 'label' => 'Chatbot Session', 'match' => ['chatbot.*']],

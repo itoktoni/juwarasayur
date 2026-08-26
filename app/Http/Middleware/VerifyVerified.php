@@ -10,12 +10,12 @@ class VerifyVerified
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Gate verifikasi dinonaktifkan secara default; aktifkan via env REQUIRE_VERIFIED=true
+        // Gate verifikasi via env REQUIRE_VERIFIED=true
         if (! env('REQUIRE_VERIFIED', false)) {
             return $next($request);
         }
 
-        if ($request->user() && ! $request->user()->verified_at) {
+        if ($request->user() && ! $request->user()->hasVerifiedEmail()) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Akun belum terverifikasi. Silakan verifikasi terlebih dahulu.',

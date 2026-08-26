@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Boost\BoostManager;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController as FortifyRegisteredUserController;
 use Livewire\Blaze\Blaze;
 
 class AppServiceProvider extends ServiceProvider
@@ -59,6 +60,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Override controller registrasi Fortify agar wajib captcha (register & register/reseller)
+        $this->app->bind(FortifyRegisteredUserController::class, \App\Http\Controllers\Auth\RegisteredUserController::class);
+
         $this->configureDefaults();
         $this->registerMacros();
 

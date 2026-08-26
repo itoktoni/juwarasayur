@@ -15,6 +15,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     @include('ecommerce::components.brand')
+    <script src="{{ asset('js/apexcharts.min.js') }}"></script>
 </head>
 <body class="bg-surface text-on-surface antialiased pb-16 md:pb-0">
 
@@ -51,6 +52,9 @@
                                 <span class="material-symbols-outlined text-xl text-on-surface-variant">receipt_long</span> Pesanan
                             </a>
                             @if($user?->isReseller())
+                                <a href="{{ route('account.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('account.dashboard') ? 'text-primary font-bold bg-primary/5' : 'text-on-surface hover:bg-surface-container-low' }} transition-colors">
+                                    <span class="material-symbols-outlined text-xl text-on-surface-variant">space_dashboard</span> Dashboard
+                                </a>
                                 <a href="{{ route('account.customers') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
                                     <span class="material-symbols-outlined text-xl text-on-surface-variant">group</span> Customer
                                 </a>
@@ -82,10 +86,10 @@
         <div class="grid grid-cols-4 h-16 max-w-lg mx-auto">
             @php
                 $bottomItems = [
-                    ['href' => route('home'), 'label' => 'Home', 'icon' => 'home', 'active' => request()->routeIs('home')],
+                    ['href' => $user?->isReseller() ? route('account.dashboard') : route('home'), 'label' => 'Home', 'icon' => 'space_dashboard', 'active' => request()->routeIs('account.dashboard') || request()->routeIs('home')],
                     ['href' => route('shop.index'), 'label' => 'Belanja', 'icon' => 'storefront', 'active' => request()->routeIs('shop.*')],
                     ['href' => route('cart.index'), 'label' => 'Keranjang', 'icon' => 'shopping_cart', 'active' => false],
-                    ['href' => route('account.profile'), 'label' => 'Akun', 'icon' => 'person', 'active' => request()->routeIs('account.*') || request()->routeIs('ecommerce.orders.*')],
+                    ['href' => route('account.profile'), 'label' => 'Akun', 'icon' => 'person', 'active' => request()->routeIs('account.profile*') || request()->routeIs('ecommerce.orders.*')],
                 ];
             @endphp
             @foreach($bottomItems as $item)
@@ -125,5 +129,6 @@
         })();
     </script>
 
+    @stack('scripts')
 </body>
 </html>

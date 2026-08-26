@@ -25,9 +25,16 @@
         </x-form>
 
         @if (Route::has('password.request'))
-            <div class="text-center text-sm text-base-content/60">
-                <span>{{ __("Don't have an account?") }}</span>
-                <a href="{{ route('register') }}" class="link link-primary">{{ __('Sign up') }}</a>
+            <div class="text-center text-sm text-base-content/60 space-y-1">
+                <div>
+                    <span>{{ __("Don't have an account?") }}</span>
+                    <a href="{{ route('register') }}" class="link link-primary">{{ __('Sign up') }}</a>
+                </div>
+                @if (Route::has('register.reseller'))
+                    <div>
+                        <a href="{{ route('register.reseller') }}" class="link link-secondary font-semibold">Daftar jadi Reseller</a>
+                    </div>
+                @endif
             </div>
         @endif
     </div>

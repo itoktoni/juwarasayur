@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -25,9 +26,9 @@ use Laravel\Sanctum\HasApiTokens;
 /**
  * @mixin IdeHelperUser
  */
-#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'phone', 'avatar', 'verified_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'phone', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use DefaultEntity, Filterable, HasApiTokens, HasFactory, Notifiable, OptionTrait, Sortable, TwoFactorAuthenticatable, UserEntity;
@@ -49,6 +50,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'verified_at' => 'datetime',
             'password' => 'hashed',
+            'fee' => 'decimal:2',
         ];
     }
 
@@ -131,11 +133,28 @@ class User extends Authenticatable
     }
 
     /**
+     * Fee komisi efektif (%): fee khusus reseller, fallback ke config global.
+     * Hanya admin yang boleh mengubah fee ini (via menu Reseller).
+     */
+    public function effectiveFee(): float
+    {
+        return (float) ($this->fee ?? config('commission.rate', 2));
+    }
+
+    /**
      * Customers owned by this reseller (users with reference_id = reseller id).
      */
     public function hasCustomers(): HasMany
     {
         return $this->hasMany(User::class, 'reference_id');
+    }
+
+    /**
+     * Pengajuan withdraw komisi milik reseller ini.
+     */
+    public function has_withdrawals(): HasMany
+    {
+        return $this->hasMany(\App\Models\Withdrawal::class);
     }
 
     /**

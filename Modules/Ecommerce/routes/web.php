@@ -56,6 +56,9 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/account/dashboard', [AccountController::class, 'dashboard'])->name('account.dashboard');
+    Route::post('/account/bank', [AccountController::class, 'updateBank'])->name('account.bank.update');
+    Route::post('/account/withdraw', [AccountController::class, 'withdraw'])->name('account.withdraw');
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
     Route::post('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
     Route::post('/account/profile/password', [AccountController::class, 'updatePassword'])->name('account.password.update');

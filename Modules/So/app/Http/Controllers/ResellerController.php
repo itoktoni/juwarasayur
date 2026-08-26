@@ -122,7 +122,11 @@ class ResellerController extends Controller
             'password' => [$existing ? 'nullable' : 'required', 'string', 'min:6'],
             'reference_id' => ['nullable', 'integer', 'exists:users,id'],
             'avatar' => ['nullable', 'string', 'max:255'],
+            // Fee komisi per-reseller (%); kosong = pakai default config
+            'fee' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]));
+
+        $data['fee'] = $data['fee'] ?? ($existing?->fee);
 
         $data['type'] = UserTypeEnum::RESELLER;
 

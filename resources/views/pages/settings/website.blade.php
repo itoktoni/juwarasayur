@@ -181,6 +181,22 @@
                     </select>
                     <p class="text-xs text-on-surface-variant mt-1">Dipakai untuk print continues struk SO &amp; PO. Default dari .env: STRUK_PAPER_WIDTH.</p>
                 </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Komisi Reseller (%)</label>
+                    <input type="number" step="0.01" min="0" max="100" name="commission_rate"
+                        value="{{ old('commission_rate', rtrim(rtrim((string) config('commission.rate', 2), '0'), '.')) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Persen komisi reseller dari omzet order. Default dari .env: RESELLER_COMMISSION_RATE.</p>
+                    @error('commission_rate')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Minimal Pencairan Komisi (Rp)</label>
+                    <input type="number" step="1000" min="0" name="min_withdraw"
+                        value="{{ old('min_withdraw', config('commission.min_withdraw', 50000)) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Jumlah minimum withdraw komisi reseller. Default dari .env: RESELLER_MIN_WITHDRAW.</p>
+                    @error('min_withdraw')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                </div>
             </div>
 
             <div class="flex items-center gap-3 pt-4 border-t border-outline-variant">
