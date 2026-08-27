@@ -9,39 +9,83 @@ class WebsiteSetting
         return 'name';
     }
 
-    public static function contentPath(): string
+    /**
+     * Mapping key settings → nama ENV key di .env.
+     * Satu-satunya sumber kebenaran adalah .env; config/website.php hanya membaca env().
+     */
+    private static function envMap(): array
     {
-        return config_path('website.php');
+        return [
+            'name' => 'WEBSITE_NAME',
+            'tagline' => 'WEBSITE_TAGLINE',
+            'description' => 'WEBSITE_DESCRIPTION',
+            'alamat' => 'WEBSITE_ALAMAT',
+            'telepon' => 'WEBSITE_TELEPON',
+            'email' => 'WEBSITE_EMAIL',
+            'logo' => 'WEBSITE_LOGO',
+            'favicon' => 'WEBSITE_FAVICON',
+            'footer_text' => 'WEBSITE_FOOTER_TEXT',
+            'warehouse_name' => 'SO_WAREHOUSE_NAME',
+            'warehouse_address' => 'SO_WAREHOUSE_ADDRESS',
+            'warehouse_lat' => 'SO_WAREHOUSE_LAT',
+            'warehouse_lng' => 'SO_WAREHOUSE_LNG',
+            'struk_paper_width' => 'STRUK_PAPER_WIDTH',
+            'commission_rate' => 'RESELLER_COMMISSION_RATE',
+            'min_withdraw' => 'RESELLER_MIN_WITHDRAW',
+        ];
     }
 
     public static function raw(): array
     {
-        $path = static::contentPath();
-        if (! file_exists($path)) {
-            return [];
-        }
-
-        $config = require $path;
-
-        return is_array($config) ? $config : [];
+        return (array) config('website', []);
     }
 
+    /**
+     * Simpan settings ke .env (upsert KEY=value), lalu reset cache config
+     * agar perubahan langsung terbaca.
+     */
     public static function persist(array $data): void
     {
-        $data['updated_at'] = now()->toIso8601String();
-        if (! isset($data['created_at'])) {
-            $data['created_at'] = $data['updated_at'];
+        $values = [];
+        foreach (static::envMap() as $key => $envKey) {
+            if (array_key_exists($key, $data)) {
+                $values[$envKey] = (string) ($data[$key] ?? '');
+            }
         }
-        if (! isset($data['id'])) {
-            $data['id'] = 1;
+
+        $primary = $data['colors']['primary'] ?? null;
+        if (! empty($primary)) {
+            $values['WEBSITE_PRIMARY_COLOR'] = (string) $primary;
         }
 
-        $export = var_export($data, true);
-        $content = "<?php\n\nreturn ".$export.";\n";
+        static::writeEnv(base_path('.env'), $values);
+    }
 
-        file_put_contents(static::contentPath(), $content);
+    /**
+     * Upsert KEY=value di .env (quote nilai berisi spasi/karakter khusus).
+     */
+    public static function writeEnv(string $path, array $values): void
+    {
+        $content = file_exists($path) ? file_get_contents($path) : '';
 
-        // Bersihkan cache config agar perubahan langsung terbaca.
+        foreach ($values as $key => $value) {
+            if (preg_match('/[\s"\'#]/', (string) $value)) {
+                $value = '"'.str_replace(['\\', '"'], ['\\\\', '\\"'], (string) $value).'"';
+            }
+
+            $pattern = '/^'.preg_quote($key, '/').'=.*$/m';
+            $line = $key.'='.$value;
+
+            if (preg_match($pattern, $content)) {
+                $content = preg_replace($pattern, $line, $content);
+            } else {
+                $content = rtrim($content, PHP_EOL).PHP_EOL.PHP_EOL.$line.PHP_EOL;
+            }
+        }
+
+        file_put_contents($path, $content);
+
+        // Reset config ter-cache agar perubahan langsung terbaca.
         if (file_exists(base_path('bootstrap/cache/config.php'))) {
             \Artisan::call('config:clear');
         }
@@ -49,20 +93,18 @@ class WebsiteSetting
 
     public static function merged(): array
     {
-        $config = config('website');
-        $raw = static::raw();
+        $config = static::raw();
 
-        if (empty($raw)) {
-            return $config;
-        }
+        $config['colors'] = array_merge(['primary' => '#00288e'], $config['colors'] ?? []);
+        $config['social'] = array_merge([
+            'facebook' => '',
+            'instagram' => '',
+            'twitter' => '',
+            'youtube' => '',
+            'tiktok' => '',
+        ], $config['social'] ?? []);
 
-        $colors = array_merge($config['colors'] ?? [], $raw['colors'] ?? []);
-        $social = array_merge($config['social'] ?? [], $raw['social'] ?? []);
-
-        return array_merge($config, $raw, [
-            'colors' => $colors,
-            'social' => $social,
-        ]);
+        return $config;
     }
 
     public static function primaryColor(): string

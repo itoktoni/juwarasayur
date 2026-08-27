@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\WebsiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -91,55 +90,9 @@ class WebsiteSettingController extends Controller
 
         WebsiteSetting::persist($merged);
 
-        // Gudang utama disimpan ke .env agar terbaca config('so.shipping.warehouse.*')
-        $envPath = base_path('.env');
-        if (File::isWritable($envPath)) {
-            $this->updateEnv($envPath, [
-                'SO_WAREHOUSE_NAME' => $validated['warehouse_name'],
-                'SO_WAREHOUSE_ADDRESS' => (string) $validated['warehouse_address'],
-                'SO_WAREHOUSE_LAT' => (string) $validated['warehouse_lat'],
-                'SO_WAREHOUSE_LNG' => (string) $validated['warehouse_lng'],
-                'STRUK_PAPER_WIDTH' => (string) $validated['struk_paper_width'],
-                'RESELLER_COMMISSION_RATE' => (string) $validated['commission_rate'],
-                'RESELLER_MIN_WITHDRAW' => (string) $validated['min_withdraw'],
-            ]);
-        } else {
-            flash()->warning(__('The .env file is not writable. Warehouse location was not saved.'));
-        }
-
         flash()->success('Website settings saved.');
 
         return Redirect::route('settings.website');
-    }
-
-    /**
-     * Upsert KEY=value di .env (quote nilai berisi spasi/karakter khusus).
-     */
-    private function updateEnv(string $path, array $values): void
-    {
-        $content = File::exists($path) ? File::get($path) : '';
-
-        foreach ($values as $key => $value) {
-            if (preg_match('/[\s"\'#]/', (string) $value)) {
-                $value = '"'.str_replace(['\\', '"'], ['\\\\', '\"'], (string) $value).'"';
-            }
-
-            $pattern = '/^'.preg_quote($key, '/').'=.*$/m';
-            $line = $key.'='.$value;
-
-            if (preg_match($pattern, $content)) {
-                $content = preg_replace($pattern, $line, $content);
-            } else {
-                $content = rtrim($content, PHP_EOL).PHP_EOL.PHP_EOL.$line.PHP_EOL;
-            }
-        }
-
-        File::put($path, $content);
-
-        // Reset config ter-cache agar perubahan langsung terbaca
-        if (File::exists(base_path('bootstrap/cache/config.php'))) {
-            \Artisan::call('config:clear');
-        }
     }
 
     private function storeFile($file, string $dir): string
