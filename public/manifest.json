@@ -33,12 +33,12 @@
     "shortcuts": [
         {
             "name": "Dashboard",
-            "url": "/dashboard",
+            "url": "/admin/dashboard",
             "icons": [{ "src": "/favicon.ico", "sizes": "any" }]
         },
         {
-            "name": "POS",
-            "url": "/pos",
+            "name": "Katalog",
+            "url": "/product",
             "icons": [{ "src": "/favicon.ico", "sizes": "any" }]
         }
     ]

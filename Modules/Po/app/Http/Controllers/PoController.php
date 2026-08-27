@@ -209,6 +209,17 @@ class PoController extends Controller
 
         if ($tanggal) {
             [$groups, $warnings] = $this->buildSoGroups($tanggal);
+
+            // Preview dikelompokkan per SUPPLIER (bukan per master): 1 card = 1 calon PO
+            // dengan multiple product — sama seperti hasil generate (1 PO per supplier).
+            $groups = $groups
+                ->groupBy(fn ($g) => $g['supplier']->id)
+                ->map(fn ($masterGroups) => [
+                    'supplier' => $masterGroups->first()['supplier'],
+                    'items' => $masterGroups->flatMap(fn ($g) => $g['items'])->values(),
+                    'total_berat' => $masterGroups->sum('total_berat'),
+                ])
+                ->values();
         }
 
         return $this->views('po::pages.po.generate-from-so', [
@@ -222,12 +233,49 @@ class PoController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => ['required', 'date'],
+            // Master terpilih (opsional, kosong = semua master)
+            'masters' => ['nullable', 'array'],
+            'masters.*' => ['integer'],
+            // Barang terpilih dari tombol Generate per baris (kosong = semua barang)
+            'products' => ['nullable', 'array'],
+            'products.*' => ['integer'],
+            // Supplier terpilih dari tombol Generate PO per card (kosong = semua supplier)
+            'suppliers' => ['nullable', 'array'],
+            'suppliers.*' => ['integer'],
         ]);
         $tanggal = $validated['tanggal'];
 
         [$masterGroups, $warnings] = $this->buildSoGroups($tanggal);
 
         $valid = $masterGroups->filter(fn ($group) => $group['supplier'] !== null);
+
+        // Generate per card: hanya grup master yang dipilih lewat tombol di card-nya
+        if (! empty($validated['masters'])) {
+            $selected = array_map('intval', $validated['masters']);
+            $valid = $valid->filter(fn ($group) => in_array((int) ($group['master']?->id ?? 0), $selected, true));
+        }
+
+        // Generate PO per supplier: hanya supplier yang dipilih lewat tombol di card-nya —
+        // 1 PO dengan multiple product milik supplier tersebut.
+        if (! empty($validated['suppliers'])) {
+            $selectedSuppliers = array_map('intval', $validated['suppliers']);
+            $valid = $valid->filter(fn ($group) => in_array((int) $group['supplier']->id, $selectedSuppliers, true));
+        }
+
+        // Generate satu per satu berdasarkan list barang: hanya product_id yang dipilih
+        // yang masuk PO; grup yang barangnya habis terfilter dibuang.
+        if (! empty($validated['products'])) {
+            $selectedProducts = array_map('intval', $validated['products']);
+            $valid = $valid
+                ->map(function ($group) use ($selectedProducts) {
+                    $group['items'] = $group['items']
+                        ->filter(fn ($item) => in_array((int) $item['product_id'], $selectedProducts, true))
+                        ->values();
+
+                    return $group;
+                })
+                ->filter(fn ($group) => $group['items']->isNotEmpty());
+        }
 
         if ($valid->isEmpty()) {
             return back()->withErrors(['tanggal' => 'Tidak ada item dengan supplier rekomendasi untuk tanggal '.$tanggal.'.'])->withInput();
@@ -260,11 +308,14 @@ class PoController extends Controller
                             'sources' => [],
                         ];
                         $bySupplier[$sid]['lines'][$pid]['qty'] += (int) $item['qty'];
-                        $bySupplier[$sid]['lines'][$pid]['sources'][] = [
-                            'so_detail_id' => (int) $item['so_detail_id'],
-                            'qty' => (int) $item['qty'],
-                        ];
-                        $coveredDetailIds[] = $item['so_detail_id'];
+                        // Barang gabungan multi-SO: tiap so_detail penyumbang dicatat dengan qty-nya
+                        foreach ($item['so_details'] as $src) {
+                            $bySupplier[$sid]['lines'][$pid]['sources'][] = [
+                                'so_detail_id' => (int) $src['id'],
+                                'qty' => (int) $src['qty'],
+                            ];
+                            $coveredDetailIds[] = (int) $src['id'];
+                        }
                     }
                 }
 
@@ -365,6 +416,31 @@ class PoController extends Controller
                 'harga' => (float) ($d->has_product?->product_harga ?? 0),
                 'harga_modal' => $d->has_product?->product_harga_modal,
             ])->values();
+
+            // Gabungkan barang yang sama dari beberapa SO jadi satu baris:
+            // qty & total berat dijumlah, sumber so_detail dicatat untuk pivot PO ↔ SO.
+            // Contoh: Pakcoy dari 3 SO @ 3kg+4kg+3kg → 1 baris 10kg.
+            $rows = $rows
+                ->groupBy('product_id')
+                ->map(function ($productRows) {
+                    $first = $productRows->first();
+
+                    return [
+                        'product_id' => $first['product_id'],
+                        'product_nama' => $first['product_nama'],
+                        'berat' => $first['berat'],
+                        'qty' => $productRows->sum('qty'),
+                        'total_berat' => round($productRows->sum('total_berat'), 3),
+                        'harga' => $first['harga'],
+                        'harga_modal' => $first['harga_modal'],
+                        'so_codes' => $productRows->pluck('so_code')->unique()->values()->all(),
+                        'so_details' => $productRows
+                            ->map(fn ($r) => ['id' => (int) $r['so_detail_id'], 'qty' => (int) $r['qty']])
+                            ->values()
+                            ->all(),
+                    ];
+                })
+                ->values();
 
             $group = [
                 'master' => $master,

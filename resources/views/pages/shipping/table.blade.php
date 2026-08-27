@@ -1,6 +1,6 @@
 <?php /** @var Modules\Ecommerce\Models\CodLocation $table */ ?>
 <x-layouts::app>
-    <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => 'Pengiriman & COD']]" />
+    <x-breadcrumb :items="[['url' => route('dashboard'), 'label' => 'Home'], ['url' => '', 'label' => 'Pengiriman & COD']]" />
     <div class="content mt-4 lg:mt-0">
         <x-filter :per-page="25" :fields="$fields">
             <x-slot:advanced>

@@ -50,6 +50,16 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
     Route::auto('/shipping', ShippingController::class, ['name' => 'shipping']);
     Route::auto('/withdrawal', 'WithdrawalController', ['name' => 'withdrawal']);
 
+    // Prepare dari SO (barang keluar gudang) — modul ringan
+    Route::prefix('prepare')->name('prepare.')->controller(\App\Http\Controllers\PrepareController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::match(['get', 'post'], '/group', 'group')->name('group');
+        Route::get('/{product}/prepare', 'prepareForm')->name('prepareForm');
+        Route::post('/{product}/prepare', 'storePrepare')->name('storePrepare');
+        Route::get('/progress', 'progress')->name('progress');
+        Route::get('/print-label', 'printLabel')->name('printLabel');
+    });
+
     Route::prefix('notifications-web')->group(function () {
         Route::get('/', function (Request $request) {
             $notifications = Notification::where('user_id', Auth::id())

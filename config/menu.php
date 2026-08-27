@@ -46,6 +46,8 @@ return [
                 ['route' => 'so-discount.getTable', 'icon' => 'sell', 'label' => 'Diskon', 'match' => ['so-discount.*']],
                 ['route' => 'shipping.getTable', 'icon' => 'local_shipping', 'label' => 'Pengiriman & COD', 'match' => ['shipping.*']],
                 ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
+                ['route' => 'prepare.index', 'icon' => 'inventory_2', 'label' => 'Prepare dari SO', 'match' => ['prepare.*']],
+
                 // ['route' => 'so-consignment.getTable', 'icon' => 'assignment_turned_in', 'label' => 'Titip Jual', 'match' => ['so-consignment.*']],
                 // ['route' => 'so-consignment.getToday', 'icon' => 'today', 'label' => 'Konsinyasi Hari Ini'],
             ],
@@ -110,11 +112,11 @@ return [
 
     'bottom_nav' => [
 
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Left'],
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Kiri'],
+        ['route' => 'catalog-product.getTable', 'icon' => 'spa', 'label' => 'Product'],
+        ['route' => 'prepare.index', 'icon' => 'inventory_2', 'label' => 'Prepare SO'],
         ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Kanan'],
-        ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Right'],
+        ['route' => 'po-generate.preview', 'icon' => 'auto_awesome', 'label' => 'PO-SO'],
+        ['route' => 'po-po.getTable', 'icon' => 'shopping_cart', 'label' => 'PO'],
 
     ],
 

@@ -1,7 +1,7 @@
 <?php /** @var App\Models\Users $table */ ?>
 
 <x-layouts::app>
-    <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => moduleLabel()]]" />
+    <x-breadcrumb :items="[['url' => route('dashboard'), 'label' => 'Home'], ['url' => '', 'label' => moduleLabel()]]" />
     <div class="content mt-4 lg:mt-0">
         {{-- Filters --}}
         <x-filter :per-page="25" :fields="$fields">

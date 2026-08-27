@@ -8,5 +8,6 @@
     "Reseller": true,
     "Production": true,
     "Chatbot": true,
-    "Faq": true
+    "Faq": true,
+    "Prepare": true
 }

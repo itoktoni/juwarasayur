@@ -3,9 +3,11 @@
 namespace Modules\So\Models;
 
 use App\Models\BaseModel;
+use App\Models\PrepareAllocation;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Catalog\Models\Product;
 use Modules\Po\Models\PoDetail;
 
@@ -21,6 +23,14 @@ class SoDetail extends BaseModel
     public static function field_name(): string
     {
         return 'so_detail_code';
+    }
+
+    /**
+     * Alokasi persiapan dari gudang untuk SO detail ini.
+     */
+    public function has_prepare_allocations(): HasMany
+    {
+        return $this->hasMany(PrepareAllocation::class, 'so_detail_id');
     }
 
     protected function casts(): array

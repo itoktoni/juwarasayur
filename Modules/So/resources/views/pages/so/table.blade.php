@@ -1,7 +1,7 @@
 <?php /** @var Modules\So\Models\So $table */ ?>
 
 <x-layouts::app>
-    <x-breadcrumb :items="[['url' => '/dashboard', 'label' => 'Home'], ['url' => '', 'label' => moduleLabel()]]" />
+    <x-breadcrumb :items="[['url' => route('dashboard'), 'label' => 'Home'], ['url' => '', 'label' => moduleLabel()]]" />
     <div class="content mt-4 lg:mt-0">
         {{-- Filters --}}
         <x-filter :per-page="25" :fields="$fields">
@@ -22,7 +22,9 @@
             $sortDir = str_contains($currentSort, ':desc') ? 'desc' : 'asc';
         @endphp
 
-        <x-table>
+        {{-- Table dengan wrapper: di mobile stretch full-width tanpa padding/border --}}
+        <div class="lg:bg-surface-container-lowest lg:border lg:border-outline-variant lg:rounded-xl lg:mt-5 -mx-4 md:mx-0 lg:form-card">
+        <x-table :border="false">
             <x-slot:head>
                 <x-table-checkbox :model="$model" onchange="toggleAll(this)" />
                 <th>Actions</th>
@@ -44,6 +46,12 @@
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">print</span>
                         </a>
+                        @if(in_array($table->so_status, ['paid', 'confirmed'], true))
+                            <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                <span class="material-symbols-outlined text-lg">inventory_2</span>
+                            </a>
+                        @endif
                     </x-table-action>
                     <td>{{ $table->so_code }}</td>
                     <td>{{ formatDate($table->so_tanggal) }}</td>
@@ -67,7 +75,7 @@
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Tanggal</p>
                                 <p class="text-xs font-medium text-on-surface">{{ formatDate($table->so_tanggal) }}</p>
                             </div>
-                            <div>
+                            <div class="text-right">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Customer</p>
                                 <p class="text-xs font-medium text-primary truncate">{{ $table->has_customer?->name ?? '-' }}</p>
                             </div>
@@ -75,7 +83,7 @@
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Status</p>
                                 <p class="text-xs font-medium text-on-surface">{{ \Modules\So\Enums\SoStatusEnum::getDescription($table->so_status) }}</p>
                             </div>
-                            <div>
+                            <div class="text-right">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Total</p>
                                 <p class="text-xs font-mono font-medium text-on-surface">{{ formatAngka((int) $table->so_grand_total, 'Rp') }}</p>
                             </div>
@@ -87,6 +95,12 @@
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">print</span>
                                 </a>
+                                @if(in_array($table->so_status, ['paid', 'confirmed'], true))
+                                    <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">inventory_2</span>
+                                    </a>
+                                @endif
                                 <x-table-action :model="$model" :id="$table->field_primary" />
                             </div>
                         </div>

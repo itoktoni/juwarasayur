@@ -43,7 +43,7 @@
                     </a>
                     @auth
                         @if(auth()->user()->isAdmin() || auth()->user()->isDeveloper())
-                            <a href="/dashboard" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
+                            <a href="{{ route('dashboard') }}" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Dashboard</a>
                         @else
                             <a href="{{ route('account.profile') }}" class="hidden sm:inline-flex btn btn-soft btn-sm ml-1">Akun</a>
                         @endif
