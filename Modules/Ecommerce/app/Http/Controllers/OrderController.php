@@ -14,9 +14,9 @@ class OrderController extends Controller
     public function index(): View
     {
         $user = Auth::user();
-        // Reseller melihat pesanan yang dibuat untuk customernya,
-        // customer/user biasa melihat pesanan miliknya sendiri.
-        $ownerColumn = $user->isReseller() ? 'so_id_reseller' : 'so_id_customer';
+        // Affiliator/reseller: pesanan yang mereka buat tercatat sebagai so_id_reseller.
+        // Customer/user biasa: pesanan di mana mereka jadi so_id_customer.
+        $ownerColumn = ($user->isReseller() || $user->isAffiliator()) ? 'so_id_reseller' : 'so_id_customer';
 
         $data = So::query()
             ->with(['has_details.has_product'])
@@ -32,12 +32,12 @@ class OrderController extends Controller
 
     public function show(int $id): View
     {
-        $user = Auth::id();
-        $ownerColumn = Auth::user()->isReseller() ? 'so_id_reseller' : 'so_id_customer';
+        $user = Auth::user();
+        $ownerColumn = ($user->isReseller() || $user->isAffiliator()) ? 'so_id_reseller' : 'so_id_customer';
 
         $so = So::query()
             ->with(['has_details.has_product.has_satuan', 'has_reseller'])
-            ->where($ownerColumn, $user)
+            ->where($ownerColumn, $user->id)
             ->findOrFail($id);
 
         return view('ecommerce::pages.orders.show', [

@@ -13,18 +13,18 @@ use Illuminate\View\View;
 use Modules\So\Models\So;
 
 /**
- * Controller publik untuk area akun (profile, customer reseller).
+ * Controller publik untuk area akun (profile, customer affiliator).
  * Diakses dari halaman depan tanpa middleware 'admin' — modul-modul
- * CRUD lain adalah area admin dan tidak boleh dibuka reseller/customer.
+ * CRUD lain adalah area admin dan tidak boleh dibuka affiliator/customer.
  */
 class AccountController extends Controller
 {
     // ------------------------------------------------------------------
-    // Dashboard (khusus reseller)
+    // Dashboard (khusus affiliator)
     // ------------------------------------------------------------------
     public function dashboard(): View
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $user = Auth::user();
         $today = now()->today();
@@ -68,12 +68,32 @@ class AccountController extends Controller
             ->limit(6)
             ->get();
 
+        // Rekap fee_snapshot per order affiliator — sumber transparansi komisi
+        // (siapa affiliator bisa cek fee_percent/fee_amount tiap baris order).
+        $recentOrders->load(['has_details.has_product']);
+
+        // Payload JSON untuk modal pop-up "Detail fee" — dihitung di sini agar
+        // view cukup json_encode tanpa struktur arrow-fn yang bikin Blade bingung.
+        $feePopupData = $recentOrders->mapWithKeys(fn ($o) => [
+            (string) $o->id => [
+                'code' => (string) $o->so_code,
+                'total' => (float) $o->has_details->sum('fee_amount'),
+                'rows' => $o->has_details->map(fn ($d) => [
+                    'name' => (string) ($d->has_product?->product_nama ?? $d->so_detail_code),
+                    'qty' => (int) $d->so_detail_qty,
+                    'pct' => (float) $d->fee_percent,
+                    'amount' => (float) $d->fee_amount,
+                ])->all(),
+            ],
+        ])->all();
+
         return view('ecommerce::pages.account.dashboard', [
             'stats' => $stats,
             'dailySales' => $dailySales,
+            'feePopupData' => $feePopupData,
             'recentOrders' => $recentOrders,
             'salesChart' => $this->omzetBarChart($dailySales),
-            // Komisi reseller (fee khusus per-reseller, fallback config global)
+            // Komisi affiliator (fee khusus per-affiliator, fallback config global)
             'commissionRate' => $user->effectiveFee(),
             'commissionEarned' => \App\Models\Withdrawal::earned($user),
             'commissionBalance' => \App\Models\Withdrawal::balance($user),
@@ -104,7 +124,7 @@ class AccountController extends Controller
      */
     public function withdraw(Request $request): RedirectResponse
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $user = Auth::user();
 
@@ -193,12 +213,12 @@ class AccountController extends Controller
     }
 
     // ------------------------------------------------------------------
-    // Customer (khusus reseller)
+    // Customer (khusus affiliator)
     // ------------------------------------------------------------------
 
     public function customers(Request $request): View
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $q = trim((string) $request->input('q', ''));
 
@@ -224,7 +244,7 @@ class AccountController extends Controller
 
     public function customerCreate(): View
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         return view('ecommerce::pages.account.customer-form', [
             'customer' => null,
@@ -233,7 +253,7 @@ class AccountController extends Controller
 
     public function customerStore(Request $request): RedirectResponse
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $data = $this->validatedCustomer($request);
 
@@ -246,7 +266,7 @@ class AccountController extends Controller
 
     public function customerEdit(int $id): View
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $customer = $this->ownedCustomer($id);
 
@@ -257,7 +277,7 @@ class AccountController extends Controller
 
     public function customerUpdate(Request $request, int $id): RedirectResponse
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $customer = $this->ownedCustomer($id);
         $data = $this->validatedCustomer($request, $customer);
@@ -271,7 +291,7 @@ class AccountController extends Controller
 
     public function customerDelete(int $id): RedirectResponse
     {
-        $this->authorizeReseller();
+        $this->authorizeAffiliator();
 
         $customer = $this->ownedCustomer($id);
         $customer->delete();
@@ -311,9 +331,9 @@ class AccountController extends Controller
             ]);
     }
 
-    private function authorizeReseller(): void
+    private function authorizeAffiliator(): void
     {
-        abort_unless(Auth::check() && Auth::user()->isReseller(), 403, 'Hanya reseller yang dapat mengakses halaman ini.');
+        abort_unless(Auth::check() && Auth::user()->isAffiliator(), 403, 'Hanya affiliator yang dapat mengakses halaman ini.');
     }
 
     private function ownedCustomer(int $id): User

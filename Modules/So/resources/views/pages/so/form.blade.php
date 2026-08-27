@@ -1,4 +1,7 @@
-<?php /** @var Modules\So\Models\So $model */ ?>
+<?php
+use Modules\So\Models\So;
+
+/** @var So $model */ ?>
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => moduleRoute('getTable'), 'label' => 'Sales Order'], ['url' => '', 'label' => isset($model) && $model->exists ? 'Update' : 'Create']]" />
 
@@ -266,6 +269,9 @@
 
         (() => {
         const SO_PRICES = {!! json_encode($productPrices ?? []) !!};
+        const SO_RESELLER_FEES = {!! json_encode($productResellerFees ?? []) !!};
+        const SO_USER_TYPES = {!! json_encode($resellerTypes ?? []) !!};
+        const AUTH_TYPE = '{{ auth()->user()?->type ?? '' }}';
         const SO_WAREHOUSE = {!! $warehouseJson !!};
         const SO_COD_LOCATIONS = {!! $codLocationsJson !!};
         const SO_SHIPPING_COST_URL = '{{ route("so-so.getShippingCost") }}';
@@ -273,12 +279,51 @@
 
         function fmtRp(n){ return 'Rp ' + (Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 
+        // --- Harga otomatis per-role pemilik order (so_id_reseller) ---
+        // customer/user biasa: harga dasar; reseller: diskon reseller_fee_percent;
+        // affiliator: harga tetap (komisi di-snapshot server-side saat simpan).
+        function currentRole(){
+            const sel = document.querySelector('select[name="so_id_reseller"]');
+            if(sel && sel.value && SO_USER_TYPES[sel.value]) return SO_USER_TYPES[sel.value];
+            return (AUTH_TYPE === 'reseller' || AUTH_TYPE === 'affiliator') ? AUTH_TYPE : 'customer';
+        }
+
+        function autoPriceFor(pid){
+            if(!pid || SO_PRICES[pid] == null) return null;
+            const base = parseFloat(SO_PRICES[pid]);
+            if(currentRole() === 'reseller'){
+                const pct = parseFloat(SO_RESELLER_FEES[pid]);
+                if(!isNaN(pct) && pct > 0) return base * (1 - pct / 100);
+            }
+            return base;
+        }
+
+        function trimPrice(n){ return String(parseFloat(n.toFixed(2))); }
+
+        function hargaAutoEligible(el){
+            // Harga isi-an manual user tidak pernah ditimpa
+            return el.dataset.manual !== '1' && (el.value === '' || el.value === '0' || el.dataset.auto === '1');
+        }
+
+        function fillAutoHarga(el){
+            if(!hargaAutoEligible(el)) return;
+            const pid = el.closest('.so-detail-row')?.querySelector('.so-product-select')?.value;
+            const p = autoPriceFor(pid);
+            if(p == null) return;
+            el.value = trimPrice(p);
+            el.dataset.auto = '1';
+        }
+
+        function refreshAutoHarga(){
+            document.querySelectorAll('.so-detail-row .so-harga').forEach(fillAutoHarga);
+        }
+
         function calcRow(row){
             const qty = parseInt(row.querySelector('.so-qty')?.value || 0, 10) || 0;
             let harga = parseFloat(row.querySelector('.so-harga')?.value || '');
             if (isNaN(harga)) {
                 const pid = row.querySelector('.so-product-select')?.value;
-                harga = pid && SO_PRICES[pid] != null ? parseFloat(SO_PRICES[pid]) : 0;
+                harga = autoPriceFor(pid) ?? 0;
             }
             const sub = qty * (isNaN(harga)?0:harga);
             const el = row.querySelector('.so-row-subtotal');
@@ -493,10 +538,12 @@
             if(e.target.classList.contains('so-product-select')){
                 const row = e.target.closest('.so-detail-row');
                 const hargaInput = row?.querySelector('.so-harga');
-                if(hargaInput && (hargaInput.value === '' || hargaInput.value === '0')){
-                    const pid = e.target.value;
-                    if(pid && SO_PRICES[pid] != null) hargaInput.value = SO_PRICES[pid];
-                }
+                if(hargaInput) fillAutoHarga(hargaInput);
+                updateSummary();
+            }
+            // Ganti reseller/affiliator → hitung ulang harga otomatis semua baris
+            if(e.target.name === 'so_id_reseller'){
+                refreshAutoHarga();
                 updateSummary();
             }
             if(e.target.id === 'so-cod-location'){
@@ -506,6 +553,11 @@
         }, { signal: __signal });
 
         document.addEventListener('input', e => {
+            // Harga diketik manual → nonaktifkan auto-fill untuk input ini
+            if(e.target.classList && e.target.classList.contains('so-harga')){
+                e.target.dataset.manual = '1';
+                delete e.target.dataset.auto;
+            }
             if(e.target.closest('.so-detail-row')) updateSummary();
             if(['so-discount', 'so-discount-type', 'so-ppn-rate', 'so-pph-rate'].includes(e.target.id)) updateSummary();
             if(['so-lat','so-lng'].includes(e.target.id)){

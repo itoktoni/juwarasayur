@@ -223,9 +223,10 @@ class CheckoutController extends Controller
 
         $user = Auth::user();
         $isReseller = $user && $user->isReseller();
+        $isAffiliator = $user && $user->isAffiliator();
 
-        if ($user && ! $isReseller && $user->type !== UserTypeEnum::CUSTOMER) {
-            abort(403, 'Hanya customer yang dapat melakukan pemesanan.');
+        if ($user && ! $isReseller && ! $isAffiliator && $user->type !== UserTypeEnum::CUSTOMER) {
+            abort(403, 'Hanya customer/reseller/affiliator yang dapat melakukan pemesanan.');
         }
 
         /** @var Collection $cartItems */
@@ -245,8 +246,10 @@ class CheckoutController extends Controller
             }
         }
 
-        // Penentuan pemesan: reseller memesan untuk customer pilihannya
-        if ($isReseller) {
+        // Penentuan pemesan:
+        // - Affiliator → memesan untuk customer pilihannya (session reseller_customer_id)
+        // - Reseller/Customer → memesan untuk dirinya sendiri
+        if ($isAffiliator) {
             $selectedId = (int) Session::get('reseller_customer_id', 0);
             $buyer = $selectedId
                 ? User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->find($selectedId)
@@ -332,7 +335,7 @@ class CheckoutController extends Controller
         $discount = $this->activeDiscount($subtotal);
         $discountAmount = $discount?->hitungPotongan($subtotal) ?? 0.0;
 
-        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer, $discount, $discountAmount, $isReseller) {
+        $so = DB::transaction(function () use ($cartItems, $subtotal, $shipping, $buyerName, $buyerPhone, $soIdReseller, $soIdCustomer, $discount, $discountAmount, $isReseller, $isAffiliator, $user) {
             /** @var So $so */
             $so = So::create([
                 'so_tanggal' => now(),
@@ -359,17 +362,27 @@ class CheckoutController extends Controller
             ]);
 
             $seq = 1;
+            $feeResolver = app(\App\Services\Commission\FeeResolver::class);
             foreach ($cartItems as $item) {
                 $harga = (float) ($item->has_product?->product_harga ?? 0);
                 $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
                 $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+                $qty = (int) $item->qty;
+
+                // Hitung fee snapshot per baris: reseller = diskon harga (fee=0),
+                // affiliator = komisi % dari harga produk, customer = tanpa fee.
+                $fee = $feeResolver->resolve($item->has_product, $user, $qty, $harga);
 
                 SoDetail::create([
                     'so_detail_code' => sprintf('%s-%03d', $so->so_code, $seq),
                     'so_detail_id_so' => $so->id,
                     'so_detail_id_product' => $item->has_product->id,
-                    'so_detail_qty' => (int) $item->qty,
+                    'so_detail_qty' => $qty,
                     'so_detail_harga' => $hargaEfektif,
+                    'fee_percent' => $isAffiliator ? $fee->percent : null,
+                    'fee_amount' => $isAffiliator ? $fee->amount : 0,
+                    'fee_source' => $fee->source,
+                    'applied_role' => $fee->role,
                 ]);
                 $seq++;
             }

@@ -35,15 +35,15 @@
 
                     <div class="flex flex-col sm:flex-row gap-2 mt-5">
                         <a href="{{ route('shop.index') }}" class="btn btn-primary flex-1 h-11 justify-center">
-                            <span class="material-symbols-outlined text-base">storefront</span> Belanja Lagi
+                            <span class="material-symbols-outlined text-base">storefront</span> Belanja
                         </a>
                         <a href="{{ route('payment.invoice', ['token' => $so->so_payment_token]) }}" target="_blank"
                             class="btn btn-soft flex-1 h-11 justify-center">
-                            <span class="material-symbols-outlined text-base">print</span> Print Invoice
+                            <span class="material-symbols-outlined text-base">print</span> Invoice
                         </a>
                         @auth
                             <a href="{{ route('ecommerce.orders.show', ['id' => $so->id]) }}" class="btn btn-soft flex-1 h-11 justify-center">
-                                <span class="material-symbols-outlined text-base">receipt_long</span> Lihat Pesanan
+                                <span class="material-symbols-outlined text-base">receipt_long</span> Pesanan
                             </a>
                         @endauth
                     </div>

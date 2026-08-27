@@ -46,8 +46,8 @@ return [
                 ['route' => 'so-discount.getTable', 'icon' => 'sell', 'label' => 'Diskon', 'match' => ['so-discount.*']],
                 ['route' => 'shipping.getTable', 'icon' => 'local_shipping', 'label' => 'Pengiriman & COD', 'match' => ['shipping.*']],
                 ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'Sales Orders', 'match' => ['so-so.*']],
-                ['route' => 'so-consignment.getTable', 'icon' => 'assignment_turned_in', 'label' => 'Titip Jual', 'match' => ['so-consignment.*']],
-                ['route' => 'so-consignment.getToday', 'icon' => 'today', 'label' => 'Konsinyasi Hari Ini'],
+                // ['route' => 'so-consignment.getTable', 'icon' => 'assignment_turned_in', 'label' => 'Titip Jual', 'match' => ['so-consignment.*']],
+                // ['route' => 'so-consignment.getToday', 'icon' => 'today', 'label' => 'Konsinyasi Hari Ini'],
             ],
         ],
         [

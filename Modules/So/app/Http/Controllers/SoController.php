@@ -6,6 +6,7 @@ use App\Enums\UserTypeEnum;
 use App\Http\Requests\GeneralRequest;
 use App\Models\User;
 use App\Services\Commission\FeeResolver;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Models\Product;
@@ -25,7 +26,9 @@ class SoController extends Controller
 
     protected function share($data = [])
     {
-        $products = Product::where('is_active', true)->orderBy('product_nama')->get(['id', 'product_nama', 'product_harga']);
+        $products = Product::where('is_active', true)
+            ->orderBy('product_nama')
+            ->get(['id', 'product_nama', 'product_harga', 'reseller_fee_percent']);
         $trim = fn ($v) => $v === null || $v === '' ? $v : rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
 
         $codLocations = CodLocation::active()
@@ -47,6 +50,8 @@ class SoController extends Controller
             'codLocations' => $codLocations->all(),
             'productOptions' => $products->pluck('product_nama', 'id')->all(),
             'productPrices' => $products->mapWithKeys(fn ($p) => [$p->id => $trim($p->product_harga)])->all(),
+            'productResellerFees' => $products->mapWithKeys(fn ($p) => [$p->id => $trim($p->reseller_fee_percent ?? 0)])->all(),
+            'resellerTypes' => $this->resellerTypes(),
             'warehouse' => config('so.shipping.warehouse'),
             'shippingConfig' => [
                 'price_per_km' => (float) config('so.shipping.price_per_km'),
@@ -250,18 +255,26 @@ class SoController extends Controller
             $data['so_shipping_fee'] = 0;
         }
 
-        // Terapkan FeeResolver per baris: reseller dapat harga diskon, affiliator dapat snapshot komisi
+        // Terapkan FeeResolver per baris berdasarkan USER YANG DIPILIH (so_id_reseller),
+        // bukan user login — sehingga admin bisa membuat order utk reseller/affiliator:
+        //   - customer/user biasa : harga = product_harga
+        //   - reseller            : harga = product_harga - (product_harga * reseller_fee_percent)
+        //   - affiliator          : harga = product_harga + snapshot fee_percent/fee_amount
+        // Basis harga SELALU product_harga dari DB agar tidak bisa dimanipulasi/double-diskon.
         if (! empty($data['details']) && is_array($data['details'])) {
-            $user = Auth::user();
+            $ownerId = (int) ($data['so_id_reseller'] ?? 0);
+            $owner = $ownerId ? User::find($ownerId) : Auth::user();
+
             foreach ($data['details'] as $idx => $row) {
                 $product = Product::find((int) ($row['so_detail_id_product'] ?? 0));
-                if (! $product) continue;
-                $harga = (float) ($row['so_detail_harga'] ?? $product->product_harga);
+                if (! $product) {
+                    continue;
+                }
                 $qty = (int) ($row['so_detail_qty'] ?? 1);
-                $res = $this->fees->resolve($product, $user, $qty, $harga);
-                // Reseller: harga sudah didiskon, affiliator: harga tetap
+                $res = $this->fees->resolve($product, $owner, $qty, (float) $product->product_harga);
+                // Reseller: harga sudah didiskon, affiliator/customer: harga tetap
                 $data['details'][$idx]['so_detail_harga'] = $res->hargaEfektif;
-                if ($user?->isAffiliator()) {
+                if ($owner?->isAffiliator()) {
                     $data['details'][$idx]['fee_percent'] = $res->percent;
                     $data['details'][$idx]['fee_amount'] = $res->amount;
                     $data['details'][$idx]['fee_source'] = $res->source;
@@ -343,14 +356,34 @@ class SoController extends Controller
         return User::where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->pluck('name', 'id')->all();
     }
 
+    /**
+     * Pilihan pemilik order untuk admin: reseller maupun affiliator.
+     * Harga & perlakuan mengikuti tipe user yang dipilih.
+     */
     private function resellerOptions(): array
+    {
+        return $this->pickableOwners()
+            ?->mapWithKeys(fn ($u) => [
+                $u->id => $u->type === UserTypeEnum::AFFILIATOR ? "{$u->name} (Affiliator)" : $u->name,
+            ])->all() ?? [];
+    }
+
+    /** Map [id user => type] untuk preview harga di sisi JS form. */
+    private function resellerTypes(): array
+    {
+        return $this->pickableOwners()?->pluck('type', 'id')->all() ?? [];
+    }
+
+    private function pickableOwners(): ?Collection
     {
         $user = Auth::user();
 
         if ($user && ($user->isAdmin() || $user->isDeveloper())) {
-            return User::where('type', UserTypeEnum::RESELLER)->orderBy('name')->pluck('name', 'id')->all();
+            return User::whereIn('type', [UserTypeEnum::RESELLER, UserTypeEnum::AFFILIATOR])
+                ->orderBy('name')
+                ->get(['id', 'name', 'type']);
         }
 
-        return [];
+        return null;
     }
 }

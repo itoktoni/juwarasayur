@@ -29,7 +29,7 @@
             </form>
             <div class="ml-auto flex items-center gap-2 relative">
                 <a href="{{ route('shop.index') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Belanja</a>
-                <a href="{{ route('blog') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Blog</a>
+                <a href="{{ route('blog') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">About</a>
                 <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
                     <span class="material-symbols-outlined">shopping_cart</span>
                     <span data-cart-count class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center {{ $cartCount <= 0 ? 'hidden' : '' }}">{{ max($cartCount, 0) }}</span>
@@ -76,11 +76,17 @@
     </header>
 
     {{-- Hero --}}
-    <section class="bg-gradient-to-r from-primary to-primary/70 text-on-primary">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 text-center">
+    <section class="relative overflow-hidden bg-primary text-on-primary">
+        {{-- Dekorasi lingkaran --}}
+        <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-black/10"></div>
+        <div class="absolute top-1/2 left-1/3 w-40 h-40 rounded-full bg-white/5 hidden md:block"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20 text-center">
             <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">{{ $settings['hero_title'] }}</h1>
             <p class="mt-4 text-sm md:text-base opacity-90 max-w-2xl mx-auto">{{ $settings['hero_subtitle'] }}</p>
-            <div class="mt-6 flex justify-center gap-3">
+
+            <div class="mt-7 flex flex-wrap justify-center gap-3">
                 <a href="{{ route('shop.index') }}" class="inline-flex items-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity">
                     <span class="material-symbols-outlined text-base">storefront</span> {{ $settings['hero_cta_text'] }}
                 </a>

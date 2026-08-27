@@ -1,4 +1,4 @@
-<x-ecommerce::account-layout :title="'Dashboard Reseller'">
+<x-ecommerce::account-layout :title="'Dashboard Affiliator'">
     @php
         $user = auth()->user();
     @endphp
@@ -121,7 +121,11 @@
                 <p class="text-sm text-on-primary/80">Saldo Komisi Bisa Dicairkan</p>
                 <p class="text-3xl font-extrabold mt-1">Rp {{ number_format($commissionBalance, 0, ',', '.') }}</p>
                 <p class="text-xs text-on-primary/80 mt-2">Komisi {{ rtrim(rtrim((string) $commissionRate, '0'), '.') }}% dari omzet • Total terhasil: Rp {{ number_format($commissionEarned, 0, ',', '.') }}</p>
-                @if(!empty($user->bank_account_no))
+                @if($commissionBalance <= 0)
+                    <p class="mt-4 inline-flex items-center gap-2 text-xs bg-white/15 px-3 py-2 rounded-lg">
+                        <span class="material-symbols-outlined text-base">info</span> Belum ada komisi yang bisa dicairkan. Mulai order untuk menghasilkan komisi.
+                    </p>
+                @elseif(!empty($user->bank_account_no))
                     <button type="button" onclick="document.getElementById('withdraw-form').classList.toggle('hidden')"
                         class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-primary font-bold text-sm hover:bg-white/90 transition-colors">
                         <span class="material-symbols-outlined text-lg">payments</span> Withdraw
@@ -224,7 +228,7 @@
             </form>
         </div>
 
-        {{-- Recent orders --}}
+        {{-- Recent orders + fee snapshot --}}
         <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-on-surface">Order Terbaru</h3>
@@ -234,9 +238,50 @@
                 <div class="text-center py-10">
                     <span class="material-symbols-outlined text-5xl text-outline">inbox</span>
                     <p class="text-sm text-on-surface-variant mt-2">Belum ada order. Mulai jualan sekarang!</p>
+                    <div class="mt-4 flex items-center justify-center gap-2 text-xs">
+                        <a href="{{ route('shop.index') }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition">
+                            <span class="material-symbols-outlined text-sm">storefront</span> Buka Katalog
+                        </a>
+                        <a href="{{ route('account.customers.create') }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-semibold hover:bg-primary/20 transition">
+                            <span class="material-symbols-outlined text-sm">person_add</span> Tambah Customer
+                        </a>
+                    </div>
                 </div>
             @else
-                <div class="overflow-x-auto">
+                {{-- Mobile: stacked cards (no horizontal scroll) --}}
+                <div class="space-y-3 sm:hidden">
+                    @foreach($recentOrders as $order)
+                        @php $orderFee = (float) $order->has_details->sum('fee_amount'); @endphp
+                        <div class="p-3 rounded-xl border border-outline-variant/40 bg-white">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="font-mono text-xs font-bold text-primary truncate">{{ $order->so_code }}</p>
+                                    <p class="text-sm text-on-surface truncate">{{ $order->has_customer?->name ?? $order->so_customer_name ?? '-' }}</p>
+                                </div>
+                                <span class="shrink-0 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide
+                                    {{ $order->so_status === \Modules\So\Enums\SoStatusEnum::CANCELLED ? 'bg-error/10 text-error'
+                                        : ($order->so_status === \Modules\So\Enums\SoStatusEnum::DELIVERED ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary') }}">
+                                    {{ \Modules\So\Enums\SoStatusEnum::getDescription($order->so_status) }}
+                                </span>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between text-xs text-on-surface-variant">
+                                <span>{{ \Illuminate\Support\Carbon::parse($order->so_tanggal)->format('d/m/Y') }}</span>
+                                <span class="font-mono text-on-surface font-semibold">Rp {{ number_format((float) $order->so_grand_total, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+                                <span class="text-xs text-on-surface-variant">Fee Kamu <span class="ml-1 font-mono font-semibold text-success">+ Rp {{ number_format($orderFee, 0, ',', '.') }}</span></span>
+                                <button type="button"
+                                    data-fee-popup="{{ $order->id }}"
+                                    class="text-xs text-primary font-semibold inline-flex items-center gap-1 hover:underline">
+                                    Detail fee <span class="material-symbols-outlined text-base">open_in_new</span>
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop: tabel ringkas --}}
+                <div class="hidden sm:block overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="text-left text-xs uppercase tracking-wide text-on-surface-variant border-b border-outline-variant/50">
@@ -244,11 +289,14 @@
                                 <th class="py-2 pr-4">Customer</th>
                                 <th class="py-2 pr-4 hidden sm:table-cell">Tanggal</th>
                                 <th class="py-2 pr-4">Status</th>
-                                <th class="py-2 text-right">Total</th>
+                                <th class="py-2 pr-4 text-right">Total</th>
+                                <th class="py-2 pr-4 text-right">Fee Kamu</th>
+                                <th class="py-2"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-outline-variant/40">
                             @foreach($recentOrders as $order)
+                                @php $orderFee = (float) $order->has_details->sum('fee_amount'); @endphp
                                 <tr class="hover:bg-surface-container/60 transition-colors">
                                     <td class="py-3 pr-4 font-mono text-xs font-bold text-primary">{{ $order->so_code }}</td>
                                     <td class="py-3 pr-4">{{ $order->has_customer?->name ?? $order->so_customer_name ?? '-' }}</td>
@@ -260,7 +308,15 @@
                                             {{ \Modules\So\Enums\SoStatusEnum::getDescription($order->so_status) }}
                                         </span>
                                     </td>
-                                    <td class="py-3 text-right font-mono font-bold">Rp {{ number_format((float) $order->so_grand_total, 0, ',', '.') }}</td>
+                                    <td class="py-3 pr-4 text-right font-mono font-bold">Rp {{ number_format((float) $order->so_grand_total, 0, ',', '.') }}</td>
+                                    <td class="py-3 pr-4 text-right font-mono font-semibold text-success">+ Rp {{ number_format($orderFee, 0, ',', '.') }}</td>
+                                    <td class="py-3 text-right">
+                                        <button type="button"
+                                            data-fee-popup="{{ $order->id }}"
+                                            class="text-xs text-primary font-semibold inline-flex items-center gap-1 hover:underline">
+                                            <span class="material-symbols-outlined text-base">open_in_new</span> Detail fee
+                                        </button>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -269,6 +325,50 @@
             @endif
         </div>
     </div>
+
+    {{-- Modal: detail fee per order --}}
+    <div id="fee-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant">
+                <div>
+                    <h3 class="font-bold text-on-surface">Detail Fee</h3>
+                    <p class="text-xs text-on-surface-variant mt-0.5">Order <span id="fee-modal-code" class="font-mono font-semibold text-primary"></span></p>
+                </div>
+                <button type="button" id="fee-modal-close" class="p-1.5 rounded-lg hover:bg-surface-container text-on-surface-variant">
+                    <span class="material-symbols-outlined text-xl">close</span>
+                </button>
+            </div>
+            <div class="px-5 py-4 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs uppercase tracking-wide text-on-surface-variant border-b border-outline-variant/60">
+                            <th class="py-2 pr-2">Produk</th>
+                            <th class="py-2 pr-2 text-center">Qty</th>
+                            <th class="py-2 pr-2 text-right">%</th>
+                            <th class="py-2 text-right">Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fee-modal-body" class="divide-y divide-outline-variant/40"></tbody>
+                    <tfoot>
+                        <tr class="border-t-2 border-outline-variant/60 font-bold">
+                            <td class="py-2.5 pr-2" colspan="3">Total Fee</td>
+                            <td id="fee-modal-total" class="py-2.5 text-right font-mono text-success"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Template baris fee (clone per popup) --}}
+    <template id="fee-modal-row-tpl">
+        <tr>
+            <td class="py-2.5 pr-2 text-on-surface" data-name></td>
+            <td class="py-2.5 pr-2 text-center text-on-surface-variant" data-qty></td>
+            <td class="py-2.5 pr-2 text-right font-mono text-on-surface-variant" data-pct></td>
+            <td class="py-2.5 text-right font-mono font-semibold text-success" data-amount></td>
+        </tr>
+    </template>
 
     <script>
         function goWithdraw() {
@@ -280,6 +380,53 @@
             (target || form)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         const emptyBank = {{ empty($user->bank_account_no) ? 'true' : 'false' }};
+
+        // Data fee per order — dihitung di controller (feePopupData) lalu
+        // di-encode sekali di sini agar Blade tidak men-parse struktur arrow-fn.
+        window.__feePopupData = {!! json_encode($feePopupData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!};
+
+        (function () {
+            const modal = document.getElementById('fee-modal');
+            const body = document.getElementById('fee-modal-body');
+            const total = document.getElementById('fee-modal-total');
+            const codeEl = document.getElementById('fee-modal-code');
+            const closeBtn = document.getElementById('fee-modal-close');
+            const tpl = document.getElementById('fee-modal-row-tpl');
+            const fmtPct = (v) => v.toFixed(2).replace(/\.?0+$/, '');
+            const fmtRp = (v) => 'Rp ' + new Intl.NumberFormat('id-ID').format(v);
+
+            function open(orderId) {
+                const data = window.__feePopupData?.[String(orderId)];
+                if (! data) return;
+                body.innerHTML = '';
+                (data.rows || []).forEach((r) => {
+                    const row = tpl.content.firstElementChild.cloneNode(true);
+                    row.querySelector('[data-name]').textContent = r.name;
+                    row.querySelector('[data-qty]').textContent = '×' + r.qty;
+                    row.querySelector('[data-pct]').textContent = fmtPct(r.pct) + '%';
+                    row.querySelector('[data-amount]').textContent = fmtRp(r.amount);
+                    body.appendChild(row);
+                });
+                codeEl.textContent = data.code;
+                total.textContent = fmtRp(data.total);
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function close() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+
+            document.querySelectorAll('[data-fee-popup]').forEach((btn) => {
+                btn.addEventListener('click', () => open(btn.dataset.feePopup));
+            });
+            closeBtn.addEventListener('click', close);
+            modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+        })();
     </script>
 
     @push('scripts')

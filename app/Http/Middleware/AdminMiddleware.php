@@ -10,14 +10,15 @@ use Symfony\Component\HttpFoundation\Response;
 class AdminMiddleware
 {
     /**
-     * Halaman admin (/admin/*) tidak boleh diakses user bertipe
-     * customer & reseller — langsung dialihkan ke routing publik.
+     * Halaman admin (/admin/*) hanya untuk role internal (admin/developer/editor).
+     * User bertipe customer, reseller, atau affiliator dialihkan ke home publik
+     * karena area admin adalah back-office (user bertipe user dengan role internal).
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
 
-        if ($user && ($user->isCustomer() || $user->isReseller())) {
+        if ($user && ($user->isCustomer() || $user->isReseller() || $user->isAffiliator())) {
             return redirect()->route('home');
         }
 

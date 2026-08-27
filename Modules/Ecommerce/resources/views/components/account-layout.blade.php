@@ -86,7 +86,7 @@
         <div class="grid grid-cols-4 h-16 max-w-lg mx-auto">
             @php
                 $bottomItems = [
-                    ['href' => $user?->isReseller() ? route('account.dashboard') : route('home'), 'label' => 'Home', 'icon' => 'space_dashboard', 'active' => request()->routeIs('account.dashboard') || request()->routeIs('home')],
+                    ['href' => $user?->isAffiliator() ? route('account.dashboard') : route('home'), 'label' => 'Home', 'icon' => 'space_dashboard', 'active' => request()->routeIs('account.dashboard') || request()->routeIs('home')],
                     ['href' => route('shop.index'), 'label' => 'Belanja', 'icon' => 'storefront', 'active' => request()->routeIs('shop.*')],
                     ['href' => route('cart.index'), 'label' => 'Keranjang', 'icon' => 'shopping_cart', 'active' => false],
                     ['href' => route('account.profile'), 'label' => 'Akun', 'icon' => 'person', 'active' => request()->routeIs('account.profile*') || request()->routeIs('ecommerce.orders.*')],
