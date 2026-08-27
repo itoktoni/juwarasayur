@@ -5,7 +5,9 @@ namespace Modules\Po\Models;
 use App\Models\BaseModel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\Catalog\Models\Product;
+use Modules\So\Models\SoDetail;
 
 #[Fillable(['po_detail_id_po', 'po_detail_id_product', 'po_detail_qty', 'po_detail_prepared', 'po_detail_harga', 'po_detail_subtotal', 'po_detail_keterangan', 'po_detail_code'])]
 class PoDetail extends BaseModel
@@ -44,6 +46,20 @@ class PoDetail extends BaseModel
     public function has_product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'po_detail_id_product');
+    }
+
+    /**
+     * SO detail yang menjadi sumber PO detail ini (relasi many-to-many via pivot).
+     * Pivot menyimpan `qty` — qty yang diminta oleh tiap SO detail ke PO detail ini.
+     */
+    public function has_so_details(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SoDetail::class,
+            'po_detail_so_details',
+            'po_detail_id',
+            'so_detail_id'
+        )->withPivot('qty')->withTimestamps();
     }
 
     protected static function booted(): void

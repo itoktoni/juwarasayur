@@ -207,8 +207,13 @@ class SoController extends Controller
                 ?? ($customer?->reference_id ?: Auth::id());
         }
 
-        // Reseller hanya boleh order untuk customer-nya sendiri
-        if ($customer !== null) {
+        // Reseller hanya boleh order untuk customer-nya sendiri.
+        // Admin/developer/editor (role internal) bebas membuat SO tanpa batasan
+        // ownership customer — karena di area admin semua user adalah milik sistem.
+        $user = Auth::user();
+        $isInternal = $user && in_array($user->role, ['admin', 'developer', 'editor'], true);
+
+        if ($customer !== null && ! $isInternal) {
             abort_if((int) $customer->reference_id !== (int) $data['so_id_reseller'], 422, 'Customer bukan milik reseller ini.');
         }
 

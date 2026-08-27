@@ -28,6 +28,7 @@
             <x-slot:head>
                 <th>Produk</th>
                 <th class="text-center">Qty PO</th>
+                <th class="text-center">Diminta SO</th>
                 <th class="text-center">Prepared</th>
                 <th class="text-center">Sisa</th>
                 <th class="text-left">Progress</th>
@@ -40,6 +41,7 @@
                     $prepared = (int) $detail->po_detail_prepared;
                     $sisa = $detail->po_detail_sisa;
                     $percent = $qty > 0 ? min(100, round($prepared / $qty * 100)) : 0;
+                    $dimintaSo = $soSources[$detail->id]['total_diminta'] ?? 0;
                 @endphp
                 <tr>
                     <td>
@@ -47,6 +49,13 @@
                         <div class="font-data-mono text-data-mono text-on-surface-variant mt-0.5">{{ $detail->po_detail_code ?? '#' . $detail->id }}</div>
                     </td>
                     <td class="text-center font-medium">{{ $qty }}</td>
+                    <td class="text-center">
+                        @if($dimintaSo > 0)
+                            <span class="font-medium text-on-surface">{{ (int) $dimintaSo }}</span>
+                        @else
+                            <span class="text-on-surface-variant text-xs">—</span>
+                        @endif
+                    </td>
                     <td class="text-center">
                         <x-badge :type="$prepared > 0 ? 'info' : 'default'">{{ $prepared }}</x-badge>
                     </td>
@@ -83,6 +92,7 @@
                         $prepared = (int) $detail->po_detail_prepared;
                         $sisa = $detail->po_detail_sisa;
                         $percent = $qty > 0 ? min(100, round($prepared / $qty * 100)) : 0;
+                        $dimintaSo = $soSources[$detail->id]['total_diminta'] ?? 0;
                     @endphp
                     <div class="mx-1 rounded-xl p-4 bg-surface-container-low">
                         <div class="flex items-start justify-between gap-3">
@@ -92,16 +102,20 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 mt-4">
-                            <div class="rounded-lg bg-surface-container px-3 py-2">
+                        <div class="grid grid-cols-4 gap-2 mt-4">
+                            <div class="rounded-lg bg-surface-container px-2 py-2">
                                 <p class="text-label-caps text-on-surface-variant">Qty PO</p>
                                 <p class="font-medium text-sm mt-0.5">{{ $qty }}</p>
                             </div>
-                            <div class="rounded-lg bg-surface-container px-3 py-2">
-                                <p class="text-label-caps text-on-surface-variant">Prepared</p>
+                            <div class="rounded-lg bg-surface-container px-2 py-2">
+                                <p class="text-label-caps text-on-surface-variant">SO</p>
+                                <p class="font-medium text-sm mt-0.5">{{ $dimintaSo > 0 ? (int) $dimintaSo : '—' }}</p>
+                            </div>
+                            <div class="rounded-lg bg-surface-container px-2 py-2">
+                                <p class="text-label-caps text-on-surface-variant">Prep</p>
                                 <p class="font-medium text-sm mt-0.5">{{ $prepared }}</p>
                             </div>
-                            <div class="rounded-lg bg-surface-container px-3 py-2">
+                            <div class="rounded-lg bg-surface-container px-2 py-2">
                                 <p class="text-label-caps text-on-surface-variant">Sisa</p>
                                 <p class="font-bold text-sm mt-0.5 {{ $sisa > 0 ? 'text-warning' : 'text-success' }}">{{ $sisa }}</p>
                             </div>
@@ -131,6 +145,38 @@
             </x-slot:mobile>
         </x-table>
     </x-card>
+
+    {{-- Card Sumber SO: hanya tampil jika ada pivot po_detail_so_details --}}
+    @php
+        $hasAnySo = collect($soSources ?? [])->contains(fn ($s) => $s['rows']->isNotEmpty());
+    @endphp
+    @if($hasAnySo)
+    <x-card label="Sumber Sales Order" class="mt-5" icon="receipt_long" :noGrid="true">
+        <x-table :border="false">
+            <x-slot:head>
+                <th>Kode SO</th>
+                <th>Customer</th>
+                <th>Produk</th>
+                <th class="text-center">Qty Diminta</th>
+            </x-slot:head>
+            <x-slot:body>
+                @foreach($model->has_details as $detail)
+                    @foreach(($soSources[$detail->id]['rows'] ?? collect()) as $src)
+                        <tr>
+                            <td class="font-data-mono text-data-mono text-primary">{{ $src->has_so?->so_code ?? '-' }}</td>
+                            <td>{{ $src->has_so?->has_customer?->name ?? $src->has_so?->so_customer_name ?? '-' }}</td>
+                            <td>
+                                <span class="font-medium text-on-surface">{{ $detail->has_product->product_nama ?? '-' }}</span>
+                                <span class="text-xs text-on-surface-variant ml-1">via {{ $detail->po_detail_code }}</span>
+                            </td>
+                            <td class="text-center font-mono font-semibold">× {{ (int) $src->pivot->qty }}</td>
+                        </tr>
+                    @endforeach
+                @endforeach
+            </x-slot:body>
+        </x-table>
+    </x-card>
+    @endif
 
     <div class="mt-5">
         <a href="{{ route('po-po.getTable') }}" class="inline-flex items-center justify-center gap-1 h-10 px-4 text-sm font-semibold rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-all">

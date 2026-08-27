@@ -48,26 +48,45 @@ class PoController extends Controller
 
     public function getPrepare(GeneralRequest $request, $id)
     {
-        $po = Po::with(['has_supplier', 'has_details.has_product'])->findOrFail($id);
+        $po = Po::with([
+            'has_supplier',
+            'has_details.has_product',
+            'has_details.has_so_details.has_so.has_customer',
+        ])->findOrFail($id);
+
+        // Map per po_detail_id: daftar SO detail yang menjadi sumber + qty diminta.
+        $soSources = $po->has_details->mapWithKeys(fn ($d) => [
+            $d->id => [
+                'rows' => $d->has_so_details,
+                'total_diminta' => (float) $d->has_so_details->sum('pivot.qty'),
+            ],
+        ]);
 
         return $this->views('po::pages.po.prepare', [
             'model' => $po,
+            'soSources' => $soSources,
         ]);
     }
 
     public function getPrepareProduct(GeneralRequest $request, $id)
     {
-        $detail = PoDetail::with(['has_po.has_supplier', 'has_product'])->findOrFail($id);
+        $detail = PoDetail::with([
+            'has_po.has_supplier',
+            'has_product',
+            'has_so_details.has_so.has_customer',
+        ])->findOrFail($id);
 
         return $this->views('po::pages.po.prepare-product', [
             'model' => $detail,
             'lokasiOptions' => Lokasi::getOptions(),
+            'soSources' => $detail->has_so_details,
+            'totalDiminta' => (float) $detail->has_so_details->sum('pivot.qty'),
         ]);
     }
 
     public function postPrepareProduct(GeneralRequest $request, $id)
     {
-        $detail = PoDetail::with('has_product')->findOrFail($id);
+        $detail = PoDetail::with(['has_product', 'has_so_details'])->findOrFail($id);
 
         $validated = $request->validate([
             'locations' => ['required', 'array', 'min:1'],
@@ -81,6 +100,15 @@ class PoController extends Controller
 
         if ($total <= 0 || $total > $sisa) {
             return back()->withErrors(['locations' => 'Total qty melebihi sisa qty product.'])->withInput();
+        }
+
+        // Validasi tambahan: prepared total tidak boleh melebihi qty diminta SO
+        // (jika PO ini berasal dari SO). PO manual tanpa SO lewat tanpa cek.
+        $soRequested = (float) $detail->has_so_details->sum('pivot.qty');
+        if ($soRequested > 0 && ((int) $detail->po_detail_prepared + $total) > (int) $soRequested) {
+            $selisih = ((int) $detail->po_detail_prepared + $total) - (int) $soRequested;
+
+            return back()->withErrors(['locations' => "Qty prepared akan melebihi permintaan SO sebesar {$selisih}. Sesuaikan qty."])->withInput();
         }
 
         try {
@@ -227,8 +255,15 @@ class PoController extends Controller
                             'product_id' => $pid,
                             'qty' => 0,
                             'harga' => (float) ($item['harga_modal'] ?? $item['harga']),
+                            // Track asal-usul tiap baris PO: SO detail mana saja yang
+                            // menyumbang qty, agar prepare bisa cross-check permintaan SO.
+                            'sources' => [],
                         ];
                         $bySupplier[$sid]['lines'][$pid]['qty'] += (int) $item['qty'];
+                        $bySupplier[$sid]['lines'][$pid]['sources'][] = [
+                            'so_detail_id' => (int) $item['so_detail_id'],
+                            'qty' => (int) $item['qty'],
+                        ];
                         $coveredDetailIds[] = $item['so_detail_id'];
                     }
                 }
@@ -242,7 +277,7 @@ class PoController extends Controller
 
                     $seq = 1;
                     foreach ($data['lines'] as $line) {
-                        PoDetail::create([
+                        $poDetail = PoDetail::create([
                             'po_detail_id_po' => $po->id,
                             'po_detail_id_product' => $line['product_id'],
                             'po_detail_code' => sprintf('%s-%03d', $po->po_code, $seq++),
@@ -250,6 +285,17 @@ class PoController extends Controller
                             'po_detail_harga' => $line['harga'],
                             'po_detail_keterangan' => null,
                         ]);
+
+                        // Simpan pivot per (po_detail, so_detail) dengan qty yang diminta.
+                        // attach() akan deduplicate jika ada so_detail_id yang sama,
+                        // tapi di sini tiap kombinasi sudah unik per product.
+                        $syncData = [];
+                        foreach ($line['sources'] as $src) {
+                            $syncData[$src['so_detail_id']] = ['qty' => $src['qty']];
+                        }
+                        if (! empty($syncData)) {
+                            $poDetail->has_so_details()->sync($syncData);
+                        }
                     }
 
                     $po->recalculateTotals();
