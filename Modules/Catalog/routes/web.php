@@ -14,3 +14,7 @@ Route::auto('/catalog/category', CategoryController::class, ['name' => 'catalog-
 Route::auto('/catalog/tag', TagController::class, ['name' => 'catalog-tag']);
 Route::auto('/catalog/product-master', ProductMasterController::class, ['name' => 'catalog-product-master']);
 Route::auto('/catalog/product', ProductController::class, ['name' => 'catalog-product']);
+
+Route::get('/catalog/product/export', [ProductController::class, 'getExport'])->name('catalog-product.export');
+Route::get('/catalog/product/import', [ProductController::class, 'getImport'])->name('catalog-product.import');
+Route::post('/catalog/product/import', [ProductController::class, 'postImport'])->name('catalog-product.import.post');

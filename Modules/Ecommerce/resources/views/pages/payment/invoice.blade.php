@@ -82,7 +82,7 @@
             @if((float) $so->so_shipping_fee > 0)
                 <div><span>Ongkir</span><span>{{ formatAngka((float) $so->so_shipping_fee, 'Rp') }}</span></div>
             @endif
-            <div class="grand"><span>Total</span><span>{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</span></div>
+            <div class="grand"><span>Total Bayar</span><span>{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</span></div>
         </div>
 
         <div class="meta">

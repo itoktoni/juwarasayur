@@ -13,7 +13,7 @@
 
                     <div class="mt-5 p-4 rounded-lg bg-primary/5 border border-primary/30 text-left text-sm space-y-2">
                         <div class="flex justify-between"><span class="text-on-surface-variant">Kode Pesanan</span><strong class="font-mono">{{ $so->so_code }}</strong></div>
-                        <div class="flex justify-between"><span class="text-on-surface-variant">Total Dibayar</span><strong class="font-mono text-primary">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</strong></div>
+                        <div class="flex justify-between"><span class="text-on-surface-variant">Total Dibayar</span><strong class="font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</strong></div>
                         <div class="flex justify-between"><span class="text-on-surface-variant">Metode Bayar</span><span>QRIS</span></div>
                         <div class="flex justify-between"><span class="text-on-surface-variant">Pengiriman</span><span>{{ $methodLabel }}@if($so->so_cod_location) — {{ $so->so_cod_location }}@endif</span></div>
                         <div class="flex justify-between"><span class="text-on-surface-variant">Atas Nama</span><span>{{ $so->so_customer_name }}</span></div>
@@ -126,8 +126,11 @@
                     @endif
 
                     <div class="mt-5 p-4 rounded-lg bg-primary/5 border border-primary/30">
-                        <p class="text-xs text-on-surface-variant">Total Pembayaran</p>
-                        <p class="text-2xl font-bold font-mono text-primary">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</p>
+                        <p class="text-xs text-on-surface-variant">Total Pembayaran (nominal unik)</p>
+                        <p class="text-2xl font-bold font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</p>
+                        @if($so->unique_code > 0)
+                            <p class="text-[11px] text-on-surface-variant mt-1">Bayar tepat sesuai nominal di atas</p>
+                        @endif
                     </div>
 
                     <p class="text-[11px] text-on-surface-variant mt-3 leading-relaxed">
@@ -199,7 +202,7 @@
                         @endif
                         <div class="flex items-center justify-between pt-3 border-t border-outline-variant text-sm">
                             <span class="font-bold text-on-surface">Total</span>
-                            <span class="font-bold font-mono text-primary">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</span>
+                            <span class="font-bold font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</span>
                         </div>
                     </div>
                 </div>

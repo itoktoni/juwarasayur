@@ -101,6 +101,7 @@ class UserSeeder extends Seeder
 
     /**
      * Upsert user + set kolom opsional (fee, bank_*, reference_id) dan verified_at.
+     *
      * @param  array<string,mixed>  $row
      */
     private function upsertUser(array $row, string $password): User

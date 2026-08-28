@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\UserTypeEnum;
 use App\Concerns\ControllerTrait;
 use App\Http\Requests\GeneralRequest;
 use App\Models\Withdrawal;

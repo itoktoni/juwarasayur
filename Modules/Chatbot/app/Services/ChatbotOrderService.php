@@ -47,11 +47,9 @@ class ChatbotOrderService
             throw new \RuntimeException('Keranjang chatbot kosong.');
         }
 
-        // Metode kirim wajib dipilih customer sebelum checkout.
-        $method = ShippingMethodEnum::coerce($shipping['method'] ?? null);
-        if ($method === null) {
-            throw new \RuntimeException('Metode pengiriman belum dipilih.');
-        }
+        // Metode kirim default pickup jika belum dipilih customer.
+        $method = ShippingMethodEnum::coerce($shipping['method'] ?? null)
+            ?? ShippingMethodEnum::PICKUP;
 
         $shippingFee = (float) ($shipping['fee'] ?? 0);
 

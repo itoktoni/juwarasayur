@@ -11,17 +11,18 @@ use App\Enums\UserTypeEnum;
 use App\Notifications\ResetPasswordNotification;
 use App\Properties\UserEntity;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\So\Models\Consignment;
 
 /**
  * @mixin IdeHelperUser
@@ -160,7 +161,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function has_consignments(): HasMany
     {
-        return $this->hasMany(\Modules\So\Models\Consignment::class, 'user_id');
+        return $this->hasMany(Consignment::class, 'user_id');
     }
 
     /**
@@ -168,7 +169,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function has_withdrawals(): HasMany
     {
-        return $this->hasMany(\App\Models\Withdrawal::class);
+        return $this->hasMany(Withdrawal::class);
     }
 
     /**

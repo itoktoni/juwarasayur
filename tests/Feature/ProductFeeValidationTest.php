@@ -3,7 +3,7 @@
 use Modules\Catalog\Models\Product;
 
 it('validates fee percent between 0 and 100', function () {
-    $p = new Product();
+    $p = new Product;
     $rules = $p->rules();
     expect($rules['reseller_fee_percent'])->toContain('between:0,100');
     expect($rules['affiliator_fee_percent'])->toContain('between:0,100');

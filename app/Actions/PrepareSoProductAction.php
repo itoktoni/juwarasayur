@@ -12,7 +12,6 @@ use Modules\Inventory\Models\Lokasi;
 use Modules\Inventory\Models\Stock;
 use Modules\Inventory\Models\StockMovement;
 use Modules\So\Models\SoDetail;
-use Throwable;
 
 /**
  * Siapkan barang keluar gudang untuk memenuhi SO.

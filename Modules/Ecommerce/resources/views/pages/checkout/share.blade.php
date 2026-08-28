@@ -31,7 +31,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-outline-variant/60 flex items-center justify-between">
                 <span class="badge badge-soft">{{ \Modules\So\Enums\SoStatusEnum::getDescription($so->so_status) }}</span>
-                <span class="font-bold font-mono text-primary text-lg">Rp {{ formatAngka((int) $so->so_grand_total) }}</span>
+                <span class="font-bold font-mono text-primary text-lg">Rp {{ formatAngka((int) $so->so_unique_amount) }}</span>
             </div>
         </div>
 
@@ -84,8 +84,8 @@
             @endif
 
             <div class="mt-5 p-4 rounded-lg bg-primary/5 border border-primary/30">
-                <p class="text-xs text-on-surface-variant">Total Pembayaran</p>
-                <p class="text-2xl font-bold font-mono text-primary">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</p>
+                <p class="text-xs text-on-surface-variant">Total Pembayaran (nominal unik)</p>
+                <p class="text-2xl font-bold font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</p>
             </div>
 
             <p class="text-[11px] text-on-surface-variant mt-3">
@@ -168,7 +168,7 @@
                 @endif
                 <div class="flex items-center justify-between pt-3 border-t border-outline-variant text-sm">
                     <span class="font-bold text-on-surface">Total</span>
-                    <span class="font-bold font-mono text-primary">{{ formatAngka((float) $so->so_grand_total, 'Rp') }}</span>
+                    <span class="font-bold font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</span>
                 </div>
             </div>
         </div>

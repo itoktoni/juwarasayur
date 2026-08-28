@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;
 
-#[Fillable(['so_code', 'so_payment_token', 'so_tanggal', 'so_id_reseller', 'so_id_customer', 'so_customer_name', 'so_customer_phone', 'so_status', 'so_shipping_method', 'so_cod_location', 'so_shipping_fee', 'so_distance_km', 'so_address', 'so_lat', 'so_lng', 'so_keterangan', 'so_subtotal', 'so_discount', 'so_discount_type', 'so_discount_note', 'so_dpp', 'so_ppn', 'so_ppn_rate', 'so_pph', 'so_pph_rate', 'so_grand_total', 'so_po_generated_at'])]
+#[Fillable(['so_code', 'so_payment_token', 'so_tanggal', 'so_id_reseller', 'so_id_customer', 'so_customer_name', 'so_customer_phone', 'so_status', 'so_shipping_method', 'so_cod_location', 'so_shipping_fee', 'so_distance_km', 'so_address', 'so_lat', 'so_lng', 'so_keterangan', 'so_subtotal', 'so_discount', 'so_discount_type', 'so_discount_note', 'so_dpp', 'so_ppn', 'so_ppn_rate', 'so_pph', 'so_pph_rate', 'so_grand_total', 'so_unique_amount', 'so_po_generated_at'])]
 class So extends BaseModel
 {
     protected $table = 'so_orders';
@@ -40,6 +40,7 @@ class So extends BaseModel
             'so_shipping_fee' => 'decimal:2',
             'so_distance_km' => 'decimal:2',
             'so_grand_total' => 'decimal:2',
+            'so_unique_amount' => 'decimal:2',
         ];
     }
 
@@ -87,6 +88,12 @@ class So extends BaseModel
 
             // URL pembayaran memakai token acak, bukan id berurutan
             $model->so_payment_token ??= (string) Str::uuid();
+
+            // Nominal unik 2 digit untuk verifikasi webhook
+            if (empty($model->so_unique_amount)) {
+                $baseTotal = (float) ($model->so_grand_total ?? 0);
+                $model->so_unique_amount = $baseTotal + random_int(0, 99);
+            }
         });
     }
 
@@ -97,6 +104,24 @@ class So extends BaseModel
         } while (static::where('so_code', $code)->exists());
 
         return $code;
+    }
+
+    /**
+     * Ambil 2 digit unik dari nominal pembayaran.
+     * Contoh: 50023 → 23
+     */
+    public function getUniqueCodeAttribute(): int
+    {
+        return (int) fmod((float) $this->so_unique_amount, 100);
+    }
+
+    /**
+     * Base total sebelum ditambah 2 digit unik.
+     * Contoh: 50023 → 50000
+     */
+    public function getBaseTotalAttribute(): float
+    {
+        return (float) $this->so_grand_total;
     }
 
     /**

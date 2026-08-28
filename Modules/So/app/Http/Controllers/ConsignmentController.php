@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Models\Product;
 use Modules\So\Enums\ConsignmentStatusEnum;
 use Modules\So\Models\Consignment;
+use Modules\So\Models\ConsignmentDetail;
 
 /**
  * Admin: titip jual (konsinyasi). Pagi = titip barang ke reseller,
@@ -199,7 +200,7 @@ class ConsignmentController extends Controller
                 $prev->update($attrs);
                 $keepIds[] = (int) $prev->id;
             } else {
-                $keepIds[] = (int) \Modules\So\Models\ConsignmentDetail::create($attrs)->id;
+                $keepIds[] = (int) ConsignmentDetail::create($attrs)->id;
             }
         }
 

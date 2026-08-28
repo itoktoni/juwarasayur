@@ -12,6 +12,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
@@ -30,6 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        TrustProxies::at('*');
+
         $middleware->alias([
             'access' => AccessMiddleware::class,
             'admin' => AdminMiddleware::class,
@@ -55,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append([
+            TrustProxies::class,
             HandleCors::class,
         ]);
     })

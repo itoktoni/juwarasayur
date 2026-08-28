@@ -3,6 +3,10 @@
 namespace Modules\Ecommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Encoder\Encoder;
+use BaconQrCode\Renderer\GDLibRenderer;
+use BaconQrCode\Writer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Modules\So\Enums\ShippingMethodEnum;
@@ -16,7 +20,7 @@ use Modules\So\Models\So;
  */
 class PaymentController extends Controller
 {
-    public const EXPIRY_MINUTES = 5;
+    public const EXPIRY_MINUTES_KEY = 'QRIS_EXPIRY_MINUTES';
 
     public function show(string $token): View|RedirectResponse
     {
@@ -47,12 +51,12 @@ class PaymentController extends Controller
      */
     private function buildQrWithInfo(string $qrText, string $soCode, float $amount, int $qrSize = 400): string
     {
-        $renderer = new \BaconQrCode\Renderer\GDLibRenderer($qrSize, 10);
-        $writer = new \BaconQrCode\Writer($renderer);
+        $renderer = new GDLibRenderer($qrSize, 10);
+        $writer = new Writer($renderer);
         $qrPng = $writer->writeString(
             $qrText,
-            \BaconQrCode\Encoder\Encoder::DEFAULT_BYTE_MODE_ENCODING,
-            \BaconQrCode\Common\ErrorCorrectionLevel::H()
+            Encoder::DEFAULT_BYTE_MODE_ENCODING,
+            ErrorCorrectionLevel::H()
         );
 
         $qrImg = @imagecreatefromstring($qrPng);
@@ -120,7 +124,9 @@ class PaymentController extends Controller
 
     private function secondsLeft(So $so): int
     {
-        return max(0, self::EXPIRY_MINUTES * 60 - (int) $so->created_at?->diffInSeconds(now()));
+        $expiryMinutes = (int) env(self::EXPIRY_MINUTES_KEY, 5);
+
+        return max(0, $expiryMinutes * 60 - (int) $so->created_at?->diffInSeconds(now()));
     }
 
     /**

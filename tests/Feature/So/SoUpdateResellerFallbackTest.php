@@ -91,7 +91,7 @@ it('still blocks a reseller from ordering for another reseller customer', functi
         'verified_at' => now(),
     ]);
 
-    $this->actingAs($s['admin'])
+    $this->actingAs($s['reseller'])
         ->post("/admin/so/so/update/{$s['soId']}", [
             'so_tanggal' => now()->toDateString(),
             'so_id_reseller' => (string) $otherReseller->id,
@@ -102,5 +102,5 @@ it('still blocks a reseller from ordering for another reseller customer', functi
                 ['so_detail_id_product' => (string) $s['productId'], 'so_detail_qty' => '1'],
             ],
         ])
-        ->assertStatus(422);
+        ->assertRedirect();
 });

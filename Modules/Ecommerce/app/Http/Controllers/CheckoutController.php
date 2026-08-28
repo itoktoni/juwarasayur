@@ -5,6 +5,11 @@ namespace Modules\Ecommerce\Http\Controllers;
 use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Commission\FeeResolver;
+use BaconQrCode\Common\ErrorCorrectionLevel;
+use BaconQrCode\Encoder\Encoder;
+use BaconQrCode\Renderer\GDLibRenderer;
+use BaconQrCode\Writer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -362,7 +367,7 @@ class CheckoutController extends Controller
             ]);
 
             $seq = 1;
-            $feeResolver = app(\App\Services\Commission\FeeResolver::class);
+            $feeResolver = app(FeeResolver::class);
             foreach ($cartItems as $item) {
                 $harga = (float) ($item->has_product?->product_harga ?? 0);
                 $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
@@ -433,7 +438,7 @@ class CheckoutController extends Controller
             ? $this->buildQrWithInfo($qrisPayload, $so->so_code, (float) $so->so_grand_total, 400)
             : '';
         // Sisa waktu pembayaran, sama dengan aturan di PaymentController
-        $secondsLeft = max(0, PaymentController::EXPIRY_MINUTES * 60
+        $secondsLeft = max(0, (int) env(PaymentController::EXPIRY_MINUTES_KEY, 5) * 60
             - (int) $so->created_at?->diffInSeconds(now()));
 
         return view('ecommerce::pages.checkout.share', [
@@ -451,12 +456,12 @@ class CheckoutController extends Controller
      */
     private function buildQrWithInfo(string $qrText, string $soCode, float $amount, int $qrSize = 400): string
     {
-        $renderer = new \BaconQrCode\Renderer\GDLibRenderer($qrSize, 10);
-        $writer = new \BaconQrCode\Writer($renderer);
+        $renderer = new GDLibRenderer($qrSize, 10);
+        $writer = new Writer($renderer);
         $qrPng = $writer->writeString(
             $qrText,
-            \BaconQrCode\Encoder\Encoder::DEFAULT_BYTE_MODE_ENCODING,
-            \BaconQrCode\Common\ErrorCorrectionLevel::H()
+            Encoder::DEFAULT_BYTE_MODE_ENCODING,
+            ErrorCorrectionLevel::H()
         );
 
         $qrImg = @imagecreatefromstring($qrPng);

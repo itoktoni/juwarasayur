@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController as FortifyRegisteredUserController;
@@ -24,7 +25,7 @@ class RegisteredUserController extends FortifyRegisteredUserController
         $answer = (int) $request->input('captcha');
 
         if (! $request->session()->has("captcha_$key") || (int) $request->session()->get("captcha_$key") !== $answer) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'captcha' => 'Captcha salah.',
             ]);
         }

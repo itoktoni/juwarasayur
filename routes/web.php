@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PrepareController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\WebsiteSettingController;
 use App\Models\Notification;
@@ -15,7 +16,8 @@ use Modules\Ecommerce\Http\Controllers\StorefrontController;
 Route::middleware('guest')->get('/register/reseller', fn () => view('pages::auth.register-reseller'))
     ->name('register.reseller');
 
-Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {    if (! config('centrifugo.enabled')) {
+Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {
+    if (! config('centrifugo.enabled')) {
         return response()->json(['token' => 'disabled']);
     }
 
@@ -51,7 +53,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
     Route::auto('/withdrawal', 'WithdrawalController', ['name' => 'withdrawal']);
 
     // Prepare dari SO (barang keluar gudang) — modul ringan
-    Route::prefix('prepare')->name('prepare.')->controller(\App\Http\Controllers\PrepareController::class)->group(function () {
+    Route::prefix('prepare')->name('prepare.')->controller(PrepareController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::match(['get', 'post'], '/group', 'group')->name('group');
         Route::get('/{product}/prepare', 'prepareForm')->name('prepareForm');

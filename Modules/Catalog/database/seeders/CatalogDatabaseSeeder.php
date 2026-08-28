@@ -24,6 +24,7 @@ class CatalogDatabaseSeeder extends Seeder
         $tags = $this->seedTags();
         $masters = app(ProductMasterSeeder::class)->run();
         $this->seedProducts($brands, $satuans, $categories, $tags, $masters);
+        app(VegetableProductSeeder::class)->run();
     }
 
     private function pruneLegacy(): void

@@ -5,11 +5,14 @@ namespace Modules\Ecommerce\Http\Controllers;
 use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Withdrawal;
+use ArielMejiaDev\LarapexCharts\LarapexChart;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Modules\So\Enums\SoStatusEnum;
 use Modules\So\Models\So;
 
 /**
@@ -35,15 +38,15 @@ class AccountController extends Controller
             'orders_today' => (clone $baseSo())->whereDate('so_tanggal', $today)->count(),
             'revenue_today' => (float) (clone $baseSo())
                 ->whereDate('so_tanggal', $today)
-                ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+                ->whereNot('so_status', SoStatusEnum::CANCELLED)
                 ->sum('so_grand_total'),
-            'unpaid' => (clone $baseSo())->where('so_status', \Modules\So\Enums\SoStatusEnum::PENDING)->count(),
+            'unpaid' => (clone $baseSo())->where('so_status', SoStatusEnum::PENDING)->count(),
             'to_prepare' => (clone $baseSo())
-                ->whereIn('so_status', [\Modules\So\Enums\SoStatusEnum::PAID, \Modules\So\Enums\SoStatusEnum::CONFIRMED])
+                ->whereIn('so_status', [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED])
                 ->count(),
             'total_orders' => (clone $baseSo())->count(),
             'revenue_total' => (float) (clone $baseSo())
-                ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+                ->whereNot('so_status', SoStatusEnum::CANCELLED)
                 ->sum('so_grand_total'),
             'customers' => User::where('type', UserTypeEnum::CUSTOMER)
                 ->where('reference_id', $user->id)->count(),
@@ -57,7 +60,7 @@ class AccountController extends Controller
                 'label' => $day->translatedFormat('D'),
                 'total' => (float) (clone $baseSo())
                     ->whereDate('so_tanggal', $day)
-                    ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+                    ->whereNot('so_status', SoStatusEnum::CANCELLED)
                     ->sum('so_grand_total'),
             ];
         });
@@ -95,8 +98,8 @@ class AccountController extends Controller
             'salesChart' => $this->omzetBarChart($dailySales),
             // Komisi affiliator (fee khusus per-affiliator, fallback config global)
             'commissionRate' => $user->effectiveFee(),
-            'commissionEarned' => \App\Models\Withdrawal::earned($user),
-            'commissionBalance' => \App\Models\Withdrawal::balance($user),
+            'commissionEarned' => Withdrawal::earned($user),
+            'commissionBalance' => Withdrawal::balance($user),
             'withdrawals' => $user->has_withdrawals()->orderByDesc('id')->limit(5)->get(),
         ]);
     }
@@ -132,7 +135,7 @@ class AccountController extends Controller
             'amount' => ['required', 'numeric', 'min:1'],
         ]);
 
-        $balance = \App\Models\Withdrawal::balance($user);
+        $balance = Withdrawal::balance($user);
         $amount = (float) $request->input('amount');
         $min = (float) config('commission.min_withdraw', 50000);
 
@@ -148,13 +151,13 @@ class AccountController extends Controller
             return back()->withErrors(['amount' => 'Lengkapi data rekening bank terlebih dahulu.']);
         }
 
-        \App\Models\Withdrawal::create([
+        Withdrawal::create([
             'user_id' => $user->id,
             'amount' => $amount,
             'bank_name' => $user->bank_name,
             'bank_account_name' => $user->bank_account_name,
             'bank_account_no' => $user->bank_account_no,
-            'status' => \App\Models\Withdrawal::STATUS_PENDING,
+            'status' => Withdrawal::STATUS_PENDING,
         ]);
 
         flash()->success('Pengajuan withdraw berhasil dikirim dan menunggu persetujuan admin.');
@@ -310,7 +313,7 @@ class AccountController extends Controller
      */
     private function omzetBarChart($dailySales)
     {
-        $chart = new \ArielMejiaDev\LarapexCharts\LarapexChart;
+        $chart = new LarapexChart;
 
         return $chart->barChart()
             ->addData($dailySales->pluck('total')->map(fn ($v) => round((float) $v))->toArray())

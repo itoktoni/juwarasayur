@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
+use Modules\So\Enums\SoStatusEnum;
+use Modules\So\Models\So;
 
 #[Fillable(['user_id', 'amount', 'bank_name', 'bank_account_name', 'bank_account_no', 'status', 'note', 'processed_at'])]
 class Withdrawal extends BaseModel
@@ -52,10 +55,10 @@ class Withdrawal extends BaseModel
             return 0;
         }
 
-        $sum = (float) \Illuminate\Support\Facades\DB::table('so_order_details')
+        $sum = (float) DB::table('so_order_details')
             ->join('so_orders', 'so_orders.id', '=', 'so_order_details.so_detail_id_so')
             ->where('so_orders.so_id_reseller', $user->id)
-            ->whereNot('so_orders.so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+            ->whereNot('so_orders.so_status', SoStatusEnum::CANCELLED)
             ->sum('so_order_details.fee_amount');
 
         if ($sum > 0) {
@@ -63,9 +66,9 @@ class Withdrawal extends BaseModel
         }
 
         // Fallback untuk data lama sebelum snapshot fee_amount
-        return (float) \Modules\So\Models\So::query()
+        return (float) So::query()
             ->where('so_id_reseller', $user->id)
-            ->whereNot('so_status', \Modules\So\Enums\SoStatusEnum::CANCELLED)
+            ->whereNot('so_status', SoStatusEnum::CANCELLED)
             ->sum('so_grand_total') * $user->effectiveFee() / 100;
     }
 

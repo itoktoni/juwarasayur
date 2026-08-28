@@ -100,7 +100,16 @@
         </x-table>
 
         <x-pagination :paginator="$data" />
-        <x-action :model="$model" :action="['create', 'delete']"/>
+        <x-action :model="$model" :action="['create', 'delete']">
+            <a href="{{ route('catalog-product.export') }}" class="inline-flex items-center justify-center gap-1 h-8 md:h-10 px-2.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 shadow-sm transition-all active:scale-95 shrink-0">
+                <span class="material-symbols-outlined text-base md:text-xl">download</span>
+                <span class="hidden sm:inline">Download CSV</span>
+            </a>
+            <a href="{{ route('catalog-product.import') }}" wire:navigate class="inline-flex items-center justify-center gap-1 h-8 md:h-10 px-2.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all active:scale-95 shrink-0">
+                <span class="material-symbols-outlined text-base md:text-xl">upload</span>
+                <span class="hidden sm:inline">Import CSV</span>
+            </a>
+        </x-action>
     </div>
 
     <input type="hidden" class="module" value="{{ modules() }}">

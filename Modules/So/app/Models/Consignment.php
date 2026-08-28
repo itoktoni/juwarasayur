@@ -3,11 +3,11 @@
 namespace Modules\So\Models;
 
 use App\Models\BaseModel;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use Modules\Catalog\Models\Product;
 use Modules\So\Enums\ConsignmentStatusEnum;
 
 #[Fillable(['code', 'user_id', 'consignment_date', 'note', 'status', 'total_qty', 'total_sold', 'total_returned', 'total_amount', 'settled_at'])]
@@ -41,7 +41,7 @@ class Consignment extends BaseModel
 
     public function has_reseller(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function has_details(): HasMany

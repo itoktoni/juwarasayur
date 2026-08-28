@@ -28,7 +28,7 @@ class CatalogService
             ->with('has_satuan')
             ->where('is_active', true)
             ->where('product_status', 'active')
-            ->when($keyword !== null && $keyword !== '', fn ($q) => $q->where('product_nama', 'like', '%'.$keyword.'%'))
+            ->when($keyword !== null && $keyword !== '', fn ($q) => $q->whereRaw('LOWER(product_nama) LIKE ?', ['%'.strtolower($keyword).'%']))
             ->when($featuredOnly, fn ($q) => $q->where('is_featured', true))
             ->when($sort === 'murah', fn ($q) => $q->orderBy('product_harga'))
             ->when($sort === 'mahal', fn ($q) => $q->orderByDesc('product_harga'))

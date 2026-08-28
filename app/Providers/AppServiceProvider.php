@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Boost\Agents\CustomAgent;
 use App\Events\NotificationSent;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Listeners\SendNotificationViaCentrifugo;
 use App\Models\Menu;
 use App\Support\FixedAutoRoute;
@@ -21,7 +22,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Boost\BoostManager;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController as FortifyRegisteredUserController;
-use Livewire\Blaze\Blaze;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -61,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Override controller registrasi Fortify agar wajib captcha (register & register/reseller)
-        $this->app->bind(FortifyRegisteredUserController::class, \App\Http\Controllers\Auth\RegisteredUserController::class);
+        $this->app->bind(FortifyRegisteredUserController::class, RegisteredUserController::class);
 
         $this->configureDefaults();
         $this->registerMacros();
@@ -80,7 +80,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(NotificationSent::class, SendNotificationViaCentrifugo::class);
 
         // URL::forceScheme('https');
-        // Blaze::optimize()->in(resource_path('views/components'));
+        if (str_starts_with(config('app.url'), 'https')) {
+            URL::forceScheme('https');
+        }
 
         Blade::directive('bind', function ($expression) {
             return "<?php

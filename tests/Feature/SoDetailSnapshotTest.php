@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Str;
 use Modules\Catalog\Models\Product;
 use Modules\So\Models\So;
 use Modules\So\Models\SoDetail;
@@ -7,7 +9,7 @@ use Modules\So\Models\SoDetail;
 it('persists fee snapshot on so_detail', function () {
     $so = So::create([
         'so_tanggal' => now()->toDateString(),
-        'so_id_reseller' => \App\Models\User::factory()->create()->id,
+        'so_id_reseller' => User::factory()->create()->id,
         'so_shipping_method' => 'pickup',
     ]);
     $product = Product::create([
@@ -15,7 +17,7 @@ it('persists fee snapshot on so_detail', function () {
         'product_harga' => 100000,
     ]);
     $detail = SoDetail::create([
-        'so_detail_code' => 'DT-'.strtoupper(\Illuminate\Support\Str::random(6)),
+        'so_detail_code' => 'DT-'.strtoupper(Str::random(6)),
         'so_detail_id_so' => $so->id,
         'so_detail_id_product' => $product->id,
         'so_detail_qty' => 2,

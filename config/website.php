@@ -34,4 +34,3 @@ return [
     // Minimal pencairan komisi (Rp)
     'min_withdraw' => env('RESELLER_MIN_WITHDRAW', '25000'),
 ];
-
