@@ -238,10 +238,18 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-on-surface mb-1">NotifyHook Secret</label>
-                    <input type="text" name="notifyhook_secret"
-                        value="{{ $notifyhookSecret }}"
-                        placeholder="Kosongkan untuk nonaktifkan verifikasi signature"
-                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm font-mono">
+                    <div class="relative" x-data="{ show: false }">
+                        <input :type="show ? 'text' : 'password'" type="password" name="notifyhook_secret"
+                            value="{{ $notifyhookSecret }}"
+                            placeholder="Kosongkan untuk nonaktifkan verifikasi signature"
+                            class="w-full border border-outline-variant rounded-lg px-3 py-2 pr-11 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm font-mono">
+                        <button type="button" @click="show = !show"
+                            :aria-label="show ? 'Sembunyikan secret' : 'Tampilkan secret'"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors p-1">
+                            <span class="material-symbols-outlined text-xl" x-show="!show">visibility</span>
+                            <span class="material-symbols-outlined text-xl" x-show="show" style="display: none;">visibility_off</span>
+                        </button>
+                    </div>
                     <p class="text-xs text-on-surface-variant mt-1">Secret untuk verifikasi webhook NotifyHook (header X-NotifyHook-Signature = HMAC-SHA256 raw body). Kosongkan = tanpa verifikasi signature.</p>
                     @error('notifyhook_secret')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                 </div>
