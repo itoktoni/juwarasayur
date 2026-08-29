@@ -238,7 +238,7 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-on-surface mb-1">NotifyHook Secret</label>
-                    <input type="text" name="notifyhook_secret"
+                    <input type="password" name="notifyhook_secret"
                         value="{{ $notifyhookSecret }}"
                         placeholder="Kosongkan untuk nonaktifkan verifikasi signature"
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm font-mono">
