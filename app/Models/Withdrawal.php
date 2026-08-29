@@ -22,7 +22,7 @@ class Withdrawal extends BaseModel
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
+            'amount' => 'integer',
             'processed_at' => 'datetime',
         ];
     }

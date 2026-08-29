@@ -107,12 +107,14 @@ class ProductController extends Controller
             'Expires' => '0',
         ];
 
-        $callback = function () use ($products) {
+        $delimiter = config('website.csv_delimiter', ';');
+
+        $callback = function () use ($products, $delimiter) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             // Header
-            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Fee Reseller (%)', 'Fee Affilator (%)']);
+            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Fee Reseller (%)', 'Fee Affilator (%)'], $delimiter);
 
             foreach ($products as $product) {
                 fputcsv($handle, [
@@ -122,7 +124,7 @@ class ProductController extends Controller
                     $product->product_harga_modal ?? '',
                     $product->reseller_fee_percent ?? '',
                     $product->affiliator_fee_percent ?? '',
-                ]);
+                ], $delimiter);
             }
 
             fclose($handle);
@@ -162,8 +164,11 @@ class ProductController extends Controller
             rewind($handle);
         }
 
+        // Read delimiter from config (default: ;)
+        $delimiter = config('website.csv_delimiter', ';');
+
         // Read header
-        $header = fgetcsv($handle);
+        $header = fgetcsv($handle, 0, $delimiter);
         if ($header === false) {
             fclose($handle);
 
@@ -181,7 +186,7 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
-            while (($row = fgetcsv($handle)) !== false) {
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNum++;
                 if (count($row) < count($headerMap)) {
                     $errors[] = "Baris {$rowNum}: kolom kurang dari header.";
@@ -200,7 +205,19 @@ class ProductController extends Controller
                 $product = $this->findProduct($data);
 
                 if ($product) {
-                    $product->update(array_filter($data, fn ($v) => $v !== null));
+                    $clean = array_filter($data, fn ($v) => $v !== null);
+                    // Force numeric fields to int so Eloquent dirty-check triggers
+                    foreach (['product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'] as $intField) {
+                        if (isset($clean[$intField])) {
+                            $clean[$intField] = (int) $clean[$intField];
+                        }
+                    }
+                    foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $decField) {
+                        if (isset($clean[$decField])) {
+                            $clean[$decField] = (float) $clean[$decField];
+                        }
+                    }
+                    $product->update($clean);
                     $updated++;
                 } else {
                     $data['product_status'] = 'active';

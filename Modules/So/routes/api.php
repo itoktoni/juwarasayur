@@ -8,13 +8,14 @@ use Modules\So\Http\Controllers\PaymentWebhookController;
 | Webhook Pembayaran (SO)
 |--------------------------------------------------------------------------
 | Endpoint publik (tanpa auth/CSRF) untuk validasi pembayaran otomatis
-| dari aplikasi Android / Postman.
+| dari NotifyHook (forwarder notifikasi Android).
 |
-|   POST/GET /api/payment/webhook
-|   POST/GET /api/payment/webhook/{token}
+|   POST /api/payment/webhook
 |
-| Body/query: token (so_payment_token) atau so_code, status = paid|cancel
-| Header opsional: X-Webhook-Secret (wajib cocok bila dikonfigurasi)
+| Body NotifyHook: {"ip":"...","payload":{"rule":"gopay","package":"...","text":"Rp 39 ...", ...}}
+| Header wajib (bila NOTIFYHOOK_SECRET diisi):
+|   X-NotifyHook-Signature: hash_hmac('sha256', raw body, NOTIFYHOOK_SECRET)
+| Fallback standard format: {"amount": 39}
 */
 Route::match(['post', 'get'], '/payment/webhook/{token?}', [PaymentWebhookController::class, 'handle'])
     ->name('so.payment.webhook');

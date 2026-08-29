@@ -42,7 +42,7 @@
                             </div>
                             <div class="col-span-6 md:col-span-3">
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga Jual</label>
-                                <input type="number" name="details[{{ $idx }}][price]" value="{{ $rowPrice }}" min="0" step="0.01" placeholder="Otomatis"
+                                <input type="number" name="details[{{ $idx }}][price]" value="{{ $rowPrice }}" min="0" step="1" placeholder="Otomatis"
                                     class="tj-price w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm outline-none">
                             </div>
                             <div class="col-span-12 md:col-span-1 flex justify-end">
@@ -82,7 +82,7 @@
             </div>
             <div class="col-span-6 md:col-span-3">
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga Jual</label>
-                <input type="number" name="details[__IDX__][price]" min="0" step="0.01" placeholder="Otomatis" class="tj-price w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm outline-none">
+                <input type="number" name="details[__IDX__][price]" min="0" step="1" placeholder="Otomatis" class="tj-price w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm outline-none">
             </div>
             <div class="col-span-12 md:col-span-1 flex justify-end">
                 <button type="button" onclick="this.closest('.grid').remove()" class="btn btn-soft w-full h-12 text-error" title="Hapus baris">

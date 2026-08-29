@@ -19,7 +19,7 @@ class ProductionCost extends BaseModel
     protected function casts(): array
     {
         return [
-            'production_cost_nominal' => 'decimal:2',
+            'production_cost_nominal' => 'integer',
         ];
     }
 

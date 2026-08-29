@@ -28,8 +28,8 @@ class PoDetail extends BaseModel
         return [
             'po_detail_qty' => 'integer',
             'po_detail_prepared' => 'integer',
-            'po_detail_harga' => 'decimal:2',
-            'po_detail_subtotal' => 'decimal:2',
+            'po_detail_harga' => 'integer',
+            'po_detail_subtotal' => 'integer',
         ];
     }
 

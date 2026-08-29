@@ -20,7 +20,7 @@ class CodLocation extends BaseModel
         return [
             'lat' => 'decimal:7',
             'lng' => 'decimal:7',
-            'fee' => 'decimal:2',
+            'fee' => 'integer',
             'is_active' => 'boolean',
         ];
     }

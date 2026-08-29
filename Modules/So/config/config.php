@@ -5,16 +5,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Webhook Pembayaran
+    | Webhook Pembayaran (NotifyHook)
     |--------------------------------------------------------------------------
-    | Secret bersama untuk mengamankan endpoint webhook pembayaran.
-    | Dikirim lewat header "X-Webhook-Secret". Kosongkan untuk menonaktifkan
-    | pengecekan (hanya mengandalkan so_payment_token per-pesanan).
+    | Verifikasi signature memakai header "X-NotifyHook-Signature" dengan
+    | secret dari NOTIFYHOOK_SECRET (diatur via Website Settings).
     |
     */
-    'webhook' => [
-        'secret' => env('SO_WEBHOOK_SECRET', ''),
-    ],
 
     /*
     |--------------------------------------------------------------------------

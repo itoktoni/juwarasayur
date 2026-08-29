@@ -22,6 +22,10 @@ class WebsiteSettingController extends Controller
                 'lat' => config('so.shipping.warehouse.lat'),
                 'lng' => config('so.shipping.warehouse.lng'),
             ],
+            'payment' => [
+                'qris_expiry' => (int) env('QRIS_EXPIRY_MINUTES', 5),
+                'notifyhook_secret' => env('NOTIFYHOOK_SECRET', ''),
+            ],
         ]);
     }
 
@@ -51,6 +55,11 @@ class WebsiteSettingController extends Controller
             'commission_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             // Minimal pencairan komisi (Rp)
             'min_withdraw' => ['required', 'numeric', 'min:0'],
+            // Payment settings
+            'qris_expiry' => ['required', 'integer', 'min:1', 'max:60'],
+            'notifyhook_secret' => ['nullable', 'string', 'max:255'],
+            // CSV import
+            'csv_delimiter' => ['required', 'string', 'in:,;'],
         ]);
 
         $existing = WebsiteSetting::raw();

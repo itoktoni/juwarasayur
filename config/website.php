@@ -33,4 +33,6 @@ return [
     'commission_rate' => env('RESELLER_COMMISSION_RATE', '2'),
     // Minimal pencairan komisi (Rp)
     'min_withdraw' => env('RESELLER_MIN_WITHDRAW', '25000'),
+    // CSV import delimiter: , (koma) atau ; (titik koma)
+    'csv_delimiter' => env('CSV_DELIMITER', ';'),
 ];

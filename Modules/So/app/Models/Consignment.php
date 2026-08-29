@@ -26,10 +26,10 @@ class Consignment extends BaseModel
     {
         return [
             'consignment_date' => 'date',
-            'total_qty' => 'decimal:2',
-            'total_sold' => 'decimal:2',
-            'total_returned' => 'decimal:2',
-            'total_amount' => 'decimal:2',
+            'total_qty' => 'integer',
+            'total_sold' => 'integer',
+            'total_returned' => 'integer',
+            'total_amount' => 'integer',
             'settled_at' => 'datetime',
         ];
     }

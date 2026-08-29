@@ -55,19 +55,19 @@
             </div>
             <div class="col-span-12 md:col-span-3">
                 <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">Diskon</label>
-                <input type="number" name="po_discount" id="po-discount" value="{{ $poDiscountDisplay }}" min="0" step="0.01" placeholder="0" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
+                <input type="number" name="po_discount" id="po-discount" value="{{ $poDiscountDisplay }}" min="0" step="1" placeholder="0" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
                 <span class="text-label-caps text-on-surface-variant mt-1 block" id="po-discount-hint">Rp jika nominal, % jika persen</span>
                 @error('po_discount')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
             </div>
             <div class="col-span-12 md:col-span-3">
                 <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">PPN Rate (%)</label>
-                <input type="number" name="po_ppn_rate" id="po-ppn-rate" value="{{ $poPpnRateDisplay }}" min="0" max="100" step="0.01" placeholder="{{ $ppnRateDefault ?? 11 }}" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
+                <input type="number" name="po_ppn_rate" id="po-ppn-rate" value="{{ $poPpnRateDisplay }}" min="0" max="100" step="1" placeholder="{{ $ppnRateDefault ?? 11 }}" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
                 <span class="text-label-caps text-on-surface-variant mt-1 block">Default .env: {{ $ppnRateDefault ?? 11 }}%</span>
                 @error('po_ppn_rate')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
             </div>
             <div class="col-span-12 md:col-span-3">
                 <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">PPH Rate (%)</label>
-                <input type="number" name="po_pph_rate" id="po-pph-rate" value="{{ $poPphRateDisplay }}" min="0" max="100" step="0.01" placeholder="{{ $pphRateDefault ?? 2 }}" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
+                <input type="number" name="po_pph_rate" id="po-pph-rate" value="{{ $poPphRateDisplay }}" min="0" max="100" step="1" placeholder="{{ $pphRateDefault ?? 2 }}" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
                 <span class="text-label-caps text-on-surface-variant mt-1 block">Default .env: {{ $pphRateDefault ?? 2 }}%</span>
                 @error('po_pph_rate')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
             </div>
@@ -107,7 +107,7 @@
                             </div>
                             <div class="col-span-6 md:col-span-2">
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga</label>
-                                <input type="number" name="details[{{ $idx }}][po_detail_harga]" value="{{ $rowHarga }}" min="0" step="0.01" placeholder="Otomatis (modal)" class="po-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                <input type="number" name="details[{{ $idx }}][po_detail_harga]" value="{{ $rowHarga }}" min="0" step="1" placeholder="Otomatis (modal)" class="po-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             </div>
                             <div class="col-span-10 md:col-span-3">
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Keterangan</label>
@@ -175,7 +175,7 @@
             </div>
             <div class="col-span-6 md:col-span-2">
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga</label>
-                <input type="number" name="details[__IDX__][po_detail_harga]" value="" min="0" step="0.01" placeholder="Otomatis (modal)" class="po-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                <input type="number" name="details[__IDX__][po_detail_harga]" value="" min="0" step="1" placeholder="Otomatis (modal)" class="po-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
             </div>
             <div class="col-span-10 md:col-span-3">
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Keterangan</label>

@@ -3,18 +3,28 @@
 namespace Modules\Catalog\Models;
 
 use App\Models\BaseModel;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode', 'product_deskripsi', 'product_deskripsi_lengkap', 'product_harga', 'product_harga_modal', 'product_harga_grosir', 'reseller_fee_percent', 'affiliator_fee_percent', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'product_gambar', 'product_galeri', 'product_status', 'is_featured', 'is_active', 'sort_order', 'product_id_product_master', 'product_id_brand', 'product_id_satuan', 'product_id_category'])]
 class Product extends BaseModel
 {
     use SoftDeletes;
 
     protected $table = 'catalog_products';
+
+    protected $fillable = [
+        'product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode',
+        'product_deskripsi', 'product_deskripsi_lengkap',
+        'product_harga', 'product_harga_modal', 'product_harga_grosir',
+        'reseller_fee_percent', 'affiliator_fee_percent',
+        'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi',
+        'product_stok', 'product_stok_minimum',
+        'product_gambar', 'product_galeri', 'product_status',
+        'is_featured', 'is_active', 'sort_order',
+        'product_id_product_master', 'product_id_brand', 'product_id_satuan', 'product_id_category',
+    ];
 
     public static $sortColumns = ['product_nama', 'product_kode', 'product_harga', 'product_stok', 'product_status', 'sort_order'];
 
@@ -28,15 +38,15 @@ class Product extends BaseModel
     protected function casts(): array
     {
         return [
-            'product_harga' => 'decimal:2',
-            'product_harga_modal' => 'decimal:2',
-            'product_harga_grosir' => 'decimal:2',
-            'reseller_fee_percent' => 'decimal:2',
-            'affiliator_fee_percent' => 'decimal:2',
-            'product_berat' => 'decimal:2',
-            'product_panjang' => 'decimal:2',
-            'product_lebar' => 'decimal:2',
-            'product_tinggi' => 'decimal:2',
+            'product_harga' => 'integer',
+            'product_harga_modal' => 'integer',
+            'product_harga_grosir' => 'integer',
+            'reseller_fee_percent' => 'integer',
+            'affiliator_fee_percent' => 'integer',
+            'product_berat' => 'integer',
+            'product_panjang' => 'integer',
+            'product_lebar' => 'integer',
+            'product_tinggi' => 'integer',
             'product_galeri' => 'array',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',

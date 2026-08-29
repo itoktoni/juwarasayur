@@ -57,7 +57,32 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => (function (): string {
+        $envFile = base_path('.env');
+        if (file_exists($envFile)) {
+            $content = file_get_contents($envFile);
+            if (preg_match('/^APP_URL=(\S+)/m', $content, $m)) {
+                $url = rtrim(trim($m[1]), '/');
+                if (! preg_match('/localhost|127\.0\.0\.1|mayur\.test/i', $url)) {
+                    return $url;
+                }
+            }
+        }
+
+        try {
+            $req = request();
+            if ($req) {
+                $scheme = $req->secure() ? 'https' : 'http';
+                $host = $req->getHost();
+                $port = $req->getPort();
+                $defaultPort = $scheme === 'https' ? 443 : 80;
+
+                return $scheme . '://' . $host . ($port !== $defaultPort ? ':' . $port : '');
+            }
+        } catch (\Throwable) {}
+
+        return 'http://localhost';
+    })(),
 
     /*
     |--------------------------------------------------------------------------

@@ -144,7 +144,7 @@
                     @csrf
                     <div>
                         <label class="block text-xs font-semibold text-on-surface mb-1">Jumlah (min Rp {{ number_format(config('commission.min_withdraw', 50000), 0, ',', '.') }} • maks Rp {{ number_format($commissionBalance, 0, ',', '.') }})</label>
-                        <input type="number" name="amount" min="{{ config('commission.min_withdraw', 50000) }}" step="0.01" required value="{{ old('amount') }}"
+                        <input type="number" name="amount" min="{{ config('commission.min_withdraw', 50000) }}" step="1" required value="{{ old('amount') }}"
                             class="w-full h-11 px-3 bg-white border {{ $errors->has('amount') ? 'border-error' : 'border-outline-variant' }} rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
                         @error('amount')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                     </div>

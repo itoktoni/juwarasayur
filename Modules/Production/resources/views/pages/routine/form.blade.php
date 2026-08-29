@@ -92,7 +92,7 @@
                     <div class="wo-cost flex gap-2 items-center" data-row="${idx}">
                         <input type="text" name="cost_nama[]" value="${data.nama ?? ''}" placeholder="Nama biaya (parkir, konsumsi, dll)"
                             class="flex-1 h-11 px-3 border border-outline-variant rounded-lg bg-white text-sm">
-                        <input type="number" min="0" step="0.01" name="cost_nominal[]" value="${data.nominal ?? ''}" placeholder="Nominal"
+                        <input type="number" min="0" step="1" name="cost_nominal[]" value="${data.nominal ?? ''}" placeholder="Nominal"
                             class="w-40 h-11 px-3 border border-outline-variant rounded-lg bg-white text-sm font-mono"
                             oninput="window.updateModalEstimate && window.updateModalEstimate()">
                         <button type="button" onclick="this.closest('.wo-cost').remove(); window.updateModalEstimate && window.updateModalEstimate()" class="btn btn-soft h-11 shrink-0 text-error" title="Hapus">

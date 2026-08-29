@@ -7,7 +7,7 @@
                 <x-input col="6" name="po_detail_id_po" label="PO ID" type="number" />
                 <x-input col="6" name="po_detail_id_product" label="Product ID" type="number" />
                 <x-input col="4" name="po_detail_qty" label="Qty" type="number" />
-                <x-input col="4" name="po_detail_harga" label="Harga" type="number" step="0.01" />
+                <x-input col="4" name="po_detail_harga" label="Harga" type="number" step="1" />
                 <x-input col="4" name="po_detail_code" label="Kode Detail" placeholder="Auto jika kosong" />
                 <x-textarea col="12" name="po_detail_keterangan" label="Keterangan" />
             @endbind

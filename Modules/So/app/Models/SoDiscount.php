@@ -22,8 +22,8 @@ class SoDiscount extends BaseModel
     protected function casts(): array
     {
         return [
-            'discount_value' => 'decimal:2',
-            'discount_min_purchase' => 'decimal:2',
+            'discount_value' => 'integer',
+            'discount_min_purchase' => 'integer',
             'is_active' => 'boolean',
         ];
     }

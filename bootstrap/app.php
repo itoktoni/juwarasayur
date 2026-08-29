@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AccessMiddleware;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ForceHttpsBehindProxy;
 use App\Http\Middleware\VerifyChatOrigin;
 use App\Http\Middleware\VerifyVerified;
 use App\Providers\ModelAliasServiceProvider;
@@ -60,6 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append([
             TrustProxies::class,
             HandleCors::class,
+            ForceHttpsBehindProxy::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

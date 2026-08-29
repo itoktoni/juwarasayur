@@ -22,10 +22,10 @@ class ConsignmentDetail extends BaseModel
     protected function casts(): array
     {
         return [
-            'qty' => 'decimal:2',
-            'qty_sold' => 'decimal:2',
-            'qty_returned' => 'decimal:2',
-            'price' => 'decimal:2',
+            'qty' => 'integer',
+            'qty_sold' => 'integer',
+            'qty_returned' => 'integer',
+            'price' => 'integer',
         ];
     }
 

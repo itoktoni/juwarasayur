@@ -31,7 +31,7 @@ class PaymentController extends Controller
         }
 
         $qrisPayload = ! empty(config('ecommerce.qris_payload'))
-            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_grand_total)
+            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_unique_amount)
             : null;
         $qrDownload = $qrisPayload
             ? $this->buildQrWithInfo($qrisPayload, $so->so_code, (float) $so->so_grand_total, 400)

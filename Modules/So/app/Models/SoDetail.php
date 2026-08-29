@@ -36,9 +36,9 @@ class SoDetail extends BaseModel
     protected function casts(): array
     {
         return [
-            'so_detail_harga' => 'decimal:2',
-            'fee_percent' => 'decimal:2',
-            'fee_amount' => 'decimal:2',
+            'so_detail_harga' => 'integer',
+            'fee_percent' => 'integer',
+            'fee_amount' => 'integer',
             'po_generated_at' => 'datetime',
         ];
     }

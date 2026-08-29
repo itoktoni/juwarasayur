@@ -432,10 +432,10 @@ class CheckoutController extends Controller
 
         $link = url('/payment/'.$so->so_payment_token);
         $qrisPayload = ! empty(config('ecommerce.qris_payload'))
-            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_grand_total)
+            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_unique_amount)
             : null;
         $qrDownload = $qrisPayload
-            ? $this->buildQrWithInfo($qrisPayload, $so->so_code, (float) $so->so_grand_total, 400)
+            ? $this->buildQrWithInfo($qrisPayload, $so->so_code, (float) $so->so_unique_amount, 400)
             : '';
         // Sisa waktu pembayaran, sama dengan aturan di PaymentController
         $secondsLeft = max(0, (int) env(PaymentController::EXPIRY_MINUTES_KEY, 5) * 60

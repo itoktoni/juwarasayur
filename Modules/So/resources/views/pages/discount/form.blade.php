@@ -11,9 +11,9 @@
 
                 <x-select col="4" name="discount_type" label="Tipe Diskon"
                     :options="['percent' => 'Persen (%)', 'nominal' => 'Nominal (Rp)']" />
-                <x-input col="4" name="discount_value" type="number" step="0.01" label="Nilai"
+                <x-input col="4" name="discount_value" type="number" step="1" label="Nilai"
                     helper="Persen: isi 5 = potongan 5%. Nominal: isi 5000 = potongan Rp5.000" />
-                <x-input col="4" name="discount_min_purchase" type="number" step="0.01" label="Min. Transaksi (Rp)"
+                <x-input col="4" name="discount_min_purchase" type="number" step="1" label="Min. Transaksi (Rp)"
                     helper="Kosongkan / 0 jika tanpa syarat minimal" />
 
                 <x-checkbox col="12" name="is_active" label="Aktif" />

@@ -5,6 +5,9 @@
     $whAddr = old('warehouse_address', $warehouse['address'] ?? '');
     $whLat = old('warehouse_lat', $warehouse['lat'] ?? -7.644872);
     $whLng = old('warehouse_lng', $warehouse['lng'] ?? 112.904528);
+
+    $qrisExpiry = old('qris_expiry', $payment['qris_expiry'] ?? 5);
+    $notifyhookSecret = old('notifyhook_secret', $payment['notifyhook_secret'] ?? '');
 @endphp
 
 <x-layouts::app :title="$title">
@@ -183,7 +186,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-on-surface mb-1">Komisi Reseller (%)</label>
-                    <input type="number" step="0.01" min="0" max="100" name="commission_rate"
+                    <input type="number" step="1" min="0" max="100" name="commission_rate"
                         value="{{ old('commission_rate', rtrim(rtrim((string) config('commission.rate', 2), '0'), '.')) }}"
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
                     <p class="text-xs text-on-surface-variant mt-1">Persen komisi reseller dari omzet order. Default dari .env: RESELLER_COMMISSION_RATE.</p>
@@ -196,6 +199,42 @@
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
                     <p class="text-xs text-on-surface-variant mt-1">Jumlah minimum withdraw komisi reseller. Default dari .env: RESELLER_MIN_WITHDRAW.</p>
                     @error('min_withdraw')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                </div>
+            </div>
+
+            {{-- CSV Import --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">CSV Import</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">CSV Delimiter</label>
+                    <select name="csv_delimiter"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                        <option value=";" @selected(old('csv_delimiter', config('website.csv_delimiter', ';')) === ';')>Titik koma ( ; )</option>
+                        <option value="," @selected(old('csv_delimiter', config('website.csv_delimiter', ';')) === ',')>Koma ( , )</option>
+                    </select>
+                    <p class="text-xs text-on-surface-variant mt-1">Pemisah kolom saat import CSV produk. Default: titik koma ( ; ).</p>
+                </div>
+            </div>
+
+            {{-- Payment Settings --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Payment & Webhook</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">QRIS Expiry (menit)</label>
+                    <input type="number" min="1" max="60" name="qris_expiry"
+                        value="{{ $qrisExpiry }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm" required>
+                    <p class="text-xs text-on-surface-variant mt-1">Batas waktu pembayaran QRIS sebelum expired. Default: 5 menit.</p>
+                    @error('qris_expiry')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">NotifyHook Secret</label>
+                    <input type="text" name="notifyhook_secret"
+                        value="{{ $notifyhookSecret }}"
+                        placeholder="Kosongkan untuk nonaktifkan verifikasi signature"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm font-mono">
+                    <p class="text-xs text-on-surface-variant mt-1">Secret untuk verifikasi webhook NotifyHook (header X-NotifyHook-Signature = HMAC-SHA256 raw body). Kosongkan = tanpa verifikasi signature.</p>
+                    @error('notifyhook_secret')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                 </div>
             </div>
 

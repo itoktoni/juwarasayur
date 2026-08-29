@@ -10,145 +10,213 @@ use Modules\So\Models\So;
 
 class PaymentWebhookController extends Controller
 {
-    /** Durasi valid nominal unik (menit) — dari .env QRIS_EXPIRY_MINUTES */
     private const UNIQUE_AMOUNT_VALIDITY_MINUTES_KEY = 'QRIS_EXPIRY_MINUTES';
 
+    private const SIGNATURE_HEADER = 'X-NotifyHook-Signature';
+
+    private const PACKAGE_MAP = [
+        'com.gojek.gopaymerchant' => 'qris',
+        'com.gojek.gopay' => 'gopay',
+        'id.dana' => 'dana',
+        'com.shopeepay.id' => 'shopeepay',
+        'id.ovo' => 'ovo',
+        'com.ovo' => 'ovo',
+        'id.bsi.mobile' => 'transfer',
+        'com.bca' => 'transfer',
+        'com.bni' => 'transfer',
+        'com.bri' => 'transfer',
+        'com.mandiri' => 'transfer',
+        'com.bcadigital' => 'blu',
+    ];
+
     /**
-     * Webhook pembayaran — POST /api/payment/webhook
+     * POST /api/payment/webhook
      *
-     * Payment gateway mengirim data ke endpoint ini.
-     * Semua request di-log untuk audit trail.
+     * NotifyHook (Android notification forwarder):
+     *   Header : X-NotifyHook-Signature: hash_hmac('sha256', raw body, NOTIFYHOOK_SECRET)
+     *   Body   : {"ip":"127.0.0.1","payload":{"rule":"gopay","package":"com.gojek.gopaymerchant",
+     *            "app":"GoPay Merchant","title":"Pembayaran QRIS statis diterima",
+     *            "text":"Rp 39 di Home Pimpah, BERBAH.","timestamp":"...","notificationKey":"...","username":"..."}}
      *
-     * Contoh payload (JSON):
-     * {
-     *   "amount": 50023,
-     *   "status": "paid" | "cancel" | "cancelled",
-     *   "reference": "optional-reference-id",
-     *   ...
-     * }
+     * Auto-detect: NotifyHook format atau standard format {"amount": 39}.
+     * Yang penting: amount / unique value → match order → settle.
      */
     public function handle(Request $request)
     {
-        // Log semua incoming webhook untuk audit
-        Log::channel('webhook')->info('Webhook payment received', [
-            'method' => $request->method(),
+        $rawBody = $request->getContent();
+        $payload = $request->json()->all() ?: $request->all();
+
+        Log::channel('webhook')->info('Webhook received', [
             'ip' => $request->ip(),
-            'payload' => $request->all(),
-            'headers' => $request->headers->only([
-                'content-type',
-                'x-webhook-secret',
-                'x-signature',
-            ]),
+            'payload' => $payload,
+            'raw_body' => $request->all(),
+            'headers' => $request->headers->all(),
+            'hmac' => $request->get('X-NofityHook-Signature') ?? null,
         ]);
 
-        // 1) Otorisasi webhook via shared secret (jika dikonfigurasi)
-        $secret = (string) config('so.webhook.secret');
-        if ($secret !== '' && $request->header('X-Webhook-Secret') !== $secret) {
-            Log::channel('webhook')->warning('Webhook payment unauthorized', [
-                'ip' => $request->ip(),
-            ]);
+        // 1) Verifikasi signature NotifyHook (HMAC-SHA256 raw body)
+        if (! $this->verifySignature($request, $rawBody)) {
+            Log::channel('webhook')->warning('Invalid signature', ['ip' => $request->ip()]);
 
-            return Response::json([
-                'status' => false,
-                'code' => 401,
-                'message' => 'Unauthorized: secret webhook tidak valid.',
-            ], 401);
+            return Response::json(['status' => false, 'message' => 'Invalid signature.'], 401);
         }
 
-        // 2) Validasi input
-        $data = $request->validate([
-            'amount' => ['required_without:so_code', 'numeric', 'min:1'],
-            'so_code' => ['required_without:amount', 'string'],
-            'status' => ['required', 'string', 'in:paid,pay,cancel,cancelled'],
-        ], [], [
-            'amount' => 'nominal pembayaran',
-            'so_code' => 'kode SO',
-            'status' => 'status',
+        // 2) Data notifikasi — NotifyHook membungkus isi notifikasi di key "payload"
+        $notification = is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload;
+
+        // 3) Extract amount — support NotifyHook dan standard format
+        $amount = $this->extractAmount($payload, $notification);
+        $method = $this->resolveMethod($notification);
+
+        Log::channel('webhook')->info('Extract result', [
+            'amount' => $amount,
+            'method' => $method,
+            'package' => $notification['package'] ?? null,
+            'notification_text' => $notification['text'] ?? null,
         ]);
 
-        // 3) Cari pesanan
-        $so = $this->findOrder($data);
+        if ($amount <= 0) {
+            Log::channel('webhook')->warning('Amount not detected', ['payload' => $payload]);
+
+            return Response::json(['status' => true, 'message' => 'Amount not detected.'], 200);
+        }
+
+        // 4) Cari order pending dengan nominal unik
+        $so = $this->findPendingOrder($amount);
 
         if (! $so) {
-            Log::channel('webhook')->warning('Webhook payment order not found', [
-                'amount' => $data['amount'] ?? null,
-                'so_code' => $data['so_code'] ?? null,
-            ]);
+            Log::channel('webhook')->warning('No pending order', ['amount' => $amount]);
 
-            return Response::json([
-                'status' => false,
-                'code' => 404,
-                'message' => 'Pesanan tidak ditemukan.',
-            ], 404);
+            return Response::json(['status' => true, 'message' => 'No pending order found.'], 200);
         }
 
-        // 4) Normalisasi status target
-        $target = in_array($data['status'], ['cancel', 'cancelled'], true)
-            ? SoStatusEnum::CANCELLED
-            : SoStatusEnum::PAID;
+        // 5) Update status
+        $oldStatus = $so->so_status;
+        $so->update(['so_status' => SoStatusEnum::PAID]);
 
-        // 5) Validasi transisi status
-        $current = $so->so_status;
-
-        if ($target === SoStatusEnum::PAID && $current !== SoStatusEnum::PENDING) {
-            return Response::json([
-                'status' => false,
-                'code' => 409,
-                'message' => "Tidak bisa membayar pesanan dengan status '{$current}'.",
-                'data' => ['so_code' => $so->so_code, 'so_status' => $current],
-            ], 409);
-        }
-
-        if ($target === SoStatusEnum::CANCELLED && ! in_array($current, [SoStatusEnum::PENDING, SoStatusEnum::PAID], true)) {
-            return Response::json([
-                'status' => false,
-                'code' => 409,
-                'message' => "Tidak bisa membatalkan pesanan dengan status '{$current}'.",
-                'data' => ['so_code' => $so->so_code, 'so_status' => $current],
-            ], 409);
-        }
-
-        // 6) Update status
-        $so->update(['so_status' => $target]);
-
-        Log::channel('webhook')->info('Webhook payment processed', [
+        Log::channel('webhook')->info('Order settled', [
             'so_code' => $so->so_code,
-            'old_status' => $current,
-            'new_status' => $target,
-            'amount' => $data['amount'] ?? null,
+            'amount' => $amount,
+            'method' => $method,
+            'old_status' => $oldStatus,
         ]);
 
         return Response::json([
             'status' => true,
             'code' => 200,
-            'message' => $target === SoStatusEnum::PAID
-                ? 'Pembayaran berhasil divalidasi, pesanan lunas.'
-                : 'Pesanan berhasil dibatalkan.',
-            'data' => [
-                'so_code' => $so->so_code,
-                'so_status' => $so->so_status,
-                'so_unique_amount' => (float) $so->so_unique_amount,
-            ],
+            'message' => "Pembayaran Rp {$amount} berhasil, pesanan {$so->so_code} lunas.",
+            'data' => ['so_code' => $so->so_code, 'amount' => $amount, 'method' => $method],
         ], 200);
     }
 
     /**
-     * Cari pesanan berdasarkan nominal unik atau so_code.
+     * Verifikasi header X-NotifyHook-Signature.
+     * Nilai header: HMAC-SHA256 hex dengan NOTIFYHOOK_SECRET. Prefix "sha256=" opsional.
+     * Kandidat message yang dicoba (skema NotifyHook bisa bervariasi):
+     *   1. Raw request body penuh (skema paling umum)
+     *   2. JSON "payload" (isi notifikasi) yang di-encode ulang
+     *   3. JSON "raw_body" yang di-encode ulang
+     * Jika secret belum dikonfigurasi, verifikasi dilewati.
      */
-    private function findOrder(array $data): ?So
+    private function verifySignature(Request $request, string $rawBody): bool
     {
-        // Cari berdasarkan nominal unik + time window
-        if (! empty($data['amount'])) {
-            return So::query()
-                ->where('so_unique_amount', $data['amount'])
-                ->where('so_status', SoStatusEnum::PENDING)
-                ->where('created_at', '>=', now()->subMinutes((int) env(self::UNIQUE_AMOUNT_VALIDITY_MINUTES_KEY, 5)))
-                ->first();
+        $secret = (string) env('NOTIFYHOOK_SECRET', '');
+
+        if ($secret === '') {
+            Log::channel('webhook')->warning('NOTIFYHOOK_SECRET not set, skipping signature verification');
+
+            return true;
         }
 
-        // Cari berdasarkan so_code
+        $provided = trim((string) $request->header(self::SIGNATURE_HEADER, ''));
+
+        if ($provided === '') {
+            return false;
+        }
+
+        $provided = preg_replace('/^sha256=/i', '', $provided);
+
+        $payload = json_decode($rawBody, true) ?: [];
+
+        $candidates = [$rawBody];
+
+        foreach (['payload', 'raw_body'] as $key) {
+            if (isset($payload[$key]) && is_array($payload[$key])) {
+                $candidates[] = json_encode($payload[$key], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                $candidates[] = json_encode($payload[$key]);
+            }
+        }
+
+        foreach (array_unique($candidates) as $candidate) {
+            if (hash_equals(hash_hmac('sha256', $candidate, $secret), $provided)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract amount dari payload (NotifyHook atau standard).
+     */
+    private function extractAmount(array $payload, array $notification): int
+    {
+        // Standard format: {"amount": 85}
+        if (! empty($payload['amount']) && is_numeric($payload['amount'])) {
+            return (int) $payload['amount'];
+        }
+
+        // NotifyHook format: {"payload": {"text": "Rp 85 ..."}}
+        if (! empty($notification['text'])) {
+            return $this->parseAmount((string) $notification['text']);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Resolve metode pembayaran dari package app / rule NotifyHook.
+     */
+    private function resolveMethod(array $notification): ?string
+    {
+        $package = $notification['package'] ?? null;
+
+        if ($package && isset(self::PACKAGE_MAP[$package])) {
+            return self::PACKAGE_MAP[$package];
+        }
+
+        return $notification['rule'] ?? null;
+    }
+
+    /**
+     * Parse nominal dari text notifikasi.
+     * "Rp 85 di Home Pimpah" → 85
+     * "Rp 2.000.000" → 2000000
+     */
+    private function parseAmount(string $text): int
+    {
+        if (preg_match('/Rp[\s.]?([\d.]+)/i', $text, $m)) {
+            return (int) str_replace('.', '', $m[1]);
+        }
+
+        if (preg_match('/([\d.]+)\s*(?:rupiah|IDR)/i', $text, $m)) {
+            return (int) str_replace('.', '', $m[1]);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Cari order pending dengan nominal unik.
+     */
+    private function findPendingOrder(int $amount): ?So
+    {
+        $expiryMinutes = (int) env(self::UNIQUE_AMOUNT_VALIDITY_MINUTES_KEY, 5);
+
         return So::query()
-            ->where('so_code', $data['so_code'])
+            ->where('so_unique_amount', $amount)
+            ->where('so_status', SoStatusEnum::PENDING)
+            ->where('created_at', '>=', now()->subMinutes($expiryMinutes))
             ->first();
     }
 }

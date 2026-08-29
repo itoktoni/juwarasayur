@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -78,11 +77,6 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Event::listen(NotificationSent::class, SendNotificationViaCentrifugo::class);
-
-        // URL::forceScheme('https');
-        if (str_starts_with(config('app.url'), 'https')) {
-            URL::forceScheme('https');
-        }
 
         Blade::directive('bind', function ($expression) {
             return "<?php

@@ -9,7 +9,7 @@
                 <x-input col="6" name="address" label="Alamat" placeholder="Opsional" />
                 <x-input col="3" name="lat" label="Latitude" type="number" step="any" />
                 <x-input col="3" name="lng" label="Longitude" type="number" step="any" />
-                <x-input col="3" name="fee" label="Ongkir (Rp)" type="number" min="0" step="0.01"
+                <x-input col="3" name="fee" label="Ongkir (Rp)" type="number" min="0" step="1"
                     helper="Kosongkan agar ongkir dihitung dari jarak." />
                 <x-select col="3" name="is_active" label="Status" :options="['1' => 'Aktif', '0' => 'Nonaktif']" />
             @endbind

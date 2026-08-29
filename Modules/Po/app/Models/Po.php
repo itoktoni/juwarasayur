@@ -30,14 +30,14 @@ class Po extends BaseModel
     {
         return [
             'po_tanggal' => 'date',
-            'po_subtotal' => 'decimal:2',
-            'po_discount' => 'decimal:2',
-            'po_dpp' => 'decimal:2',
-            'po_ppn' => 'decimal:2',
-            'po_ppn_rate' => 'decimal:2',
-            'po_pph' => 'decimal:2',
-            'po_pph_rate' => 'decimal:2',
-            'po_grand_total' => 'decimal:2',
+            'po_subtotal' => 'integer',
+            'po_discount' => 'integer',
+            'po_dpp' => 'integer',
+            'po_ppn' => 'integer',
+            'po_ppn_rate' => 'integer',
+            'po_pph' => 'integer',
+            'po_pph_rate' => 'integer',
+            'po_grand_total' => 'integer',
         ];
     }
 

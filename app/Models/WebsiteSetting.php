@@ -32,6 +32,11 @@ class WebsiteSetting
             'struk_paper_width' => 'STRUK_PAPER_WIDTH',
             'commission_rate' => 'RESELLER_COMMISSION_RATE',
             'min_withdraw' => 'RESELLER_MIN_WITHDRAW',
+            // Payment settings
+            'qris_expiry' => 'QRIS_EXPIRY_MINUTES',
+            'notifyhook_secret' => 'NOTIFYHOOK_SECRET',
+            // CSV import
+            'csv_delimiter' => 'CSV_DELIMITER',
         ];
     }
 

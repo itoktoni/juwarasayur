@@ -30,17 +30,17 @@ class So extends BaseModel
         return [
             'so_tanggal' => 'date',
             'so_po_generated_at' => 'datetime',
-            'so_subtotal' => 'decimal:2',
-            'so_discount' => 'decimal:2',
-            'so_dpp' => 'decimal:2',
-            'so_ppn' => 'decimal:2',
-            'so_ppn_rate' => 'decimal:2',
-            'so_pph' => 'decimal:2',
-            'so_pph_rate' => 'decimal:2',
-            'so_shipping_fee' => 'decimal:2',
-            'so_distance_km' => 'decimal:2',
-            'so_grand_total' => 'decimal:2',
-            'so_unique_amount' => 'decimal:2',
+            'so_subtotal' => 'integer',
+            'so_discount' => 'integer',
+            'so_dpp' => 'integer',
+            'so_ppn' => 'integer',
+            'so_ppn_rate' => 'integer',
+            'so_pph' => 'integer',
+            'so_pph_rate' => 'integer',
+            'so_shipping_fee' => 'integer',
+            'so_distance_km' => 'integer',
+            'so_grand_total' => 'integer',
+            'so_unique_amount' => 'integer',
         ];
     }
 

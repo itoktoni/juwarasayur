@@ -63,7 +63,7 @@ use Modules\So\Models\So;
                             </div>
                             <div class="col-span-6 md:col-span-3">
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga</label>
-                                <input type="number" name="details[{{ $idx }}][so_detail_harga]" value="{{ $rowHarga }}" min="0" step="0.01" placeholder="Otomatis" class="so-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                <input type="number" name="details[{{ $idx }}][so_detail_harga]" value="{{ $rowHarga }}" min="0" step="1" placeholder="Otomatis" class="so-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             </div>
                             <div class="col-span-10 md:col-span-2">
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Ket.</label>
@@ -103,19 +103,19 @@ use Modules\So\Models\So;
             </div>
             <div class="col-span-12 md:col-span-3">
                 <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">Diskon</label>
-                <input type="number" name="so_discount" id="so-discount" value="{{ old('so_discount', $model?->so_discount !== null ? $trimVal($model?->so_discount) : '') }}" min="0" step="0.01" placeholder="0"
+                <input type="number" name="so_discount" id="so-discount" value="{{ old('so_discount', $model?->so_discount !== null ? $trimVal($model?->so_discount) : '') }}" min="0" step="1" placeholder="0"
                     class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
                 @error('so_discount')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
             </div>
             <div class="col-span-12 md:col-span-3">
                 <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">PPN Rate (%)</label>
-                <input type="number" name="so_ppn_rate" id="so-ppn-rate" value="{{ old('so_ppn_rate', $model?->so_ppn_rate !== null ? rtrim(rtrim((string) (float) $model?->so_ppn_rate, '0'), '.') : '0') }}" min="0" max="100" step="0.01" placeholder="0"
+                <input type="number" name="so_ppn_rate" id="so-ppn-rate" value="{{ old('so_ppn_rate', $model?->so_ppn_rate !== null ? rtrim(rtrim((string) (float) $model?->so_ppn_rate, '0'), '.') : '0') }}" min="0" max="100" step="1" placeholder="0"
                     class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
                 @error('so_ppn_rate')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
             </div>
             <div class="col-span-12 md:col-span-3">
                 <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">PPH Rate (%)</label>
-                <input type="number" name="so_pph_rate" id="so-pph-rate" value="{{ old('so_pph_rate', $model?->so_pph_rate !== null ? rtrim(rtrim((string) (float) $model?->so_pph_rate, '0'), '.') : '0') }}" min="0" max="100" step="0.01" placeholder="0"
+                <input type="number" name="so_pph_rate" id="so-pph-rate" value="{{ old('so_pph_rate', $model?->so_pph_rate !== null ? rtrim(rtrim((string) (float) $model?->so_pph_rate, '0'), '.') : '0') }}" min="0" max="100" step="1" placeholder="0"
                     class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container" />
                 @error('so_pph_rate')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
             </div>
@@ -239,7 +239,7 @@ use Modules\So\Models\So;
             </div>
             <div class="col-span-6 md:col-span-3">
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga</label>
-                <input type="number" name="details[__IDX__][so_detail_harga]" value="" min="0" step="0.01" placeholder="Otomatis" class="so-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                <input type="number" name="details[__IDX__][so_detail_harga]" value="" min="0" step="1" placeholder="Otomatis" class="so-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
             </div>
             <div class="col-span-10 md:col-span-2">
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Ket.</label>
