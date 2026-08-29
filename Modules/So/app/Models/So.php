@@ -89,10 +89,10 @@ class So extends BaseModel
             // URL pembayaran memakai token acak, bukan id berurutan
             $model->so_payment_token ??= (string) Str::uuid();
 
-            // Nominal unik 2 digit untuk verifikasi webhook
+            // Nominal unik (kode unik configurable via QRIS_UNIQUE_DIGITS) untuk verifikasi webhook
             if (empty($model->so_unique_amount)) {
                 $baseTotal = (float) ($model->so_grand_total ?? 0);
-                $model->so_unique_amount = $baseTotal + random_int(0, 99);
+                $model->so_unique_amount = $baseTotal + random_int(0, static::uniqueCodeMax());
             }
         });
     }
@@ -107,17 +107,33 @@ class So extends BaseModel
     }
 
     /**
-     * Ambil 2 digit unik dari nominal pembayaran.
-     * Contoh: 50023 → 23
+     * Jumlah digit kode unik pembayaran (dari QRIS_UNIQUE_DIGITS, default 2).
      */
-    public function getUniqueCodeAttribute(): int
+    public static function uniqueDigits(): int
     {
-        return (int) fmod((float) $this->so_unique_amount, 100);
+        return max(1, min(6, (int) env('QRIS_UNIQUE_DIGITS', 2)));
     }
 
     /**
-     * Base total sebelum ditambah 2 digit unik.
-     * Contoh: 50023 → 50000
+     * Nilai acak maksimum kode unik. 2 digit → 99, 3 digit → 999, dst.
+     */
+    public static function uniqueCodeMax(): int
+    {
+        return 10 ** static::uniqueDigits() - 1;
+    }
+
+    /**
+     * Ambil kode unik dari nominal pembayaran.
+     * Contoh (2 digit): 50023 → 23
+     */
+    public function getUniqueCodeAttribute(): int
+    {
+        return (int) fmod((float) $this->so_unique_amount, 10 ** static::uniqueDigits());
+    }
+
+    /**
+     * Base total sebelum ditambah kode unik.
+     * Contoh (2 digit): 50023 → 50000
      */
     public function getBaseTotalAttribute(): float
     {

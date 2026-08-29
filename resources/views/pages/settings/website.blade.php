@@ -7,6 +7,7 @@
     $whLng = old('warehouse_lng', $warehouse['lng'] ?? 112.904528);
 
     $qrisExpiry = old('qris_expiry', $payment['qris_expiry'] ?? 5);
+    $uniqueDigits = old('unique_digits', $payment['unique_digits'] ?? 2);
     $notifyhookSecret = old('notifyhook_secret', $payment['notifyhook_secret'] ?? '');
 @endphp
 
@@ -226,6 +227,14 @@
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm" required>
                     <p class="text-xs text-on-surface-variant mt-1">Batas waktu pembayaran QRIS sebelum expired. Default: 5 menit.</p>
                     @error('qris_expiry')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Kode Unik (digit)</label>
+                    <input type="number" min="1" max="6" name="unique_digits"
+                        value="{{ $uniqueDigits }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm" required>
+                    <p class="text-xs text-on-surface-variant mt-1">Jumlah digit kode unik pada nominal pembayaran. 2 = Rp xx039 (acak 00–99), 3 = acak 000–999, dst. Maks 6 digit.</p>
+                    @error('unique_digits')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-on-surface mb-1">NotifyHook Secret</label>

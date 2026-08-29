@@ -99,6 +99,23 @@ class Product extends BaseModel
                 $model->product_slug = static::generateUniqueSlug($model->product_nama, $model->id);
             }
         });
+
+        // Kolom NOT NULL tanpa nullable — isi default kalau request kirim kosong/null,
+        // supaya tidak error SQL 1048 (default DB tidak berlaku saat NULL dikirim eksplisit).
+        static::saving(function (self $model) {
+            foreach (['product_harga', 'product_harga_modal', 'product_stok', 'product_stok_minimum', 'sort_order'] as $field) {
+                if ($model->{$field} === null || $model->{$field} === '') {
+                    $model->{$field} = 0;
+                }
+            }
+
+            if (empty($model->product_status)) {
+                $model->product_status = 'active';
+            }
+
+            $model->is_featured = (bool) $model->is_featured;
+            $model->is_active = ($model->is_active === null || $model->is_active === '') ? true : (bool) $model->is_active;
+        });
     }
 
     public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
@@ -126,9 +143,9 @@ class Product extends BaseModel
             'product_barcode' => ['nullable', 'string', 'max:100'],
             'product_deskripsi' => ['nullable', 'string'],
             'product_deskripsi_lengkap' => ['nullable', 'string'],
-            'product_harga' => ['required', 'numeric', 'min:0'],
-            'product_harga_modal' => ['nullable', 'numeric', 'min:0'],
-            'product_harga_grosir' => ['nullable', 'numeric', 'min:0'],
+            'product_harga' => ['required', 'integer', 'min:0'],
+            'product_harga_modal' => ['nullable', 'integer', 'min:0'],
+            'product_harga_grosir' => ['nullable', 'integer', 'min:0'],
             'reseller_fee_percent' => ['nullable', 'numeric', 'between:0,100'],
             'affiliator_fee_percent' => ['nullable', 'numeric', 'between:0,100'],
             'product_berat' => ['nullable', 'numeric', 'min:0'],
@@ -139,7 +156,7 @@ class Product extends BaseModel
             'product_stok_minimum' => ['nullable', 'integer', 'min:0'],
             'product_gambar' => ['nullable', 'string', 'max:255'],
             'product_galeri' => ['nullable', 'array'],
-            'product_status' => ['nullable', 'string', 'in:active,inactive,draft,archived'],
+            'product_status' => ['required', 'string', 'in:active,inactive,draft,archived'],
             'is_featured' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer'],

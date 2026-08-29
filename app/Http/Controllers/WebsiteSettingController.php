@@ -24,6 +24,7 @@ class WebsiteSettingController extends Controller
             ],
             'payment' => [
                 'qris_expiry' => (int) env('QRIS_EXPIRY_MINUTES', 5),
+                'unique_digits' => (int) env('QRIS_UNIQUE_DIGITS', 2),
                 'notifyhook_secret' => env('NOTIFYHOOK_SECRET', ''),
             ],
         ]);
@@ -57,6 +58,7 @@ class WebsiteSettingController extends Controller
             'min_withdraw' => ['required', 'numeric', 'min:0'],
             // Payment settings
             'qris_expiry' => ['required', 'integer', 'min:1', 'max:60'],
+            'unique_digits' => ['required', 'integer', 'min:1', 'max:6'],
             'notifyhook_secret' => ['nullable', 'string', 'max:255'],
             // CSV import
             'csv_delimiter' => ['required', 'string', 'in:,;'],

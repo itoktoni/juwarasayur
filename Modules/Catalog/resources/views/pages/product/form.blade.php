@@ -9,7 +9,7 @@ use Modules\Catalog\Models\Product;
     <x-form :model="$model" enctype="multipart/form-data">
         <x-card label="Informasi Produk">
             @bind($model ?? null)
-                <x-input col="6" name="product_nama" label="Nama Produk" />
+                <x-input col="6" name="product_nama" label="Nama Produk *" required />
                 <x-input col="6" name="product_slug" label="Slug" placeholder="Auto generate jika kosong" />
                 <x-input col="4" name="product_kode" label="Kode Produk" placeholder="Auto generate jika kosong" />
                 <x-input col="4" name="product_sku" label="SKU" />
@@ -27,14 +27,14 @@ use Modules\Catalog\Models\Product;
 
         <x-card label="Harga & Stok" class="mt-5">
             @bind($model ?? null)
-                <x-input col="4" name="product_harga" label="Harga Jual" type="number" step="1" />
+                <x-input col="4" name="product_harga" label="Harga Jual *" type="number" step="1" min="0" required />
                 <x-input col="4" name="product_harga_modal" label="Harga Modal" type="number" step="1" />
                 <x-input col="4" name="product_harga_grosir" label="Harga Grosir" type="number" step="1" />
                 <x-input col="6" name="reseller_fee_percent" label="Diskon Reseller (%)" type="number" step="1" min="0" max="100" helper="Harga reseller = harga - diskon. 10% → Rp100.000 jadi Rp90.000. 0 = tanpa diskon." />
                 <x-input col="6" name="affiliator_fee_percent" label="Komisi Affiliator (%)" type="number" step="1" min="0" max="100" helper="Komisi per baris order, cair via Withdraw. Kosong = fallback ke fee user/config global." />
                 <x-input col="4" name="product_stok" label="Stok" type="number" />
                 <x-input col="4" name="product_stok_minimum" label="Stok Minimum" type="number" />
-                <x-select col="4" name="product_status" label="Status" :options="['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft', 'archived' => 'Archived']" />
+                <x-select col="4" name="product_status" label="Status *" :options="['active' => 'Active', 'inactive' => 'Inactive', 'draft' => 'Draft', 'archived' => 'Archived']" :placeholder="false" required />
             @endbind
         </x-card>
 

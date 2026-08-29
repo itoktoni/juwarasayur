@@ -34,6 +34,7 @@ class WebsiteSetting
             'min_withdraw' => 'RESELLER_MIN_WITHDRAW',
             // Payment settings
             'qris_expiry' => 'QRIS_EXPIRY_MINUTES',
+            'unique_digits' => 'QRIS_UNIQUE_DIGITS',
             'notifyhook_secret' => 'NOTIFYHOOK_SECRET',
             // CSV import
             'csv_delimiter' => 'CSV_DELIMITER',
