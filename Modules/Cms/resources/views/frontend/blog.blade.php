@@ -33,7 +33,11 @@
 
             {{-- Deskripsi --}}
             <div class="lg:border-l lg:border-white/25 lg:pl-10 flex-1">
-                <p class="text-white/90 leading-relaxed max-w-2xl">{{ $site['description'] }}</p>
+                <div class="wysiwyg-content text-white/90 leading-relaxed max-w-2xl
+                    [&_a]:underline [&_a]:text-white [&_a]:font-medium
+                    [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1
+                    [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-1
+                    [&_p]:mb-2 [&_p:last-child]:mb-0 [&_img]:rounded-lg [&_img]:my-2 [&_img]:max-w-full [&_img]:h-auto">{!! $site['description'] !!}</div>
                 <div class="flex flex-wrap gap-2 mt-5">
                     <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur text-sm">
                         <span class="material-symbols-outlined text-base">location_on</span>
