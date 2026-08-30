@@ -72,6 +72,19 @@ class WebsiteSettingController extends Controller
             'flash_sale_hours' => ['required', 'integer', 'min:1', 'max:48'],
             'show_latest' => ['required', 'boolean'],
             'latest_title' => ['nullable', 'string', 'max:100'],
+            // Footer
+            'footer_tagline' => ['nullable', 'string'],
+            'footer_alamat' => ['nullable', 'string'],
+            'footer_telepon' => ['nullable', 'string', 'max:50'],
+            'footer_email' => ['nullable', 'email', 'max:255'],
+            // Shipping methods
+            'shipping_pickup' => ['required', 'boolean'],
+            'shipping_cod' => ['required', 'boolean'],
+            'shipping_delivery' => ['required', 'boolean'],
+            // Delivery pricing
+            'delivery_free_km' => ['required', 'numeric', 'min:0', 'max:100'],
+            'delivery_price_per_km' => ['required', 'numeric', 'min:0'],
+            'delivery_min_fee' => ['required', 'numeric', 'min:0'],
         ]);
 
         $existing = WebsiteSetting::raw();
@@ -123,15 +136,32 @@ class WebsiteSettingController extends Controller
             'show' => (bool) ($validated['show_latest'] ?? true),
             'title' => $validated['latest_title'] ?? 'Produk Terbaru',
         ];
+        $frontend['footer'] = [
+            'tagline' => $validated['footer_tagline'] ?? '',
+            'alamat' => $validated['footer_alamat'] ?? '',
+            'telepon' => $validated['footer_telepon'] ?? '',
+            'email' => $validated['footer_email'] ?? '',
+        ];
+        $frontend['shipping'] = [
+            'pickup' => (bool) ($validated['shipping_pickup'] ?? true),
+            'cod' => (bool) ($validated['shipping_cod'] ?? true),
+            'delivery' => (bool) ($validated['shipping_delivery'] ?? true),
+        ];
+        $frontend['delivery'] = [
+            'free_km' => (float) ($validated['delivery_free_km'] ?? 10),
+            'price_per_km' => (float) ($validated['delivery_price_per_km'] ?? 2500),
+            'min_fee' => (float) ($validated['delivery_min_fee'] ?? 10000),
+        ];
         unset($validated['hero_title'], $validated['hero_subtitle'], $validated['hero_cta_text'],
             $validated['flash_sale_title'], $validated['flash_sale_count'], $validated['flash_sale_hours'],
-            $validated['show_latest'], $validated['latest_title']);
+            $validated['show_latest'], $validated['latest_title'],
+            $validated['footer_tagline'], $validated['footer_alamat'], $validated['footer_telepon'], $validated['footer_email'],
+            $validated['shipping_pickup'], $validated['shipping_cod'], $validated['shipping_delivery'],
+            $validated['delivery_free_km'], $validated['delivery_price_per_km'], $validated['delivery_min_fee']);
 
         $merged = array_merge($existing, $validated, ['colors' => $colors, 'frontend' => $frontend]);
 
-        WebsiteSetting::persist($merged);
-
-        // Write frontend settings to .env
+        // Write frontend + footer settings to .env
         $envMap = [
             'FRONTEND_HERO_TITLE' => $frontend['hero']['title'],
             'FRONTEND_HERO_SUBTITLE' => $frontend['hero']['subtitle'],
@@ -141,6 +171,16 @@ class WebsiteSettingController extends Controller
             'FRONTEND_FLASH_SALE_HOURS' => $frontend['flash_sale']['hours'],
             'FRONTEND_SHOW_LATEST' => $frontend['latest']['show'] ? 'true' : 'false',
             'FRONTEND_LATEST_TITLE' => $frontend['latest']['title'],
+            'FRONTEND_FOOTER_TAGLINE' => $frontend['footer']['tagline'] ?? '',
+            'FRONTEND_FOOTER_ALAMAT' => $frontend['footer']['alamat'] ?? '',
+            'FRONTEND_FOOTER_TELEPON' => $frontend['footer']['telepon'] ?? '',
+            'FRONTEND_FOOTER_EMAIL' => $frontend['footer']['email'] ?? '',
+            'FRONTEND_SHIPPING_PICKUP' => ($frontend['shipping']['pickup'] ?? true) ? 'true' : 'false',
+            'FRONTEND_SHIPPING_COD' => ($frontend['shipping']['cod'] ?? true) ? 'true' : 'false',
+            'FRONTEND_SHIPPING_DELIVERY' => ($frontend['shipping']['delivery'] ?? true) ? 'true' : 'false',
+            'FRONTEND_DELIVERY_FREE_KM' => $frontend['delivery']['free_km'] ?? 10,
+            'FRONTEND_DELIVERY_PRICE_PER_KM' => $frontend['delivery']['price_per_km'] ?? 2500,
+            'FRONTEND_DELIVERY_MIN_FEE' => $frontend['delivery']['min_fee'] ?? 10000,
         ];
         $this->updateEnv($envMap);
 

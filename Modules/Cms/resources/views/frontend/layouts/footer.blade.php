@@ -1,9 +1,10 @@
 @php
-    // Nilai dari config/website.php, bisa dioverride via Settings Website (CMS)
     $site = \App\Models\WebsiteSetting::merged();
-    $siteAlamat = trim((string) ($site['alamat'] ?? ''));
-    $siteTelepon = trim((string) ($site['telepon'] ?? ''));
-    $siteEmail = trim((string) ($site['email'] ?? ''));
+    $footerCfg = config('frontend.footer', []);
+    $siteTagline = trim((string) ($footerCfg['tagline'] ?? ''));
+    $siteAlamat = trim((string) ($footerCfg['alamat'] ?: ($site['alamat'] ?? '')));
+    $siteTelepon = trim((string) ($footerCfg['telepon'] ?: ($site['telepon'] ?? '')));
+    $siteEmail = trim((string) ($footerCfg['email'] ?: ($site['email'] ?? '')));
 @endphp
 <footer class="bg-[#0f1f18] text-white pt-16 pb-8">
     <div class="max-w-7xl mx-auto px-6 md:px-8">
@@ -20,7 +21,7 @@
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Juwara Sayur') }}" class="h-12 w-auto">
                     </div>
-                    <p class="text-white/60 text-sm leading-relaxed max-w-md">Sayur-mayur &amp; bahan dapur segar — sayur, telur, ikan, ayam, daging. Pasar ke dapur Anda, setiap hari.</p>
+                    <p class="text-white/60 text-sm leading-relaxed max-w-md">{{ $siteTagline }}</p>
                     <div class="flex gap-3 mt-6">
                         @if($siteEmail !== '')
                             <a href="mailto:{{ $siteEmail }}" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors" aria-label="Email"><span class="material-symbols-outlined text-lg">mail</span></a>
@@ -59,7 +60,7 @@
                     <div class="flex items-center gap-3 mb-4">
                         <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name', 'Juwara Sayur') }}" class="h-12 w-auto">
                     </div>
-                    <p class="text-white/60 text-sm leading-relaxed max-w-md">Sayur-mayur &amp; bahan dapur segar — sayur, telur, ikan, ayam, daging. Pasar ke dapur Anda, setiap hari.</p>
+                    <p class="text-white/60 text-sm leading-relaxed max-w-md">{{ $siteTagline }}</p>
                     <div class="flex gap-3 mt-6">
                         @if($siteEmail !== '')
                             <a href="mailto:{{ $siteEmail }}" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors" aria-label="Email"><span class="material-symbols-outlined text-lg">mail</span></a>

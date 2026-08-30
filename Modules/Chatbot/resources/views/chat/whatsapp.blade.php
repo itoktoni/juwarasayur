@@ -422,6 +422,7 @@
     const status = document.getElementById('chat-status');
 
     const CSRF = document.querySelector('meta[name=csrf-token]').content;
+    const SHIPPING = { pickup: {{ config('frontend.shipping.pickup', true) ? 'true' : 'false' }}, cod: {{ config('frontend.shipping.cod', true) ? 'true' : 'false' }}, delivery: {{ config('frontend.shipping.delivery', true) ? 'true' : 'false' }} };
 
     const scrollDown = () => { box.scrollTop = box.scrollHeight; };
     scrollDown();
@@ -975,9 +976,9 @@
         sheetBody.innerHTML =
             '<h3>Metode Pengiriman</h3><p class="sub">Pilih cara pesananmu sampai.</p>' +
             '<div class="chips">' +
-            '<button type="button" class="chip" data-m="pickup"><span class="material-symbols-outlined">storefront</span> Diambil di Gudang (gratis)</button>' +
-            '<button type="button" class="chip" data-m="cod"><span class="material-symbols-outlined">payments</span> COD - bayar di titik temu</button>' +
-            '<button type="button" class="chip" data-m="delivery"><span class="material-symbols-outlined">local_shipping</span> Dikirim ke alamat saya</button>' +
+            (SHIPPING.pickup ? '<button type="button" class="chip" data-m="pickup"><span class="material-symbols-outlined">storefront</span> Diambil di Gudang (gratis)</button>' : '') +
+            (SHIPPING.cod ? '<button type="button" class="chip" data-m="cod"><span class="material-symbols-outlined">payments</span> COD - bayar di titik temu</button>' : '') +
+            (SHIPPING.delivery ? '<button type="button" class="chip" data-m="delivery"><span class="material-symbols-outlined">local_shipping</span> Dikirim ke alamat saya</button>' : '') +
             '</div><div id="sh-extra"></div><div class="w-error" id="sh-err"></div>' +
             '<div class="w-actions"><button class="btn-primary-w" id="sh-confirm" style="display:none">Konfirmasi Pengiriman</button></div>';
 

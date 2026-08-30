@@ -38,9 +38,11 @@
                     <p class="text-xs text-on-surface-variant mb-4">Pilih cara penerimaan pesanan.</p>
 
                     {{-- Accordion: 1. Pickup, 2. COD, 3. Diantar ke Rumah --}}
+                    @php $shippingCfg = config('frontend.shipping', ['pickup'=>true,'cod'=>true,'delivery'=>true]); @endphp
                     <div class="space-y-2" id="shipping-accordion">
 
                         {{-- 1. Ambil di Gudang --}}
+                        @if($shippingCfg['pickup'])
                         <div class="ship-opt rounded-lg border overflow-hidden {{ old('shipping_method', 'pickup') === 'pickup' ? 'border-primary bg-primary/5' : 'border-outline-variant' }}" data-method="pickup">
                             <label class="flex items-start gap-3 p-3 cursor-pointer hover:bg-surface-container ship-head">
                                 <input type="radio" name="shipping_method" value="pickup" {{ old('shipping_method', 'pickup') === 'pickup' ? 'checked' : '' }}
@@ -60,8 +62,10 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         {{-- 2. COD --}}
+                        @if($shippingCfg['cod'])
                         <div class="ship-opt rounded-lg border overflow-hidden {{ old('shipping_method') === 'cod' ? 'border-primary bg-primary/5' : 'border-outline-variant' }}" data-method="cod">
                             <label class="flex items-start gap-3 p-3 cursor-pointer hover:bg-surface-container ship-head">
                                 <input type="radio" name="shipping_method" value="cod" {{ old('shipping_method') === 'cod' ? 'checked' : '' }}
@@ -105,15 +109,18 @@
                                 @error('so_cod_location')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                             </div>
                         </div>
+                        @endif
 
                         {{-- 3. Diantar ke Rumah --}}
+                        @if($shippingCfg['delivery'])
                         <div class="ship-opt rounded-lg border overflow-hidden {{ old('shipping_method') === 'delivery' ? 'border-primary bg-primary/5' : 'border-outline-variant' }}" data-method="delivery">
                             <label class="flex items-start gap-3 p-3 cursor-pointer hover:bg-surface-container ship-head">
                                 <input type="radio" name="shipping_method" value="delivery" {{ old('shipping_method') === 'delivery' ? 'checked' : '' }}
                                     class="mt-1 accent-primary shipping-toggle">
                                 <span>
                                     <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">home</span> 3. Diantar ke Rumah</span>
-                                    <span class="block text-xs text-on-surface-variant mt-0.5">Tandai titik rumah di peta — ongkir dihitung dari jarak ke gudang utama.</span>
+                                    @php $delCfg = config('frontend.delivery', ['free_km'=>10,'price_per_km'=>2500,'min_fee'=>10000]); @endphp
+                                    <span class="block text-xs text-on-surface-variant mt-0.5">Gratis ongkir hingga {{ (int) $delCfg['free_km'] }} km. Di atas itu, {{ formatAngka((int) $delCfg['price_per_km'], 'Rp') }}/km.</span>
                                 </span>
                             </label>
                             <div class="ship-pane px-3 pb-3">
@@ -139,6 +146,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
             </div>

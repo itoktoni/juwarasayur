@@ -303,6 +303,89 @@
                 </div>
             </div>
 
+            {{-- Shipping Methods --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Metode Pengiriman</h3>
+            <p class="text-xs text-on-surface-variant mb-4">Aktifkan/nonaktifkan metode pengiriman yang tersedia di checkout.</p>
+            @php $shipCfg = config('frontend.shipping', ['pickup'=>true,'cod'=>true,'delivery'=>true]); @endphp
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="checkbox" name="shipping_pickup" value="1" {{ old('shipping_pickup', $frontend['shipping']['pickup'] ?? $shipCfg['pickup']) ? 'checked' : '' }}
+                        class="w-5 h-5 rounded accent-primary">
+                    <span>
+                        <span class="block font-semibold text-on-surface text-sm">Pickup (Ambil di Gudang)</span>
+                        <span class="block text-xs text-on-surface-variant">Gratis, customer ambil sendiri.</span>
+                    </span>
+                </label>
+                <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="checkbox" name="shipping_cod" value="1" {{ old('shipping_cod', $frontend['shipping']['cod'] ?? $shipCfg['cod']) ? 'checked' : '' }}
+                        class="w-5 h-5 rounded accent-primary">
+                    <span>
+                        <span class="block font-semibold text-on-surface text-sm">COD (Bayar di Titik)</span>
+                        <span class="block text-xs text-on-surface-variant">Bayar cash saat bertemu.</span>
+                    </span>
+                </label>
+                <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="checkbox" name="shipping_delivery" value="1" {{ old('shipping_delivery', $frontend['shipping']['delivery'] ?? $shipCfg['delivery']) ? 'checked' : '' }}
+                        class="w-5 h-5 rounded accent-primary">
+                    <span>
+                        <span class="block font-semibold text-on-surface text-sm">Delivery (Diantar ke Rumah)</span>
+                        <span class="block text-xs text-on-surface-variant">Dikirim ke alamat customer.</span>
+                    </span>
+                </label>
+            </div>
+
+            {{-- Delivery Pricing --}}
+            @php $delCfg = config('frontend.delivery', ['free_km'=>10,'price_per_km'=>2500,'min_fee'=>10000]); @endphp
+            <h4 class="text-sm font-bold text-on-surface mb-3">Biaya Delivery (per km)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Gratis Ongkir (km)</label>
+                    <input type="number" min="0" max="100" name="delivery_free_km"
+                        value="{{ old('delivery_free_km', $frontend['delivery']['free_km'] ?? $delCfg['free_km']) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Jarak maksimal gratis ongkir.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Harga per km (Rp)</label>
+                    <input type="number" min="0" step="100" name="delivery_price_per_km"
+                        value="{{ old('delivery_price_per_km', $frontend['delivery']['price_per_km'] ?? $delCfg['price_per_km']) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Biaya per km untuk jarak di atas batas gratis.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Minimal Ongkir (Rp)</label>
+                    <input type="number" min="0" step="100" name="delivery_min_fee"
+                        value="{{ old('delivery_min_fee', $frontend['delivery']['min_fee'] ?? $delCfg['min_fee']) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Ongkir minimal jika melebihi batas gratis.</p>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Footer Website</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Tagline</label>
+                    <textarea name="footer_tagline" rows="2"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('footer_tagline', $frontend['footer']['tagline'] ?? '') }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Alamat</label>
+                    <textarea name="footer_alamat" rows="2"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('footer_alamat', $frontend['footer']['alamat'] ?? '') }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Telepon</label>
+                    <input type="text" name="footer_telepon" value="{{ old('footer_telepon', $frontend['footer']['telepon'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Email</label>
+                    <input type="email" name="footer_email" value="{{ old('footer_email', $frontend['footer']['email'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+            </div>
+
             <div class="flex items-center gap-3 pt-4 border-t border-outline-variant">
                 <button type="submit" class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity">
                     Save Settings

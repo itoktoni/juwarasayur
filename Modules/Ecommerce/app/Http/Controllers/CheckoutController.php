@@ -214,10 +214,22 @@ class CheckoutController extends Controller
 
     public function placeOrder(Request $request): RedirectResponse
     {
+        $shippingCfg = config('frontend.shipping', ['pickup' => true, 'cod' => true, 'delivery' => true]);
+        $allowedMethods = collect();
+        if ($shippingCfg['pickup']) {
+            $allowedMethods->push(ShippingMethodEnum::PICKUP);
+        }
+        if ($shippingCfg['cod']) {
+            $allowedMethods->push(ShippingMethodEnum::COD);
+        }
+        if ($shippingCfg['delivery']) {
+            $allowedMethods->push(ShippingMethodEnum::DELIVERY);
+        }
+
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:20'],
-            'shipping_method' => ['required', 'in:'.ShippingMethodEnum::PICKUP.','.ShippingMethodEnum::COD.','.ShippingMethodEnum::DELIVERY],
+            'shipping_method' => ['required', 'in:'.$allowedMethods->implode(',')],
             'so_cod_location' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::COD, 'string', 'max:255'],
             'so_lat' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::DELIVERY, 'numeric', 'between:-90,90'],
             'so_lng' => ['nullable', 'required_if:shipping_method,'.ShippingMethodEnum::DELIVERY, 'numeric', 'between:-180,180'],
