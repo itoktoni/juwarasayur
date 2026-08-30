@@ -1,11 +1,26 @@
 <?php /** @var Modules\Chatbot\Models\ChatbotSession $model */ ?>
 
 @php
-    $messages = \Modules\Chatbot\Models\ChatbotMessage::query()
-        ->where('chatbot_session_id', $model->id)
-        ->orderBy('id')
-        ->limit(300)
-        ->get();
+    // Web channel: load from chat_web_messages (session_token = messenger_user)
+    // Other channels: load from chatbot_messages
+    if ($model->channel === 'web') {
+        $messages = \Modules\Chatbot\Models\WebChatMessage::query()
+            ->where('session_token', $model->messenger_user)
+            ->orderBy('id')
+            ->limit(300)
+            ->get()
+            ->map(fn ($m) => (object) [
+                'role' => $m->role,
+                'content' => $m->content,
+                'created_at' => $m->created_at,
+            ]);
+    } else {
+        $messages = \Modules\Chatbot\Models\ChatbotMessage::query()
+            ->where('chatbot_session_id', $model->id)
+            ->orderBy('id')
+            ->limit(300)
+            ->get();
+    }
 @endphp
 
 <x-layouts::app>
