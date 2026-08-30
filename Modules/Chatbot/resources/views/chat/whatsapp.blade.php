@@ -91,6 +91,7 @@
 
         /* Messages */
         .messages {
+            margin-top:2rem;
             flex: 1; overflow-y: auto; padding: 16px 12px 10px;
             background-image: radial-gradient(rgba(0,0,0,.03) 1px, transparent 1px);
             background-size: 18px 18px;
@@ -205,7 +206,7 @@
             font-weight: 700; font-size: 14px; color: #222; margin-bottom: 12px;
         }
         .pp-head .cnt { font-size: 12px; font-weight: 600; color: {{ $primary }}; }
-        .prod-list { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
+        .prod-list { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
         .prod-card {
             position: relative; display: flex; gap: 12px; align-items: center;
             background: #f7f7f5; border: 1.5px solid transparent; border-radius: 14px;

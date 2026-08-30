@@ -27,6 +27,7 @@ class WebsiteSettingController extends Controller
                 'unique_digits' => (int) env('QRIS_UNIQUE_DIGITS', 2),
                 'notifyhook_secret' => env('NOTIFYHOOK_SECRET', ''),
             ],
+            'frontend' => config('frontend'),
         ]);
     }
 
@@ -62,6 +63,15 @@ class WebsiteSettingController extends Controller
             'notifyhook_secret' => ['nullable', 'string', 'max:255'],
             // CSV import
             'csv_delimiter' => ['required', 'string', 'in:,;'],
+            // Homepage / Frontend
+            'hero_title' => ['nullable', 'string', 'max:255'],
+            'hero_subtitle' => ['nullable', 'string'],
+            'hero_cta_text' => ['nullable', 'string', 'max:100'],
+            'flash_sale_title' => ['nullable', 'string', 'max:100'],
+            'flash_sale_count' => ['required', 'integer', 'min:1', 'max:20'],
+            'flash_sale_hours' => ['required', 'integer', 'min:1', 'max:48'],
+            'show_latest' => ['required', 'boolean'],
+            'latest_title' => ['nullable', 'string', 'max:100'],
         ]);
 
         $existing = WebsiteSetting::raw();
@@ -97,7 +107,27 @@ class WebsiteSettingController extends Controller
         }
         unset($validated['primary_color'], $validated['remove_logo'], $validated['remove_favicon']);
 
-        $merged = array_merge($existing, $validated, ['colors' => $colors]);
+        // Frontend / Homepage settings
+        $frontend = $existing['frontend'] ?? [];
+        $frontend['hero'] = [
+            'title' => $validated['hero_title'] ?? '',
+            'subtitle' => $validated['hero_subtitle'] ?? '',
+            'cta_text' => $validated['hero_cta_text'] ?? 'Mulai Belanja',
+        ];
+        $frontend['flash_sale'] = [
+            'title' => $validated['flash_sale_title'] ?? 'Flash Sale',
+            'count' => (int) ($validated['flash_sale_count'] ?? 6),
+            'hours' => (int) ($validated['flash_sale_hours'] ?? 12),
+        ];
+        $frontend['latest'] = [
+            'show' => (bool) ($validated['show_latest'] ?? true),
+            'title' => $validated['latest_title'] ?? 'Produk Terbaru',
+        ];
+        unset($validated['hero_title'], $validated['hero_subtitle'], $validated['hero_cta_text'],
+            $validated['flash_sale_title'], $validated['flash_sale_count'], $validated['flash_sale_hours'],
+            $validated['show_latest'], $validated['latest_title']);
+
+        $merged = array_merge($existing, $validated, ['colors' => $colors, 'frontend' => $frontend]);
 
         WebsiteSetting::persist($merged);
 

@@ -217,6 +217,54 @@
                 </div>
             </div>
 
+            {{-- Homepage / Frontend --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Homepage</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Hero Title</label>
+                    <input type="text" name="hero_title" value="{{ old('hero_title', $frontend['hero']['title'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Hero Subtitle</label>
+                    <textarea name="hero_subtitle" rows="2"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('hero_subtitle', $frontend['hero']['subtitle'] ?? '') }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Hero CTA Text</label>
+                    <input type="text" name="hero_cta_text" value="{{ old('hero_cta_text', $frontend['hero']['cta_text'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Flash Sale Title</label>
+                    <input type="text" name="flash_sale_title" value="{{ old('flash_sale_title', $frontend['flash_sale']['title'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Flash Sale — Jumlah Produk</label>
+                    <input type="number" min="1" max="20" name="flash_sale_count" value="{{ old('flash_sale_count', $frontend['flash_sale']['count'] ?? 6) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Flash Sale — Durasi (jam)</label>
+                    <input type="number" min="1" max="48" name="flash_sale_hours" value="{{ old('flash_sale_hours', $frontend['flash_sale']['hours'] ?? 12) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Tampilkan Produk Terbaru</label>
+                    <select name="show_latest"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                        <option value="1" @selected(old('show_latest', $frontend['latest']['show'] ?? true))>Ya</option>
+                        <option value="0" @selected(!old('show_latest', $frontend['latest']['show'] ?? true))>Tidak</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Judul Produk Terbaru</label>
+                    <input type="text" name="latest_title" value="{{ old('latest_title', $frontend['latest']['title'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+            </div>
+
             {{-- Payment Settings --}}
             <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Payment & Webhook</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
