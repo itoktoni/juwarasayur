@@ -89,5 +89,12 @@
     </nav>
 
     @include('ecommerce::components.cart-button')
+
+    {{-- Floating chat button --}}
+    <a href="{{ url('/chat') }}" target="_blank" rel="noopener"
+       style="position:fixed;bottom:10px;right:16px;z-index:9999;width:56px;height:56px;border-radius:50%;background:var(--color-primary,#388e3c);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3);text-decoration:none;"
+       title="Chat dengan kami">
+        <span class="material-symbols-outlined" style="font-size:28px;">chat</span>
+    </a>
 </body>
 </html>
