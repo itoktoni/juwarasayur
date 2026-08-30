@@ -48,7 +48,7 @@
                                 <input type="radio" name="shipping_method" value="pickup" {{ old('shipping_method', 'pickup') === 'pickup' ? 'checked' : '' }}
                                     class="mt-1 accent-primary shipping-toggle">
                                 <span>
-                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">store</span> 1. Ambil di Gudang (Pickup)</span>
+                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">store</span> Ambil di Gudang (Pickup)</span>
                                     <span class="block text-xs text-on-surface-variant mt-0.5">Gratis — pesanan diambil sendiri.</span>
                                 </span>
                             </label>
@@ -71,7 +71,7 @@
                                 <input type="radio" name="shipping_method" value="cod" {{ old('shipping_method') === 'cod' ? 'checked' : '' }}
                                     class="mt-1 accent-primary shipping-toggle">
                                 <span>
-                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">local_shipping</span> 2. COD — Titik Kumpu Terdekat</span>
+                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">local_shipping</span> COD — Titik Kumpu Terdekat</span>
                                     <span class="block text-xs text-on-surface-variant mt-0.5">Pilih lokasi COD dengan harga ongkirnya.</span>
                                 </span>
                             </label>
@@ -118,7 +118,7 @@
                                 <input type="radio" name="shipping_method" value="delivery" {{ old('shipping_method') === 'delivery' ? 'checked' : '' }}
                                     class="mt-1 accent-primary shipping-toggle">
                                 <span>
-                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">home</span> 3. Diantar ke Rumah</span>
+                                    <span class="block font-semibold text-on-surface text-sm"><span class="material-symbols-outlined align-middle text-base">home</span> Diantar ke Rumah</span>
                                     @php $delCfg = config('frontend.delivery', ['free_km'=>10,'price_per_km'=>2500,'min_fee'=>10000]); @endphp
                                     <span class="block text-xs text-on-surface-variant mt-0.5">Gratis ongkir hingga {{ (int) $delCfg['free_km'] }} km. Di atas itu, {{ formatAngka((int) $delCfg['price_per_km'], 'Rp') }}/km.</span>
                                 </span>
