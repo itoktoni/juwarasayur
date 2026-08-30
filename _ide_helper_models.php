@@ -156,15 +156,63 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property int $id
+ * @property int $so_detail_id
+ * @property int $product_id
+ * @property int $lokasi_id
+ * @property int $qty
+ * @property \Carbon\CarbonImmutable|null $expired_date
+ * @property \Carbon\CarbonImmutable $prepared_at
+ * @property int|null $prepared_by
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read mixed $field_key
+ * @property-read mixed $field_name
+ * @property-read mixed|null $field_primary
+ * @property-read \Modules\Inventory\Models\Lokasi|null $has_lokasi
+ * @property-read \Modules\Catalog\Models\Product|null $has_product
+ * @property-read \Modules\So\Models\SoDetail $has_so_detail
+ * @property-read \App\Models\User|null $has_user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation filter(?array $params = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation filterBy(array|string $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation filterFields(array|string $fields)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation renamedFilterFields(array $renamedFilterFields)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation restrictedFilters(array|string $restrictedFilters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation sort(?array $params = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation sortFields(array|string $fields)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereExpiredDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereLokasiId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation wherePreparedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation wherePreparedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereProductId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereQty($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereSoDetailId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PrepareAllocation whereUpdatedAt($value)
+ */
+	class PrepareAllocation extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * @mixin IdeHelperUser
  * @property int $id
  * @property string $name
  * @property string $email
  * @property string|null $phone
+ * @property string|null $bank_name
+ * @property string|null $bank_account_name
+ * @property string|null $bank_account_no
  * @property \Carbon\CarbonImmutable|null $verified_at
  * @property string $role
  * @property string $type
  * @property int|null $reference_id
+ * @property int|null $fee
+ * @property bool $consignasi
  * @property string|null $avatar
  * @property \Carbon\CarbonImmutable|null $email_verified_at
  * @property string $password
@@ -182,6 +230,10 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $hasCustomers
  * @property-read int|null $has_customers_count
  * @property-read User|null $hasReseller
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \Modules\So\Models\Consignment> $has_consignments
+ * @property-read int|null $has_consignments_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Withdrawal> $has_withdrawals
+ * @property-read int|null $has_withdrawals_count
  * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
@@ -198,9 +250,14 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User sort(?array $params = null)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User sortFields(array|string $fields)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAvatar($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBankAccountName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBankAccountNo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBankName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereConsignasi($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFee($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
@@ -215,6 +272,48 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereVerifiedAt($value)
  */
-	class User extends \Eloquent {}
+	class User extends \Eloquent implements \Illuminate\Contracts\Auth\MustVerifyEmail {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $amount
+ * @property string|null $bank_name
+ * @property string|null $bank_account_name
+ * @property string|null $bank_account_no
+ * @property string $status
+ * @property string|null $note
+ * @property \Carbon\CarbonImmutable|null $processed_at
+ * @property \Carbon\CarbonImmutable|null $created_at
+ * @property \Carbon\CarbonImmutable|null $updated_at
+ * @property-read mixed $field_key
+ * @property-read mixed $field_name
+ * @property-read mixed|null $field_primary
+ * @property-read \App\Models\User|null $has_user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal filter(?array $params = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal filterBy(array|string $filters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal filterFields(array|string $fields)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal renamedFilterFields(array $renamedFilterFields)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal restrictedFilters(array|string $restrictedFilters)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal sort(?array $params = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal sortFields(array|string $fields)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereBankAccountName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereBankAccountNo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereBankName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereProcessedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Withdrawal whereUserId($value)
+ */
+	class Withdrawal extends \Eloquent {}
 }
 

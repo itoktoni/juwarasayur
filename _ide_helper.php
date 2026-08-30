@@ -5431,7 +5431,7 @@ namespace Illuminate\Support\Facades {
         /**
          * Get the underlying database connection.
          *
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function getConnection()
@@ -5456,7 +5456,7 @@ namespace Illuminate\Support\Facades {
         /**
          * Get the connection used to manage locks.
          *
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function getLockConnection()
@@ -7150,7 +7150,7 @@ namespace Illuminate\Support\Facades {
          * Build a database connection instance from the given configuration.
          *
          * @param array $config
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function build($config)
@@ -7177,7 +7177,7 @@ namespace Illuminate\Support\Facades {
          * @param \UnitEnum|string $name
          * @param array $config
          * @param bool $force
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @throws \RuntimeException
          * @static
          */
@@ -7429,8 +7429,58 @@ namespace Illuminate\Support\Facades {
          */
         public static function getDriverTitle()
         {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getDriverTitle();
+        }
+
+        /**
+         * Determine if the connected database is a MariaDB database.
+         *
+         * @return bool
+         * @static
+         */
+        public static function isMaria()
+        {
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
+            return $instance->isMaria();
+        }
+
+        /**
+         * Get the server version for the connection.
+         *
+         * @return string
+         * @static
+         */
+        public static function getServerVersion()
+        {
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
+            return $instance->getServerVersion();
+        }
+
+        /**
+         * Get a schema builder instance for the connection.
+         *
+         * @return \Illuminate\Database\Schema\MariaDbBuilder
+         * @static
+         */
+        public static function getSchemaBuilder()
+        {
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
+            return $instance->getSchemaBuilder();
+        }
+
+        /**
+         * Get the schema state for the connection.
+         *
+         * @param \Illuminate\Filesystem\Filesystem|null $files
+         * @param callable|null $processFactory
+         * @return \Illuminate\Database\Schema\MariaDbSchemaState
+         * @static
+         */
+        public static function getSchemaState($files = null, $processFactory = null)
+        {
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
+            return $instance->getSchemaState($files, $processFactory);
         }
 
         /**
@@ -7444,7 +7494,8 @@ namespace Illuminate\Support\Facades {
          */
         public static function insert($query, $bindings = [], $sequence = null)
         {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            //Method inherited from \Illuminate\Database\MySqlConnection 
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->insert($query, $bindings, $sequence);
         }
 
@@ -7456,58 +7507,9 @@ namespace Illuminate\Support\Facades {
          */
         public static function getLastInsertId()
         {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            //Method inherited from \Illuminate\Database\MySqlConnection 
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getLastInsertId();
-        }
-
-        /**
-         * Determine if the connected database is a MariaDB database.
-         *
-         * @return bool
-         * @static
-         */
-        public static function isMaria()
-        {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
-            return $instance->isMaria();
-        }
-
-        /**
-         * Get the server version for the connection.
-         *
-         * @return string
-         * @static
-         */
-        public static function getServerVersion()
-        {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
-            return $instance->getServerVersion();
-        }
-
-        /**
-         * Get a schema builder instance for the connection.
-         *
-         * @return \Illuminate\Database\Schema\MySqlBuilder
-         * @static
-         */
-        public static function getSchemaBuilder()
-        {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
-            return $instance->getSchemaBuilder();
-        }
-
-        /**
-         * Get the schema state for the connection.
-         *
-         * @param \Illuminate\Filesystem\Filesystem|null $files
-         * @param callable|null $processFactory
-         * @return \Illuminate\Database\Schema\MySqlSchemaState
-         * @static
-         */
-        public static function getSchemaState($files = null, $processFactory = null)
-        {
-            /** @var \Illuminate\Database\MySqlConnection $instance */
-            return $instance->getSchemaState($files, $processFactory);
         }
 
         /**
@@ -7519,7 +7521,7 @@ namespace Illuminate\Support\Facades {
         public static function useDefaultQueryGrammar()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->useDefaultQueryGrammar();
         }
 
@@ -7532,7 +7534,7 @@ namespace Illuminate\Support\Facades {
         public static function useDefaultSchemaGrammar()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->useDefaultSchemaGrammar();
         }
 
@@ -7545,7 +7547,7 @@ namespace Illuminate\Support\Facades {
         public static function useDefaultPostProcessor()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->useDefaultPostProcessor();
         }
 
@@ -7560,7 +7562,7 @@ namespace Illuminate\Support\Facades {
         public static function table($table, $as = null)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->table($table, $as);
         }
 
@@ -7573,7 +7575,7 @@ namespace Illuminate\Support\Facades {
         public static function query()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->query();
         }
 
@@ -7589,7 +7591,7 @@ namespace Illuminate\Support\Facades {
         public static function selectOne($query, $bindings = [], $useReadPdo = true)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->selectOne($query, $bindings, $useReadPdo);
         }
 
@@ -7606,7 +7608,7 @@ namespace Illuminate\Support\Facades {
         public static function scalar($query, $bindings = [], $useReadPdo = true)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->scalar($query, $bindings, $useReadPdo);
         }
 
@@ -7621,7 +7623,7 @@ namespace Illuminate\Support\Facades {
         public static function selectFromWriteConnection($query, $bindings = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->selectFromWriteConnection($query, $bindings);
         }
 
@@ -7638,7 +7640,7 @@ namespace Illuminate\Support\Facades {
         public static function select($query, $bindings = [], $useReadPdo = true, $fetchUsing = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->select($query, $bindings, $useReadPdo, $fetchUsing);
         }
 
@@ -7655,7 +7657,7 @@ namespace Illuminate\Support\Facades {
         public static function selectResultSets($query, $bindings = [], $useReadPdo = true, $fetchUsing = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->selectResultSets($query, $bindings, $useReadPdo, $fetchUsing);
         }
 
@@ -7672,7 +7674,7 @@ namespace Illuminate\Support\Facades {
         public static function cursor($query, $bindings = [], $useReadPdo = true, $fetchUsing = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->cursor($query, $bindings, $useReadPdo, $fetchUsing);
         }
 
@@ -7687,7 +7689,7 @@ namespace Illuminate\Support\Facades {
         public static function update($query, $bindings = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->update($query, $bindings);
         }
 
@@ -7702,7 +7704,7 @@ namespace Illuminate\Support\Facades {
         public static function delete($query, $bindings = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->delete($query, $bindings);
         }
 
@@ -7717,7 +7719,7 @@ namespace Illuminate\Support\Facades {
         public static function statement($query, $bindings = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->statement($query, $bindings);
         }
 
@@ -7732,7 +7734,7 @@ namespace Illuminate\Support\Facades {
         public static function affectingStatement($query, $bindings = [])
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->affectingStatement($query, $bindings);
         }
 
@@ -7746,7 +7748,7 @@ namespace Illuminate\Support\Facades {
         public static function unprepared($query)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->unprepared($query);
         }
 
@@ -7759,7 +7761,7 @@ namespace Illuminate\Support\Facades {
         public static function threadCount()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->threadCount();
         }
 
@@ -7773,7 +7775,7 @@ namespace Illuminate\Support\Facades {
         public static function pretend($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->pretend($callback);
         }
 
@@ -7788,7 +7790,7 @@ namespace Illuminate\Support\Facades {
         public static function withoutPretending($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->withoutPretending($callback);
         }
 
@@ -7803,7 +7805,7 @@ namespace Illuminate\Support\Facades {
         public static function bindValues($statement, $bindings)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->bindValues($statement, $bindings);
         }
 
@@ -7817,7 +7819,7 @@ namespace Illuminate\Support\Facades {
         public static function prepareBindings($bindings)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->prepareBindings($bindings);
         }
 
@@ -7833,7 +7835,7 @@ namespace Illuminate\Support\Facades {
         public static function logQuery($query, $bindings, $time = null)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->logQuery($query, $bindings, $time);
         }
 
@@ -7848,7 +7850,7 @@ namespace Illuminate\Support\Facades {
         public static function whenQueryingForLongerThan($threshold, $handler)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->whenQueryingForLongerThan($threshold, $handler);
         }
 
@@ -7861,7 +7863,7 @@ namespace Illuminate\Support\Facades {
         public static function allowQueryDurationHandlersToRunAgain()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->allowQueryDurationHandlersToRunAgain();
         }
 
@@ -7874,7 +7876,7 @@ namespace Illuminate\Support\Facades {
         public static function totalQueryDuration()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->totalQueryDuration();
         }
 
@@ -7887,7 +7889,7 @@ namespace Illuminate\Support\Facades {
         public static function resetTotalQueryDuration()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->resetTotalQueryDuration();
         }
 
@@ -7900,7 +7902,7 @@ namespace Illuminate\Support\Facades {
         public static function reconnectIfMissingConnection()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->reconnectIfMissingConnection();
         }
 
@@ -7908,13 +7910,13 @@ namespace Illuminate\Support\Facades {
          * Register a hook to be run just before a database transaction is started.
          *
          * @param \Closure $callback
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function beforeStartingTransaction($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->beforeStartingTransaction($callback);
         }
 
@@ -7922,13 +7924,13 @@ namespace Illuminate\Support\Facades {
          * Register a hook to be run just before a database query is executed.
          *
          * @param \Closure $callback
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function beforeExecuting($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->beforeExecuting($callback);
         }
 
@@ -7942,7 +7944,7 @@ namespace Illuminate\Support\Facades {
         public static function listen($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->listen($callback);
         }
 
@@ -7956,7 +7958,7 @@ namespace Illuminate\Support\Facades {
         public static function raw($value)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->raw($value);
         }
 
@@ -7972,7 +7974,7 @@ namespace Illuminate\Support\Facades {
         public static function escape($value, $binary = false)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->escape($value, $binary);
         }
 
@@ -7985,7 +7987,7 @@ namespace Illuminate\Support\Facades {
         public static function hasModifiedRecords()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->hasModifiedRecords();
         }
 
@@ -7999,7 +8001,7 @@ namespace Illuminate\Support\Facades {
         public static function recordsHaveBeenModified($value = true)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->recordsHaveBeenModified($value);
         }
 
@@ -8007,13 +8009,13 @@ namespace Illuminate\Support\Facades {
          * Set the record modification state.
          *
          * @param bool $value
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setRecordModificationState($value)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setRecordModificationState($value);
         }
 
@@ -8026,7 +8028,7 @@ namespace Illuminate\Support\Facades {
         public static function forgetRecordModificationState()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->forgetRecordModificationState();
         }
 
@@ -8034,13 +8036,13 @@ namespace Illuminate\Support\Facades {
          * Indicate that the connection should use the write PDO connection for reads.
          *
          * @param bool $value
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function useWriteConnectionWhenReading($value = true)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->useWriteConnectionWhenReading($value);
         }
 
@@ -8053,7 +8055,7 @@ namespace Illuminate\Support\Facades {
         public static function getPdo()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getPdo();
         }
 
@@ -8066,7 +8068,7 @@ namespace Illuminate\Support\Facades {
         public static function getRawPdo()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getRawPdo();
         }
 
@@ -8079,7 +8081,7 @@ namespace Illuminate\Support\Facades {
         public static function getReadPdo()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getReadPdo();
         }
 
@@ -8092,7 +8094,7 @@ namespace Illuminate\Support\Facades {
         public static function getRawReadPdo()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getRawReadPdo();
         }
 
@@ -8105,7 +8107,7 @@ namespace Illuminate\Support\Facades {
         public static function getDirectPdo()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getDirectPdo();
         }
 
@@ -8118,7 +8120,7 @@ namespace Illuminate\Support\Facades {
         public static function getRawDirectPdo()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getRawDirectPdo();
         }
 
@@ -8126,13 +8128,13 @@ namespace Illuminate\Support\Facades {
          * Set the PDO connection.
          *
          * @param \PDO|\Closure|null $pdo
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setPdo($pdo)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setPdo($pdo);
         }
 
@@ -8140,13 +8142,13 @@ namespace Illuminate\Support\Facades {
          * Set the PDO connection used for reading.
          *
          * @param \PDO|\Closure|null $pdo
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setReadPdo($pdo)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setReadPdo($pdo);
         }
 
@@ -8154,13 +8156,13 @@ namespace Illuminate\Support\Facades {
          * Set the read PDO connection configuration.
          *
          * @param array $config
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setReadPdoConfig($config)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setReadPdoConfig($config);
         }
 
@@ -8168,13 +8170,13 @@ namespace Illuminate\Support\Facades {
          * Set the PDO connection used for direct connections.
          *
          * @param \PDO|\Closure|null $pdo
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setDirectPdo($pdo)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setDirectPdo($pdo);
         }
 
@@ -8182,13 +8184,13 @@ namespace Illuminate\Support\Facades {
          * Set the direct PDO connection configuration.
          *
          * @param array $config
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setDirectPdoConfig($config)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setDirectPdoConfig($config);
         }
 
@@ -8201,7 +8203,7 @@ namespace Illuminate\Support\Facades {
         public static function getDirectPdoConfig()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getDirectPdoConfig();
         }
 
@@ -8214,7 +8216,7 @@ namespace Illuminate\Support\Facades {
         public static function hasDirectConnection()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->hasDirectConnection();
         }
 
@@ -8227,7 +8229,7 @@ namespace Illuminate\Support\Facades {
         public static function getName()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getName();
         }
 
@@ -8240,7 +8242,7 @@ namespace Illuminate\Support\Facades {
         public static function getNameWithReadWriteType()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getNameWithReadWriteType();
         }
 
@@ -8254,7 +8256,7 @@ namespace Illuminate\Support\Facades {
         public static function getConfig($option = null)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getConfig($option);
         }
 
@@ -8267,7 +8269,7 @@ namespace Illuminate\Support\Facades {
         public static function getDriverName()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getDriverName();
         }
 
@@ -8280,7 +8282,7 @@ namespace Illuminate\Support\Facades {
         public static function getQueryGrammar()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getQueryGrammar();
         }
 
@@ -8288,13 +8290,13 @@ namespace Illuminate\Support\Facades {
          * Set the query grammar used by the connection.
          *
          * @param \Illuminate\Database\Query\Grammars\Grammar $grammar
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setQueryGrammar($grammar)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setQueryGrammar($grammar);
         }
 
@@ -8307,7 +8309,7 @@ namespace Illuminate\Support\Facades {
         public static function getSchemaGrammar()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getSchemaGrammar();
         }
 
@@ -8315,13 +8317,13 @@ namespace Illuminate\Support\Facades {
          * Set the schema grammar used by the connection.
          *
          * @param \Illuminate\Database\Schema\Grammars\Grammar $grammar
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setSchemaGrammar($grammar)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setSchemaGrammar($grammar);
         }
 
@@ -8334,7 +8336,7 @@ namespace Illuminate\Support\Facades {
         public static function getPostProcessor()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getPostProcessor();
         }
 
@@ -8342,13 +8344,13 @@ namespace Illuminate\Support\Facades {
          * Set the query post processor used by the connection.
          *
          * @param \Illuminate\Database\Query\Processors\Processor $processor
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setPostProcessor($processor)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setPostProcessor($processor);
         }
 
@@ -8361,7 +8363,7 @@ namespace Illuminate\Support\Facades {
         public static function getEventDispatcher()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getEventDispatcher();
         }
 
@@ -8369,13 +8371,13 @@ namespace Illuminate\Support\Facades {
          * Set the event dispatcher instance on the connection.
          *
          * @param \Illuminate\Contracts\Events\Dispatcher $events
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setEventDispatcher($events)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setEventDispatcher($events);
         }
 
@@ -8388,7 +8390,7 @@ namespace Illuminate\Support\Facades {
         public static function unsetEventDispatcher()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->unsetEventDispatcher();
         }
 
@@ -8396,13 +8398,13 @@ namespace Illuminate\Support\Facades {
          * Set the transaction manager instance on the connection.
          *
          * @param \Illuminate\Database\DatabaseTransactionsManager $manager
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setTransactionManager($manager)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setTransactionManager($manager);
         }
 
@@ -8415,7 +8417,7 @@ namespace Illuminate\Support\Facades {
         public static function unsetTransactionManager()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->unsetTransactionManager();
         }
 
@@ -8428,7 +8430,7 @@ namespace Illuminate\Support\Facades {
         public static function pretending()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->pretending();
         }
 
@@ -8441,7 +8443,7 @@ namespace Illuminate\Support\Facades {
         public static function getQueryLog()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getQueryLog();
         }
 
@@ -8454,7 +8456,7 @@ namespace Illuminate\Support\Facades {
         public static function getRawQueryLog()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getRawQueryLog();
         }
 
@@ -8467,7 +8469,7 @@ namespace Illuminate\Support\Facades {
         public static function flushQueryLog()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->flushQueryLog();
         }
 
@@ -8480,7 +8482,7 @@ namespace Illuminate\Support\Facades {
         public static function enableQueryLog()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->enableQueryLog();
         }
 
@@ -8493,7 +8495,7 @@ namespace Illuminate\Support\Facades {
         public static function disableQueryLog()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->disableQueryLog();
         }
 
@@ -8506,7 +8508,7 @@ namespace Illuminate\Support\Facades {
         public static function logging()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->logging();
         }
 
@@ -8519,7 +8521,7 @@ namespace Illuminate\Support\Facades {
         public static function getDatabaseName()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getDatabaseName();
         }
 
@@ -8527,13 +8529,13 @@ namespace Illuminate\Support\Facades {
          * Set the name of the connected database.
          *
          * @param string $database
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setDatabaseName($database)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setDatabaseName($database);
         }
 
@@ -8541,13 +8543,13 @@ namespace Illuminate\Support\Facades {
          * Set the read / write type of the connection.
          *
          * @param string|null $readWriteType
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setReadWriteType($readWriteType)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setReadWriteType($readWriteType);
         }
 
@@ -8560,7 +8562,7 @@ namespace Illuminate\Support\Facades {
         public static function getTablePrefix()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->getTablePrefix();
         }
 
@@ -8568,13 +8570,13 @@ namespace Illuminate\Support\Facades {
          * Set the table prefix in use by the connection.
          *
          * @param string $prefix
-         * @return \Illuminate\Database\MySqlConnection
+         * @return \Illuminate\Database\MariaDbConnection
          * @static
          */
         public static function setTablePrefix($prefix)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->setTablePrefix($prefix);
         }
 
@@ -8589,7 +8591,7 @@ namespace Illuminate\Support\Facades {
         public static function withoutTablePrefix($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->withoutTablePrefix($callback);
         }
 
@@ -8604,7 +8606,7 @@ namespace Illuminate\Support\Facades {
         public static function resolverFor($driver, $callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            \Illuminate\Database\MySqlConnection::resolverFor($driver, $callback);
+            \Illuminate\Database\MariaDbConnection::resolverFor($driver, $callback);
         }
 
         /**
@@ -8617,7 +8619,7 @@ namespace Illuminate\Support\Facades {
         public static function getResolver($driver)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            return \Illuminate\Database\MySqlConnection::getResolver($driver);
+            return \Illuminate\Database\MariaDbConnection::getResolver($driver);
         }
 
         /**
@@ -8633,7 +8635,7 @@ namespace Illuminate\Support\Facades {
         public static function transaction($callback, $attempts = 1)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->transaction($callback, $attempts);
         }
 
@@ -8647,7 +8649,7 @@ namespace Illuminate\Support\Facades {
         public static function beginTransaction()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->beginTransaction();
         }
 
@@ -8661,7 +8663,7 @@ namespace Illuminate\Support\Facades {
         public static function commit()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->commit();
         }
 
@@ -8676,7 +8678,7 @@ namespace Illuminate\Support\Facades {
         public static function rollBack($toLevel = null)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->rollBack($toLevel);
         }
 
@@ -8689,7 +8691,7 @@ namespace Illuminate\Support\Facades {
         public static function transactionLevel()
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             return $instance->transactionLevel();
         }
 
@@ -8704,7 +8706,7 @@ namespace Illuminate\Support\Facades {
         public static function afterCommit($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->afterCommit($callback);
         }
 
@@ -8719,7 +8721,7 @@ namespace Illuminate\Support\Facades {
         public static function afterRollBack($callback)
         {
             //Method inherited from \Illuminate\Database\Connection 
-            /** @var \Illuminate\Database\MySqlConnection $instance */
+            /** @var \Illuminate\Database\MariaDbConnection $instance */
             $instance->afterRollBack($callback);
         }
 
@@ -19441,7 +19443,8 @@ namespace Illuminate\Support\Facades {
          */
         public static function dropAllTables()
         {
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            //Method inherited from \Illuminate\Database\Schema\MySqlBuilder 
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->dropAllTables();
         }
 
@@ -19453,7 +19456,8 @@ namespace Illuminate\Support\Facades {
          */
         public static function dropAllViews()
         {
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            //Method inherited from \Illuminate\Database\Schema\MySqlBuilder 
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->dropAllViews();
         }
 
@@ -19465,7 +19469,8 @@ namespace Illuminate\Support\Facades {
          */
         public static function getCurrentSchemaListing()
         {
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            //Method inherited from \Illuminate\Database\Schema\MySqlBuilder 
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getCurrentSchemaListing();
         }
 
@@ -19479,7 +19484,7 @@ namespace Illuminate\Support\Facades {
         public static function defaultStringLength($length)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::defaultStringLength($length);
+            \Illuminate\Database\Schema\MariaDbBuilder::defaultStringLength($length);
         }
 
         /**
@@ -19490,7 +19495,7 @@ namespace Illuminate\Support\Facades {
         public static function defaultTimePrecision($precision)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            return \Illuminate\Database\Schema\MySqlBuilder::defaultTimePrecision($precision);
+            return \Illuminate\Database\Schema\MariaDbBuilder::defaultTimePrecision($precision);
         }
 
         /**
@@ -19504,7 +19509,7 @@ namespace Illuminate\Support\Facades {
         public static function defaultMorphKeyType($type)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::defaultMorphKeyType($type);
+            \Illuminate\Database\Schema\MariaDbBuilder::defaultMorphKeyType($type);
         }
 
         /**
@@ -19516,7 +19521,7 @@ namespace Illuminate\Support\Facades {
         public static function morphUsingUuids()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::morphUsingUuids();
+            \Illuminate\Database\Schema\MariaDbBuilder::morphUsingUuids();
         }
 
         /**
@@ -19528,7 +19533,7 @@ namespace Illuminate\Support\Facades {
         public static function morphUsingUlids()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::morphUsingUlids();
+            \Illuminate\Database\Schema\MariaDbBuilder::morphUsingUlids();
         }
 
         /**
@@ -19541,7 +19546,7 @@ namespace Illuminate\Support\Facades {
         public static function createDatabase($name)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->createDatabase($name);
         }
 
@@ -19555,7 +19560,7 @@ namespace Illuminate\Support\Facades {
         public static function dropDatabaseIfExists($name)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->dropDatabaseIfExists($name);
         }
 
@@ -19568,7 +19573,7 @@ namespace Illuminate\Support\Facades {
         public static function getSchemas()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getSchemas();
         }
 
@@ -19582,7 +19587,7 @@ namespace Illuminate\Support\Facades {
         public static function hasTable($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->hasTable($table);
         }
 
@@ -19596,7 +19601,7 @@ namespace Illuminate\Support\Facades {
         public static function hasView($view)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->hasView($view);
         }
 
@@ -19610,7 +19615,7 @@ namespace Illuminate\Support\Facades {
         public static function getTables($schema = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getTables($schema);
         }
 
@@ -19625,7 +19630,7 @@ namespace Illuminate\Support\Facades {
         public static function getTableListing($schema = null, $schemaQualified = true)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getTableListing($schema, $schemaQualified);
         }
 
@@ -19639,7 +19644,7 @@ namespace Illuminate\Support\Facades {
         public static function getViews($schema = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getViews($schema);
         }
 
@@ -19653,7 +19658,7 @@ namespace Illuminate\Support\Facades {
         public static function getTypes($schema = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getTypes($schema);
         }
 
@@ -19668,7 +19673,7 @@ namespace Illuminate\Support\Facades {
         public static function hasColumn($table, $column)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->hasColumn($table, $column);
         }
 
@@ -19683,7 +19688,7 @@ namespace Illuminate\Support\Facades {
         public static function hasColumns($table, $columns)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->hasColumns($table, $columns);
         }
 
@@ -19699,7 +19704,7 @@ namespace Illuminate\Support\Facades {
         public static function whenTableHasColumn($table, $column, $callback)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->whenTableHasColumn($table, $column, $callback);
         }
 
@@ -19715,7 +19720,7 @@ namespace Illuminate\Support\Facades {
         public static function whenTableDoesntHaveColumn($table, $column, $callback)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->whenTableDoesntHaveColumn($table, $column, $callback);
         }
 
@@ -19732,7 +19737,7 @@ namespace Illuminate\Support\Facades {
         public static function whenTableHasIndex($table, $index, $callback, $type = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->whenTableHasIndex($table, $index, $callback, $type);
         }
 
@@ -19749,7 +19754,7 @@ namespace Illuminate\Support\Facades {
         public static function whenTableDoesntHaveIndex($table, $index, $callback, $type = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->whenTableDoesntHaveIndex($table, $index, $callback, $type);
         }
 
@@ -19766,7 +19771,7 @@ namespace Illuminate\Support\Facades {
         public static function getColumnType($table, $column, $fullDefinition = false)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getColumnType($table, $column, $fullDefinition);
         }
 
@@ -19780,7 +19785,7 @@ namespace Illuminate\Support\Facades {
         public static function getColumnListing($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getColumnListing($table);
         }
 
@@ -19794,7 +19799,7 @@ namespace Illuminate\Support\Facades {
         public static function getColumns($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getColumns($table);
         }
 
@@ -19808,7 +19813,7 @@ namespace Illuminate\Support\Facades {
         public static function getIndexes($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getIndexes($table);
         }
 
@@ -19822,7 +19827,7 @@ namespace Illuminate\Support\Facades {
         public static function getIndexListing($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getIndexListing($table);
         }
 
@@ -19838,7 +19843,7 @@ namespace Illuminate\Support\Facades {
         public static function hasIndex($table, $index, $type = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->hasIndex($table, $index, $type);
         }
 
@@ -19853,7 +19858,7 @@ namespace Illuminate\Support\Facades {
         public static function hasForeignKey($table, $foreignKey)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->hasForeignKey($table, $foreignKey);
         }
 
@@ -19867,7 +19872,7 @@ namespace Illuminate\Support\Facades {
         public static function getForeignKeys($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getForeignKeys($table);
         }
 
@@ -19882,7 +19887,7 @@ namespace Illuminate\Support\Facades {
         public static function table($table, $callback)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->table($table, $callback);
         }
 
@@ -19897,7 +19902,7 @@ namespace Illuminate\Support\Facades {
         public static function create($table, $callback)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->create($table, $callback);
         }
 
@@ -19911,7 +19916,7 @@ namespace Illuminate\Support\Facades {
         public static function drop($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->drop($table);
         }
 
@@ -19925,7 +19930,7 @@ namespace Illuminate\Support\Facades {
         public static function dropIfExists($table)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->dropIfExists($table);
         }
 
@@ -19940,7 +19945,7 @@ namespace Illuminate\Support\Facades {
         public static function dropColumns($table, $columns)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->dropColumns($table, $columns);
         }
 
@@ -19954,7 +19959,7 @@ namespace Illuminate\Support\Facades {
         public static function dropAllTypes()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->dropAllTypes();
         }
 
@@ -19969,7 +19974,7 @@ namespace Illuminate\Support\Facades {
         public static function rename($from, $to)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->rename($from, $to);
         }
 
@@ -19982,7 +19987,7 @@ namespace Illuminate\Support\Facades {
         public static function enableForeignKeyConstraints()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->enableForeignKeyConstraints();
         }
 
@@ -19995,7 +20000,7 @@ namespace Illuminate\Support\Facades {
         public static function disableForeignKeyConstraints()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->disableForeignKeyConstraints();
         }
 
@@ -20010,7 +20015,7 @@ namespace Illuminate\Support\Facades {
         public static function withoutForeignKeyConstraints($callback)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->withoutForeignKeyConstraints($callback);
         }
 
@@ -20024,7 +20029,7 @@ namespace Illuminate\Support\Facades {
         public static function ensureVectorExtensionExists($schema = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->ensureVectorExtensionExists($schema);
         }
 
@@ -20040,7 +20045,7 @@ namespace Illuminate\Support\Facades {
         public static function ensureExtensionExists($name, $schema = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->ensureExtensionExists($name, $schema);
         }
 
@@ -20053,7 +20058,7 @@ namespace Illuminate\Support\Facades {
         public static function getCurrentSchemaName()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getCurrentSchemaName();
         }
 
@@ -20069,7 +20074,7 @@ namespace Illuminate\Support\Facades {
         public static function parseSchemaAndTable($reference, $withDefaultSchema = null)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->parseSchemaAndTable($reference, $withDefaultSchema);
         }
 
@@ -20082,7 +20087,7 @@ namespace Illuminate\Support\Facades {
         public static function getConnection()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             return $instance->getConnection();
         }
 
@@ -20096,7 +20101,7 @@ namespace Illuminate\Support\Facades {
         public static function blueprintResolver($resolver)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            /** @var \Illuminate\Database\Schema\MySqlBuilder $instance */
+            /** @var \Illuminate\Database\Schema\MariaDbBuilder $instance */
             $instance->blueprintResolver($resolver);
         }
 
@@ -20112,7 +20117,7 @@ namespace Illuminate\Support\Facades {
         public static function macro($name, $macro)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::macro($name, $macro);
+            \Illuminate\Database\Schema\MariaDbBuilder::macro($name, $macro);
         }
 
         /**
@@ -20127,7 +20132,7 @@ namespace Illuminate\Support\Facades {
         public static function mixin($mixin, $replace = true)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::mixin($mixin, $replace);
+            \Illuminate\Database\Schema\MariaDbBuilder::mixin($mixin, $replace);
         }
 
         /**
@@ -20140,7 +20145,7 @@ namespace Illuminate\Support\Facades {
         public static function hasMacro($name)
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            return \Illuminate\Database\Schema\MySqlBuilder::hasMacro($name);
+            return \Illuminate\Database\Schema\MariaDbBuilder::hasMacro($name);
         }
 
         /**
@@ -20152,7 +20157,7 @@ namespace Illuminate\Support\Facades {
         public static function flushMacros()
         {
             //Method inherited from \Illuminate\Database\Schema\Builder 
-            \Illuminate\Database\Schema\MySqlBuilder::flushMacros();
+            \Illuminate\Database\Schema\MariaDbBuilder::flushMacros();
         }
 
             }

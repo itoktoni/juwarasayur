@@ -25,7 +25,7 @@ class ChatbotController extends Controller
      */
     public function getShow($id)
     {
-        $model = $this->model->findOrFail($id);
+        $model = $this->model->with('has_chat')->findOrFail($id);
 
         return $this->views('pages.chatbot.show', ['model' => $model]);
     }
