@@ -131,9 +131,49 @@ class WebsiteSettingController extends Controller
 
         WebsiteSetting::persist($merged);
 
+        // Write frontend settings to .env
+        $envMap = [
+            'FRONTEND_HERO_TITLE' => $frontend['hero']['title'],
+            'FRONTEND_HERO_SUBTITLE' => $frontend['hero']['subtitle'],
+            'FRONTEND_HERO_CTA_TEXT' => $frontend['hero']['cta_text'],
+            'FRONTEND_FLASH_SALE_TITLE' => $frontend['flash_sale']['title'],
+            'FRONTEND_FLASH_SALE_COUNT' => $frontend['flash_sale']['count'],
+            'FRONTEND_FLASH_SALE_HOURS' => $frontend['flash_sale']['hours'],
+            'FRONTEND_SHOW_LATEST' => $frontend['latest']['show'] ? 'true' : 'false',
+            'FRONTEND_LATEST_TITLE' => $frontend['latest']['title'],
+        ];
+        $this->updateEnv($envMap);
+
+        WebsiteSetting::persist($merged);
+
         flash()->success('Website settings saved.');
 
         return Redirect::route('settings.website');
+    }
+
+    private function updateEnv(array $data): void
+    {
+        $path = base_path('.env');
+        if (! file_exists($path)) {
+            return;
+        }
+
+        $env = file_get_contents($path);
+
+        foreach ($data as $key => $value) {
+            $value = (string) $value;
+            if (str_contains($value, ' ')) {
+                $value = '"'.$value.'"';
+            }
+
+            if (preg_match('/^'.$key.'=.*/m', $env)) {
+                $env = preg_replace('/^'.$key.'=.*/m', $key.'='.$value, $env);
+            } else {
+                $env .= "\n".$key.'='.$value;
+            }
+        }
+
+        file_put_contents($path, $env);
     }
 
     private function storeFile($file, string $dir): string
