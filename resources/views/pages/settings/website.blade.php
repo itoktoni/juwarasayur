@@ -309,6 +309,7 @@
             @php $shipCfg = config('frontend.shipping', ['pickup'=>true,'cod'=>true,'delivery'=>true]); @endphp
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="hidden" name="shipping_pickup" value="0">
                     <input type="checkbox" name="shipping_pickup" value="1" {{ old('shipping_pickup', $frontend['shipping']['pickup'] ?? $shipCfg['pickup']) ? 'checked' : '' }}
                         class="w-5 h-5 rounded accent-primary">
                     <span>
@@ -317,6 +318,7 @@
                     </span>
                 </label>
                 <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="hidden" name="shipping_cod" value="0">
                     <input type="checkbox" name="shipping_cod" value="1" {{ old('shipping_cod', $frontend['shipping']['cod'] ?? $shipCfg['cod']) ? 'checked' : '' }}
                         class="w-5 h-5 rounded accent-primary">
                     <span>
@@ -325,6 +327,7 @@
                     </span>
                 </label>
                 <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="hidden" name="shipping_delivery" value="0">
                     <input type="checkbox" name="shipping_delivery" value="1" {{ old('shipping_delivery', $frontend['shipping']['delivery'] ?? $shipCfg['delivery']) ? 'checked' : '' }}
                         class="w-5 h-5 rounded accent-primary">
                     <span>
