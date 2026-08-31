@@ -77,9 +77,10 @@ return [
                 $port = $req->getPort();
                 $defaultPort = $scheme === 'https' ? 443 : 80;
 
-                return $scheme . '://' . $host . ($port !== $defaultPort ? ':' . $port : '');
+                return $scheme.'://'.$host.($port !== $defaultPort ? ':'.$port : '');
             }
-        } catch (\Throwable) {}
+        } catch (Throwable) {
+        }
 
         return 'http://localhost';
     })(),

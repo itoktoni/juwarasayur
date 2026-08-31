@@ -76,7 +76,12 @@ class WebsiteSetting
 
         foreach ($values as $key => $value) {
             if (preg_match('/[\s"\'#]/', (string) $value)) {
-                $value = '"'.str_replace(['\\', '"'], ['\\\\', '\\"'], (string) $value).'"';
+                // Escape backslash & quote, lalu newline -> escape \n literal agar
+                // nilai tetap satu baris (upsert regex di bawah hanya mengganti satu
+                // baris; phpdotenv mengembalikan \n menjadi newline saat membaca).
+                $escaped = str_replace(['\\', '"'], ['\\\\', '\\"'], (string) $value);
+                $escaped = str_replace(["\r\n", "\r", "\n"], '\n', $escaped);
+                $value = '"'.$escaped.'"';
             }
 
             $pattern = '/^'.preg_quote($key, '/').'=.*$/m';

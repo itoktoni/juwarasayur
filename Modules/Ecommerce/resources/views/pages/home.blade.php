@@ -57,6 +57,10 @@
                                 <span class="material-symbols-outlined text-xl text-on-surface-variant">receipt_long</span>
                                 Pesanan
                             </a>
+                            <a href="{{ route('dashboard.download-prices') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-xl text-on-surface-variant">download</span>
+                                Download Harga
+                            </a>
                             <div class="border-t border-outline-variant">
                                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                                     @csrf
@@ -307,5 +311,12 @@
     </script>
 
     @include('ecommerce::components.cart-button')
+
+    {{-- Floating chat button --}}
+    <a href="{{ url('/chat') }}" target="_blank" rel="noopener"
+       style="position:fixed;bottom:10px;right:16px;z-index:9999;width:56px;height:56px;border-radius:50%;background:var(--color-primary,#388e3c);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3);text-decoration:none;"
+       title="Chat dengan kami">
+        <span class="material-symbols-outlined" style="font-size:28px;">chat</span>
+    </a>
 </body>
 </html>

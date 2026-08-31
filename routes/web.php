@@ -35,6 +35,9 @@ Route::middleware('auth')->post('/centrifugo/token', function (Request $request)
     ]);
 });
 
+// Download harga produk (semua role yang login)
+Route::middleware(['auth', 'verified'])->get('/dashboard/download-prices', [DashboardController::class, 'downloadPrices'])->name('dashboard.download-prices');
+
 // Halaman admin: prefix /admin, diblokir untuk user tipe customer & reseller
 Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->group(function () {
 

@@ -97,21 +97,29 @@ class HomeController extends Controller
      */
     private function homepageSettings(): array
     {
+        $env = config('frontend', []);
+
+        $hero = $env['hero'] ?? [];
+        $flash = $env['flash_sale'] ?? [];
+        $latest = $env['latest'] ?? [];
+
+        $defaults = [
+            'hero_title' => $hero['title'] ?? 'Sayur & Sembako Segar, Langsung dari Gudang',
+            'hero_subtitle' => $hero['subtitle'] ?? 'Harga grosir untuk semua. Pesan mudah, ambil di gudang atau kirim ke lokasi Anda.',
+            'hero_cta_text' => $hero['cta_text'] ?? 'Mulai Belanja',
+            'flash_sale_title' => $flash['title'] ?? 'Flash Sale',
+            'flash_sale_count' => $flash['count'] ?? 6,
+            'flash_sale_hours' => $flash['hours'] ?? 0,
+            'show_latest' => $latest['show'] ?? true,
+            'latest_title' => $latest['title'] ?? 'Produk Terbaru',
+            'best_selling_title' => 'Paling Laris',
+        ];
+
         $entry = Content::query()
             ->whereHas('has_type', fn ($q) => $q->where('slug', 'homepage'))
             ->published()
             ->first();
 
-        return array_merge([
-            'hero_title' => 'Sayur & Sembako Segar, Langsung dari Gudang',
-            'hero_subtitle' => 'Harga grosir untuk semua. Pesan mudah, ambil di gudang atau kirim ke lokasi Anda.',
-            'hero_cta_text' => 'Mulai Belanja',
-            'flash_sale_title' => 'Flash Sale',
-            'flash_sale_count' => 6,
-            'flash_sale_hours' => 0,
-            'show_latest' => true,
-            'latest_title' => 'Produk Terbaru',
-            'best_selling_title' => 'Paling Laris',
-        ], $entry?->meta ?? []);
+        return array_merge($defaults, $entry?->meta ?? []);
     }
 }

@@ -38,6 +38,11 @@ class ChatbotSession extends BaseModel
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function has_chat()
+    {
+        return $this->hasMany(WebChatMessage::class, 'session_token', 'messenger_user');
+    }
+
     /**
      * Reset conversation to ordering state (keep identity & cart intact).
      */

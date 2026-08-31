@@ -131,13 +131,24 @@ class CodShippingService
     }
 
     /**
-     * Ongkir berdasarkan jarak (km): price_per_km * km, minimal min_fee.
+     * Ongkir berdasarkan jarak (km):
+     * - Gratis jika jarak <= free_km (default 10 km)
+     * - Jika lebih: charge (jarak - free_km) * price_per_km, minimal min_fee.
      */
     public function shippingFee(float $distanceKm): float
     {
-        $fee = ceil(max(0, $distanceKm)) * (float) config('so.shipping.price_per_km', 2500);
+        $freeKm = (float) config('frontend.delivery.free_km', 10);
+        $pricePerKm = (float) config('frontend.delivery.price_per_km', 2500);
+        $minFee = (float) config('frontend.delivery.min_fee', 10000);
 
-        return round(max($fee, (float) config('so.shipping.min_fee', 10000)), 2);
+        if ($distanceKm <= $freeKm) {
+            return 0;
+        }
+
+        $billableKm = ceil($distanceKm - $freeKm);
+        $fee = $billableKm * $pricePerKm;
+
+        return round(max($fee, $minFee), 2);
     }
 
     /**

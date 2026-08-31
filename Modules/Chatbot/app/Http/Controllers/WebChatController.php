@@ -599,7 +599,6 @@ class WebChatController extends Controller
             ->where('is_active', true)
             ->where('product_status', 'active')
             ->orderBy('product_nama')
-            ->limit(20)
             ->get();
     }
 

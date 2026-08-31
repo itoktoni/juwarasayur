@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Charts\DashboardChart;
 use App\Enums\UserTypeEnum;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Modules\Catalog\Models\Product;
@@ -104,5 +105,47 @@ class DashboardController extends Controller
 
         return view('dashboard.reseller', compact('stats', 'recentOrders'))
             ->with('salesChart', $chart->resellerSales($user->id));
+    }
+
+    /**
+     * Download PDF daftar harga produk.
+     * - Admin/Editor/Developer: 2 kolom (harga normal + harga reseller)
+     * - Reseller: 1 kolom (harga reseller setelah diskon)
+     * - Customer/Affiliator: 1 kolom (harga normal)
+     */
+    public function downloadPrices(Request $request)
+    {
+        $user = $request->user();
+        $products = Product::where('is_active', true)
+            ->orderBy('product_nama')
+            ->get();
+
+        $isAdmin = in_array($user->role, ['admin', 'editor', 'developer']);
+        $isReseller = $user->isReseller();
+
+        $items = $products->map(function ($product) {
+            $hargaNormal = (float) $product->product_harga;
+            $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
+            $hargaReseller = $hargaNormal * (1 - $resellerFee / 100);
+
+            return [
+                'nama' => $product->product_nama,
+                'harga_normal' => $hargaNormal,
+                'harga_reseller' => $hargaReseller,
+                'reseller_fee' => $resellerFee,
+            ];
+        });
+
+        $pdf = Pdf::loadView('pdf.product-prices', [
+            'user' => $user,
+            'items' => $items,
+            'isAdmin' => $isAdmin,
+            'isReseller' => $isReseller,
+            'date' => Carbon::now()->format('d M Y'),
+        ]);
+
+        $filename = 'daftar-harga-'.Carbon::now()->format('Y-m-d').'.pdf';
+
+        return $pdf->download($filename);
     }
 }

@@ -3,16 +3,16 @@
 namespace Modules\Chatbot\Models;
 
 use App\Models\BaseModel;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 
 /**
  * Riwayat chat web (halaman WhatsApp-like). Identitas anonim per browser
  * via cookie session_token — terpisah dari ChatbotSession (WA/Telegram).
  */
-#[Fillable(['session_token', 'role', 'content', 'ui'])]
 class WebChatMessage extends BaseModel
 {
     protected $table = 'chat_web_messages';
+
+    protected $fillable = ['session_token', 'role', 'content', 'ui'];
 
     public static $sortColumns = ['created_at'];
 

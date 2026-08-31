@@ -27,11 +27,11 @@ class ForceHttpsBehindProxy
             // secure (real forwarded port). When we force the scheme via host match,
             // getPort() is the LOCAL port (e.g. 8000) which must never leak into
             // the public URL.
-            $root = 'https://' . $request->getHost();
+            $root = 'https://'.$request->getHost();
             if ($request->secure()) {
                 $port = $request->getPort();
                 if ($port !== 80 && $port !== 443) {
-                    $root .= ':' . $port;
+                    $root .= ':'.$port;
                 }
             }
 

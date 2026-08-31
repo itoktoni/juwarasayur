@@ -64,6 +64,10 @@
                         <span class="material-symbols-outlined text-xl">person</span>
                         <span class="font-body-sm text-body-sm">My Profile</span>
                     </a>
+                    <a href="{{ route('dashboard.download-prices') }}" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-on-surface">
+                        <span class="material-symbols-outlined text-xl">download</span>
+                        <span class="font-body-sm text-body-sm">Download Harga</span>
+                    </a>
                     <a href="#" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-on-surface">
                         <span class="material-symbols-outlined text-xl">help</span>
                         <span class="font-body-sm text-body-sm">Help & Support</span>

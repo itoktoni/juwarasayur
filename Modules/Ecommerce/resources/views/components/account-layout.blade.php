@@ -51,6 +51,9 @@
                             <a href="{{ route('ecommerce.orders.index') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
                                 <span class="material-symbols-outlined text-xl text-on-surface-variant">receipt_long</span> Pesanan
                             </a>
+                            <a href="{{ route('dashboard.download-prices') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-xl text-on-surface-variant">download</span> Download Harga
+                            </a>
                             @if($user?->isAffiliator())
                                 <a href="{{ route('account.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('account.dashboard') ? 'text-primary font-bold bg-primary/5' : 'text-on-surface hover:bg-surface-container-low' }} transition-colors">
                                     <span class="material-symbols-outlined text-xl text-on-surface-variant">space_dashboard</span> Dashboard

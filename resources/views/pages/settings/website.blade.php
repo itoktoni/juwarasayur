@@ -33,8 +33,8 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-on-surface mb-1">Description</label>
-                    <textarea name="description" rows="3"
-                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('description', $settings['description'] ?? '') }}</textarea>
+                    <textarea name="description" rows="6" class="cms-wysiwyg" data-wysiwyg="1">{{ old('description', $settings['description'] ?? '') }}</textarea>
+                    <p class="text-xs text-on-surface-variant mt-1">Bisa format rich text (bold, list, link, gambar) — tampil apa adanya di halaman frontend.</p>
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-on-surface mb-1">Address</label>
@@ -217,6 +217,54 @@
                 </div>
             </div>
 
+            {{-- Homepage / Frontend --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Homepage</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Hero Title</label>
+                    <input type="text" name="hero_title" value="{{ old('hero_title', $frontend['hero']['title'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Hero Subtitle</label>
+                    <textarea name="hero_subtitle" rows="2"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('hero_subtitle', $frontend['hero']['subtitle'] ?? '') }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Hero CTA Text</label>
+                    <input type="text" name="hero_cta_text" value="{{ old('hero_cta_text', $frontend['hero']['cta_text'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Flash Sale Title</label>
+                    <input type="text" name="flash_sale_title" value="{{ old('flash_sale_title', $frontend['flash_sale']['title'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Flash Sale — Jumlah Produk</label>
+                    <input type="number" min="1" max="20" name="flash_sale_count" value="{{ old('flash_sale_count', $frontend['flash_sale']['count'] ?? 6) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Flash Sale — Durasi (jam)</label>
+                    <input type="number" min="1" max="48" name="flash_sale_hours" value="{{ old('flash_sale_hours', $frontend['flash_sale']['hours'] ?? 12) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Tampilkan Produk Terbaru</label>
+                    <select name="show_latest"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                        <option value="1" @selected(old('show_latest', $frontend['latest']['show'] ?? true))>Ya</option>
+                        <option value="0" @selected(!old('show_latest', $frontend['latest']['show'] ?? true))>Tidak</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Judul Produk Terbaru</label>
+                    <input type="text" name="latest_title" value="{{ old('latest_title', $frontend['latest']['title'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+            </div>
+
             {{-- Payment Settings --}}
             <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Payment & Webhook</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -252,6 +300,92 @@
                     </div>
                     <p class="text-xs text-on-surface-variant mt-1">Secret untuk verifikasi webhook NotifyHook (header X-NotifyHook-Signature = HMAC-SHA256 raw body). Kosongkan = tanpa verifikasi signature.</p>
                     @error('notifyhook_secret')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
+                </div>
+            </div>
+
+            {{-- Shipping Methods --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Metode Pengiriman</h3>
+            <p class="text-xs text-on-surface-variant mb-4">Aktifkan/nonaktifkan metode pengiriman yang tersedia di checkout.</p>
+            @php $shipCfg = config('frontend.shipping', ['pickup'=>true,'cod'=>true,'delivery'=>true]); @endphp
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="hidden" name="shipping_pickup" value="0">
+                    <input type="checkbox" name="shipping_pickup" value="1" {{ old('shipping_pickup', $frontend['shipping']['pickup'] ?? $shipCfg['pickup']) ? 'checked' : '' }}
+                        class="w-5 h-5 rounded accent-primary">
+                    <span>
+                        <span class="block font-semibold text-on-surface text-sm">Pickup (Ambil di Gudang)</span>
+                        <span class="block text-xs text-on-surface-variant">Gratis, customer ambil sendiri.</span>
+                    </span>
+                </label>
+                <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="hidden" name="shipping_cod" value="0">
+                    <input type="checkbox" name="shipping_cod" value="1" {{ old('shipping_cod', $frontend['shipping']['cod'] ?? $shipCfg['cod']) ? 'checked' : '' }}
+                        class="w-5 h-5 rounded accent-primary">
+                    <span>
+                        <span class="block font-semibold text-on-surface text-sm">COD (Bayar di Titik)</span>
+                        <span class="block text-xs text-on-surface-variant">Bayar cash saat bertemu.</span>
+                    </span>
+                </label>
+                <label class="flex items-center gap-3 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest cursor-pointer hover:bg-surface-container">
+                    <input type="hidden" name="shipping_delivery" value="0">
+                    <input type="checkbox" name="shipping_delivery" value="1" {{ old('shipping_delivery', $frontend['shipping']['delivery'] ?? $shipCfg['delivery']) ? 'checked' : '' }}
+                        class="w-5 h-5 rounded accent-primary">
+                    <span>
+                        <span class="block font-semibold text-on-surface text-sm">Delivery (Diantar ke Rumah)</span>
+                        <span class="block text-xs text-on-surface-variant">Dikirim ke alamat customer.</span>
+                    </span>
+                </label>
+            </div>
+
+            {{-- Delivery Pricing --}}
+            @php $delCfg = config('frontend.delivery', ['free_km'=>10,'price_per_km'=>2500,'min_fee'=>10000]); @endphp
+            <h4 class="text-sm font-bold text-on-surface mb-3">Biaya Delivery (per km)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Gratis Ongkir (km)</label>
+                    <input type="number" min="0" max="100" name="delivery_free_km"
+                        value="{{ old('delivery_free_km', $frontend['delivery']['free_km'] ?? $delCfg['free_km']) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Jarak maksimal gratis ongkir.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Harga per km (Rp)</label>
+                    <input type="number" min="0" step="100" name="delivery_price_per_km"
+                        value="{{ old('delivery_price_per_km', $frontend['delivery']['price_per_km'] ?? $delCfg['price_per_km']) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Biaya per km untuk jarak di atas batas gratis.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Minimal Ongkir (Rp)</label>
+                    <input type="number" min="0" step="100" name="delivery_min_fee"
+                        value="{{ old('delivery_min_fee', $frontend['delivery']['min_fee'] ?? $delCfg['min_fee']) }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                    <p class="text-xs text-on-surface-variant mt-1">Ongkir minimal jika melebihi batas gratis.</p>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <h3 class="text-lg font-bold text-on-surface mb-4 pt-4 border-t border-outline-variant">Footer Website</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Tagline</label>
+                    <textarea name="footer_tagline" rows="2"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('footer_tagline', $frontend['footer']['tagline'] ?? '') }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Alamat</label>
+                    <textarea name="footer_alamat" rows="2"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('footer_alamat', $frontend['footer']['alamat'] ?? '') }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Telepon</label>
+                    <input type="text" name="footer_telepon" value="{{ old('footer_telepon', $frontend['footer']['telepon'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Email</label>
+                    <input type="email" name="footer_email" value="{{ old('footer_email', $frontend['footer']['email'] ?? '') }}"
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
                 </div>
             </div>
 

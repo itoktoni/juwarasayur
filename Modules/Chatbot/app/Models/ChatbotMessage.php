@@ -3,16 +3,16 @@
 namespace Modules\Chatbot\Models;
 
 use App\Models\BaseModel;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Log percakapan chatbot (semua channel): pesan customer & balasan bot.
  */
-#[Fillable(['chatbot_session_id', 'role', 'content'])]
 class ChatbotMessage extends BaseModel
 {
     protected $table = 'chatbot_messages';
+
+    protected $fillable = ['chatbot_session_id', 'role', 'content'];
 
     public static $sortColumns = ['created_at'];
 

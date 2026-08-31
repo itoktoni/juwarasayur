@@ -27,6 +27,7 @@ class WebsiteSettingController extends Controller
                 'unique_digits' => (int) env('QRIS_UNIQUE_DIGITS', 2),
                 'notifyhook_secret' => env('NOTIFYHOOK_SECRET', ''),
             ],
+            'frontend' => config('frontend'),
         ]);
     }
 
@@ -62,6 +63,28 @@ class WebsiteSettingController extends Controller
             'notifyhook_secret' => ['nullable', 'string', 'max:255'],
             // CSV import
             'csv_delimiter' => ['required', 'string', 'in:,;'],
+            // Homepage / Frontend
+            'hero_title' => ['nullable', 'string', 'max:255'],
+            'hero_subtitle' => ['nullable', 'string'],
+            'hero_cta_text' => ['nullable', 'string', 'max:100'],
+            'flash_sale_title' => ['nullable', 'string', 'max:100'],
+            'flash_sale_count' => ['required', 'integer', 'min:1', 'max:20'],
+            'flash_sale_hours' => ['required', 'integer', 'min:1', 'max:48'],
+            'show_latest' => ['required', 'boolean'],
+            'latest_title' => ['nullable', 'string', 'max:100'],
+            // Footer
+            'footer_tagline' => ['nullable', 'string'],
+            'footer_alamat' => ['nullable', 'string'],
+            'footer_telepon' => ['nullable', 'string', 'max:50'],
+            'footer_email' => ['nullable', 'email', 'max:255'],
+            // Shipping methods
+            'shipping_pickup' => ['required', 'boolean'],
+            'shipping_cod' => ['required', 'boolean'],
+            'shipping_delivery' => ['required', 'boolean'],
+            // Delivery pricing
+            'delivery_free_km' => ['required', 'numeric', 'min:0', 'max:100'],
+            'delivery_price_per_km' => ['required', 'numeric', 'min:0'],
+            'delivery_min_fee' => ['required', 'numeric', 'min:0'],
         ]);
 
         $existing = WebsiteSetting::raw();
@@ -97,13 +120,100 @@ class WebsiteSettingController extends Controller
         }
         unset($validated['primary_color'], $validated['remove_logo'], $validated['remove_favicon']);
 
-        $merged = array_merge($existing, $validated, ['colors' => $colors]);
+        // Frontend / Homepage settings
+        $frontend = $existing['frontend'] ?? [];
+        $frontend['hero'] = [
+            'title' => $validated['hero_title'] ?? '',
+            'subtitle' => $validated['hero_subtitle'] ?? '',
+            'cta_text' => $validated['hero_cta_text'] ?? 'Mulai Belanja',
+        ];
+        $frontend['flash_sale'] = [
+            'title' => $validated['flash_sale_title'] ?? 'Flash Sale',
+            'count' => (int) ($validated['flash_sale_count'] ?? 6),
+            'hours' => (int) ($validated['flash_sale_hours'] ?? 12),
+        ];
+        $frontend['latest'] = [
+            'show' => (bool) ($validated['show_latest'] ?? true),
+            'title' => $validated['latest_title'] ?? 'Produk Terbaru',
+        ];
+        $frontend['footer'] = [
+            'tagline' => $validated['footer_tagline'] ?? '',
+            'alamat' => $validated['footer_alamat'] ?? '',
+            'telepon' => $validated['footer_telepon'] ?? '',
+            'email' => $validated['footer_email'] ?? '',
+        ];
+        $frontend['shipping'] = [
+            'pickup' => (bool) ($validated['shipping_pickup'] ?? true),
+            'cod' => (bool) ($validated['shipping_cod'] ?? true),
+            'delivery' => (bool) ($validated['shipping_delivery'] ?? true),
+        ];
+        $frontend['delivery'] = [
+            'free_km' => (float) ($validated['delivery_free_km'] ?? 10),
+            'price_per_km' => (float) ($validated['delivery_price_per_km'] ?? 2500),
+            'min_fee' => (float) ($validated['delivery_min_fee'] ?? 10000),
+        ];
+        unset($validated['hero_title'], $validated['hero_subtitle'], $validated['hero_cta_text'],
+            $validated['flash_sale_title'], $validated['flash_sale_count'], $validated['flash_sale_hours'],
+            $validated['show_latest'], $validated['latest_title'],
+            $validated['footer_tagline'], $validated['footer_alamat'], $validated['footer_telepon'], $validated['footer_email'],
+            $validated['shipping_pickup'], $validated['shipping_cod'], $validated['shipping_delivery'],
+            $validated['delivery_free_km'], $validated['delivery_price_per_km'], $validated['delivery_min_fee']);
+
+        $merged = array_merge($existing, $validated, ['colors' => $colors, 'frontend' => $frontend]);
+
+        // Write frontend + footer settings to .env
+        $envMap = [
+            'FRONTEND_HERO_TITLE' => $frontend['hero']['title'],
+            'FRONTEND_HERO_SUBTITLE' => $frontend['hero']['subtitle'],
+            'FRONTEND_HERO_CTA_TEXT' => $frontend['hero']['cta_text'],
+            'FRONTEND_FLASH_SALE_TITLE' => $frontend['flash_sale']['title'],
+            'FRONTEND_FLASH_SALE_COUNT' => $frontend['flash_sale']['count'],
+            'FRONTEND_FLASH_SALE_HOURS' => $frontend['flash_sale']['hours'],
+            'FRONTEND_SHOW_LATEST' => $frontend['latest']['show'] ? 'true' : 'false',
+            'FRONTEND_LATEST_TITLE' => $frontend['latest']['title'],
+            'FRONTEND_FOOTER_TAGLINE' => $frontend['footer']['tagline'] ?? '',
+            'FRONTEND_FOOTER_ALAMAT' => $frontend['footer']['alamat'] ?? '',
+            'FRONTEND_FOOTER_TELEPON' => $frontend['footer']['telepon'] ?? '',
+            'FRONTEND_FOOTER_EMAIL' => $frontend['footer']['email'] ?? '',
+            'FRONTEND_SHIPPING_PICKUP' => ($frontend['shipping']['pickup'] ?? true) ? 'true' : 'false',
+            'FRONTEND_SHIPPING_COD' => ($frontend['shipping']['cod'] ?? true) ? 'true' : 'false',
+            'FRONTEND_SHIPPING_DELIVERY' => ($frontend['shipping']['delivery'] ?? true) ? 'true' : 'false',
+            'FRONTEND_DELIVERY_FREE_KM' => $frontend['delivery']['free_km'] ?? 10,
+            'FRONTEND_DELIVERY_PRICE_PER_KM' => $frontend['delivery']['price_per_km'] ?? 2500,
+            'FRONTEND_DELIVERY_MIN_FEE' => $frontend['delivery']['min_fee'] ?? 10000,
+        ];
+        $this->updateEnv($envMap);
 
         WebsiteSetting::persist($merged);
 
         flash()->success('Website settings saved.');
 
         return Redirect::route('settings.website');
+    }
+
+    private function updateEnv(array $data): void
+    {
+        $path = base_path('.env');
+        if (! file_exists($path)) {
+            return;
+        }
+
+        $env = file_get_contents($path);
+
+        foreach ($data as $key => $value) {
+            $value = (string) $value;
+            if (str_contains($value, ' ')) {
+                $value = '"'.$value.'"';
+            }
+
+            if (preg_match('/^'.$key.'=.*/m', $env)) {
+                $env = preg_replace('/^'.$key.'=.*/m', $key.'='.$value, $env);
+            } else {
+                $env .= "\n".$key.'='.$value;
+            }
+        }
+
+        file_put_contents($path, $env);
     }
 
     private function storeFile($file, string $dir): string
