@@ -620,7 +620,7 @@
         await sendToAI(message);
     });
 // ---------- Picker produk ----------
-    const letterOf = (i) => String.fromCharCode(97 + i); // a, b, c, ...
+    const letterOf = (i) => i + 1; // 1, 2, 3, ...
 
     function showLightbox(src) {
         const lb = document.getElementById('lightbox');
