@@ -12,8 +12,6 @@ class PaymentWebhookController extends Controller
 {
     private const UNIQUE_AMOUNT_VALIDITY_MINUTES_KEY = 'QRIS_EXPIRY_MINUTES';
 
-    private const SIGNATURE_HEADER = 'X-NotifyHook-Signature';
-
     private const PACKAGE_MAP = [
         'com.gojek.gopaymerchant' => 'qris',
         'com.gojek.gopay' => 'gopay',
@@ -51,14 +49,13 @@ class PaymentWebhookController extends Controller
             'payload' => $payload,
             'raw_body' => $request->all(),
             'headers' => $request->headers->all(),
-            'hmac' => $request->get('X-NofityHook-Signature') ?? null,
         ]);
 
-        // 1) Verifikasi signature NotifyHook (HMAC-SHA256 raw body)
-        if (! $this->verifySignature($request, $rawBody)) {
-            Log::channel('webhook')->warning('Invalid signature', ['ip' => $request->ip()]);
+        // Verifikasi token NotifyHook
+        if (! $this->verifyToken($request)) {
+            Log::channel('webhook')->warning('Invalid token', ['ip' => $request->ip()]);
 
-            return Response::json(['status' => false, 'message' => 'Invalid signature.'], 401);
+            return Response::json(['status' => false, 'message' => 'Invalid token.'], 401);
         }
 
         // 2) Data notifikasi — NotifyHook membungkus isi notifikasi di key "payload"
@@ -110,50 +107,22 @@ class PaymentWebhookController extends Controller
     }
 
     /**
-     * Verifikasi header X-NotifyHook-Signature.
-     * Nilai header: HMAC-SHA256 hex dengan NOTIFYHOOK_SECRET. Prefix "sha256=" opsional.
-     * Kandidat message yang dicoba (skema NotifyHook bisa bervariasi):
-     *   1. Raw request body penuh (skema paling umum)
-     *   2. JSON "payload" (isi notifikasi) yang di-encode ulang
-     *   3. JSON "raw_body" yang di-encode ulang
-     * Jika secret belum dikonfigurasi, verifikasi dilewati.
+     * Verifikasi token dari payload.
      */
-    private function verifySignature(Request $request, string $rawBody): bool
+    private function verifyToken(Request $request): bool
     {
         $secret = (string) env('NOTIFYHOOK_SECRET', '');
 
         if ($secret === '') {
-            Log::channel('webhook')->warning('NOTIFYHOOK_SECRET not set, skipping signature verification');
+            Log::channel('webhook')->warning('NOTIFYHOOK_SECRET not set, skipping verification');
 
             return true;
         }
 
-        $provided = trim((string) $request->header(self::SIGNATURE_HEADER, ''));
+        $payload = $request->json()->all() ?: $request->all();
+        $token = $payload['payload']['token'] ?? $payload['token'] ?? '';
 
-        if ($provided === '') {
-            return false;
-        }
-
-        $provided = preg_replace('/^sha256=/i', '', $provided);
-
-        $payload = json_decode($rawBody, true) ?: [];
-
-        $candidates = [$rawBody];
-
-        foreach (['payload', 'raw_body'] as $key) {
-            if (isset($payload[$key]) && is_array($payload[$key])) {
-                $candidates[] = json_encode($payload[$key], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                $candidates[] = json_encode($payload[$key]);
-            }
-        }
-
-        foreach (array_unique($candidates) as $candidate) {
-            if (hash_equals(hash_hmac('sha256', $candidate, $secret), $provided)) {
-                return true;
-            }
-        }
-
-        return false;
+        return hash_equals($secret, $token);
     }
 
     /**
