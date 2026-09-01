@@ -29,11 +29,11 @@ class CatalogService
             ->where('is_active', true)
             ->where('product_status', 'active')
             ->when($keyword !== null && $keyword !== '', function ($q) use ($keyword) {
-                foreach (explode(' ', $keyword) as $word) {
-                    $word = trim($word);
-                    if ($word !== '') {
-                        $q->whereRaw('LOWER(product_nama) LIKE ?', ['%'.$word.'%']);
-                    }
+                $stopwords = ['cabe', 'cabai', 'sayur', 'sayuran', 'beli', 'belikan', 'cari', 'cariin', 'mau', 'yg', 'yang'];
+                $words = array_values(array_filter(explode(' ', strtolower($keyword)), fn ($w) => ! in_array($w, $stopwords, true) && mb_strlen($w) > 1));
+
+                foreach ($words as $word) {
+                    $q->whereRaw('LOWER(product_nama) LIKE ?', ['%'.$word.'%']);
                 }
             })
             ->when($featuredOnly, fn ($q) => $q->where('is_featured', true))
