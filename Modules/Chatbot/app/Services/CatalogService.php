@@ -54,7 +54,7 @@ class CatalogService
         return Product::query()
             ->whereIn('id', $ids)
             ->where('is_active', true)
-            ->get(['id', 'product_nama', 'product_harga', 'product_stok'])
+            ->get(['id', 'product_nama', 'product_harga', 'product_stok', 'product_gambar'])
             ->keyBy('id');
     }
 
