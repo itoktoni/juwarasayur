@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Laravel\Ai\Messages\Message;
 use Modules\Catalog\Models\Product;
+use Modules\Chatbot\Ai\Tools\AddAllToCartTool;
 use Modules\Chatbot\Ai\Tools\AddToCartTool;
 use Modules\Chatbot\Ai\Tools\ListProductsTool;
 use Modules\Chatbot\Ai\Tools\RequestCheckoutTool;
@@ -125,6 +126,7 @@ class WebChatController extends Controller
             $response = agent($this->instructions(), messages: $history, tools: [
                 new ListProductsTool($catalog, $session),
                 new AddToCartTool($session, $catalog),
+                new AddAllToCartTool($session, $catalog),
                 new ViewCartTool($session, $catalog),
                 new RequestCheckoutTool($session, $catalog),
                 new SearchFaqTool,

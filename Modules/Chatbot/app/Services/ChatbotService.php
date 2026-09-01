@@ -97,6 +97,11 @@ class ChatbotService
             }
         }
 
+        // ---- Tambah semua produk yang sedang terlist ke keranjang ----
+        if (in_array($text, ['semua', 'all', 'ambil semua']) && $session->state === 'picking') {
+            return $this->addAllToListed($session);
+        }
+
         // ---- Cari sayur (harga di table product) ----
         return $this->searchProducts($session, $text);
     }
@@ -191,6 +196,38 @@ class ChatbotService
 
         return "Pilihan bagus! *{$product->product_nama}* harga {$this->price($product->product_harga)} per unit.\n\n"
             .'Berapa banyak? Ketik jumlahnya (misal *3*).';
+    }
+
+    private function addAllToListed(ChatbotSession $session): string
+    {
+        $ids = (array) ($session->meta['list'] ?? []);
+
+        if (empty($ids)) {
+            $this->sessions->setState($session, 'ordering');
+
+            return 'Tidak ada produk yang sedang terlist. Ketik nama sayur untuk mencari.';
+        }
+
+        $products = $this->catalog->findByIds($ids);
+        $cart = is_array($session->cart) ? $session->cart : [];
+        $added = [];
+
+        foreach ($ids as $productId) {
+            $product = $products->get($productId);
+            if (! $product) {
+                continue;
+            }
+            $current = (int) ($cart[$productId] ?? 0);
+            $cart[$productId] = $current + 1;
+            $added[] = $product->product_nama;
+        }
+
+        $this->sessions->saveCart($session, $cart);
+        $this->sessions->setState($session, 'ordering');
+
+        return '✅ *Semua produk sudah masuk keranjang (qty 1 per item):*'.PHP_EOL
+            .implode(PHP_EOL, array_map(fn ($name) => "- {$name}", $added)).PHP_EOL.PHP_EOL
+            .$this->showCart($session);
     }
 
     private function addSelected(ChatbotSession $session, int $qty): string
