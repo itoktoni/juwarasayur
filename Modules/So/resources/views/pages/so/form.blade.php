@@ -61,7 +61,7 @@ use Modules\So\Models\So;
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Qty <span class="text-error">*</span></label>
                                 <input type="number" name="details[{{ $idx }}][so_detail_qty]" value="{{ $rowQty }}" min="1" class="so-qty w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             </div>
-                            <div class="col-span-6 md:col-span-3">
+                            <div class="col-span-6 md:col-span-2">
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga</label>
                                 <input type="number" name="details[{{ $idx }}][so_detail_harga]" value="{{ $rowHarga }}" min="0" step="1" placeholder="Otomatis" class="so-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             </div>
@@ -69,7 +69,7 @@ use Modules\So\Models\So;
                                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Ket.</label>
                                 <input type="text" name="details[{{ $idx }}][so_detail_keterangan]" value="{{ $rowKet }}" placeholder="Opsional" class="w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             </div>
-                            <div class="col-span-2 flex justify-end">
+                            <div class="col-span-2 md:col-span-1 flex justify-end self-end">
                                 <button type="button" onclick="removeSoRow(this)" class="btn btn-soft w-full h-12 text-error" title="Hapus baris">
                                     <span class="material-symbols-outlined text-lg">delete</span>
                                 </button>
@@ -237,7 +237,7 @@ use Modules\So\Models\So;
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Qty <span class="text-error">*</span></label>
                 <input type="number" name="details[__IDX__][so_detail_qty]" value="1" min="1" class="so-qty w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
             </div>
-            <div class="col-span-6 md:col-span-3">
+            <div class="col-span-6 md:col-span-2">
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Harga</label>
                 <input type="number" name="details[__IDX__][so_detail_harga]" value="" min="0" step="1" placeholder="Otomatis" class="so-harga w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
             </div>
@@ -245,7 +245,7 @@ use Modules\So\Models\So;
                 <label class="text-xs font-bold text-on-surface-variant block mb-1">Ket.</label>
                 <input type="text" name="details[__IDX__][so_detail_keterangan]" value="" placeholder="Opsional" class="w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
             </div>
-            <div class="col-span-2 flex justify-end">
+            <div class="col-span-2 md:col-span-1 flex justify-end self-end">
                 <button type="button" onclick="removeSoRow(this)" class="btn btn-soft w-full h-12 text-error" title="Hapus baris">
                     <span class="material-symbols-outlined text-lg">delete</span>
                 </button>
@@ -422,8 +422,12 @@ use Modules\So\Models\So;
         // ================= Peta OpenStreetMap (Leaflet) =================
         let soMap = null;
         let soMarker = null;
-        const NOMINATIM_SEARCH = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q=';
         const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&';
+        // search state (mirip checkout)
+        let soSearchAbort = null;
+        let soSearchTimer = null;
+        const soSearchCache = new Map();
+        let soSearchFocusIdx = -1;
 
         function initSoMap(){
             if (soMap) { soMap.invalidateSize(); return; }
@@ -483,52 +487,95 @@ use Modules\So\Models\So;
             } catch(e) { /* abaikan */ }
         }
 
-        // Cari lokasi via Nominatim (OpenStreetMap)
-        window.searchSoLocation = async function(){
-            const q = document.getElementById('so-map-search')?.value?.trim();
+        // ==== Search by nama lokasi (Nominatim) - robust ====
+        function hideSoResults(){
+            const box = document.getElementById('so-search-results');
+            if(!box) return;
+            box.classList.add('hidden');
+            // jangan clear innerHTML agar keyboard nav tidak flicker, tapi clear saat hide jika mau:
+            soSearchFocusIdx = -1;
+        }
+        function renderSoResults(items){
+            const box = document.getElementById('so-search-results');
+            if(!box) return;
+            if(!items.length){
+                box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Lokasi tidak ditemukan. Coba kata kunci lain.</div>';
+                box.classList.remove('hidden');
+                return;
+            }
+            box.innerHTML = items.map((r, idx) =>
+                `<button type="button" data-idx="${idx}" data-lat="${r.lat}" data-lon="${r.lon}" data-name="${r.display_name.replace(/"/g,'&quot;')}" class="flex gap-2 w-full text-left px-3 py-2.5 hover:bg-primary/5 cursor-pointer text-xs ${idx===soSearchFocusIdx?'bg-primary/10':''}"><span class="material-symbols-outlined text-base text-primary shrink-0 mt-0.5">location_on</span><span><span class="block font-medium text-on-surface leading-tight">${r.display_name.split(',').slice(0,3).join(',')}</span><span class="block text-xs text-on-surface-variant leading-tight line-clamp-2">${r.display_name}</span></span></button>`
+            ).join('');
+            box.classList.remove('hidden');
+            box.querySelectorAll('button[data-idx]').forEach(btn=>{
+                btn.addEventListener('click', ()=>{
+                    const lat = parseFloat(btn.dataset.lat), lon = parseFloat(btn.dataset.lon), name = btn.dataset.name;
+                    document.getElementById('so-map-search').value = name.split(',').slice(0,3).join(', ');
+                    setSoPoint(lat, lon);
+                    moveSoMarker(lat, lon);
+                    hideSoResults();
+                });
+            });
+        }
+        async function doSoSearch(q){
             const box = document.getElementById('so-search-results');
             const btn = document.getElementById('so-map-search-btn');
-            if(!q){ alert('Masukkan nama lokasi / alamat terlebih dahulu.'); return; }
-            if(!box) return;
-
-            btn.disabled = true;
-            box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Mencari lokasi...</div>';
-            box.classList.remove('hidden');
-
-            try {
-                const res = await fetch(NOMINATIM_SEARCH + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } });
-                const results = await res.json();
-
-                if(!results.length){
-                    box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Lokasi tidak ditemukan.</div>';
-                    return;
-                }
-
-                box.innerHTML = '';
-                results.forEach(r => {
-                    const item = document.createElement('button');
-                    item.type = 'button';
-                    item.className = 'block w-full text-left px-3 py-2 text-xs hover:bg-surface-container-low cursor-pointer';
-                    item.textContent = r.display_name;
-                    item.onclick = () => {
-                        const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
-                        setSoPoint(lat, lng);
-                        moveSoMarker(lat, lng);
-                        box.classList.add('hidden');
-                    };
-                    box.appendChild(item);
-                });
-            } catch(e) {
-                box.innerHTML = '<div class="p-3 text-xs text-error">Gagal mencari lokasi.</div>';
-            } finally {
-                btn.disabled = false;
+            q = (q||'').trim();
+            if(q.length < 3){
+                if(box){ box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Ketik minimal 3 huruf.</div>'; box.classList.remove('hidden'); }
+                return;
             }
-        };
+            if(soSearchCache.has(q)){ renderSoResults(soSearchCache.get(q)); return; }
+            if(soSearchAbort) try{ soSearchAbort.abort(); }catch(e){}
+            soSearchAbort = new AbortController();
+            if(box){ box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Mencari lokasi...</div>'; box.classList.remove('hidden'); }
+            if(btn) btn.disabled = true;
+            let viewboxParam = '';
+            try { if(soMap){ const b = soMap.getBounds(); viewboxParam = `&viewbox=${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}&bounded=0`; } } catch(e){}
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=id&addressdetails=1${viewboxParam}&q=${encodeURIComponent(q)}`;
+            try{
+                const res = await fetch(url, { signal: soSearchAbort.signal, headers: { 'Accept': 'application/json' } });
+                if(!res.ok) throw new Error('HTTP '+res.status);
+                const data = await res.json();
+                soSearchCache.set(q, data);
+                renderSoResults(data);
+            }catch(e){
+                if(e.name === 'AbortError') return;
+                if(box) box.innerHTML = '<div class="p-3 text-xs text-error">Gagal mencari lokasi. Coba lagi.</div>';
+            }finally{ if(btn) btn.disabled = false; }
+        }
+        function debouncedSoSearch(q){
+            clearTimeout(soSearchTimer);
+            soSearchTimer = setTimeout(()=> doSoSearch(q), 350);
+        }
+        // kompatibilitas tombol Cari & Enter lama
+        window.searchSoLocation = function(){ const q = document.getElementById('so-map-search')?.value || ''; doSoSearch(q); };
 
+        // listener input debounced + keyboard + paste koordinat
+        const soSearchInput = document.getElementById('so-map-search');
+        if(soSearchInput){
+            soSearchInput.addEventListener('input', e=> debouncedSoSearch(e.target.value));
+            soSearchInput.addEventListener('keydown', e=>{
+                const box = document.getElementById('so-search-results');
+                const items = box ? box.querySelectorAll('button[data-idx]') : [];
+                if(e.key === 'ArrowDown'){ e.preventDefault(); soSearchFocusIdx = Math.min(soSearchFocusIdx+1, items.length-1); items.forEach((li,i)=> li.classList.toggle('bg-primary/10', i===soSearchFocusIdx)); items[soSearchFocusIdx]?.scrollIntoView({block:'nearest'}); }
+                else if(e.key === 'ArrowUp'){ e.preventDefault(); soSearchFocusIdx = Math.max(soSearchFocusIdx-1, 0); items.forEach((li,i)=> li.classList.toggle('bg-primary/10', i===soSearchFocusIdx)); }
+                else if(e.key === 'Enter'){
+                    if(soSearchFocusIdx>=0 && items[soSearchFocusIdx]){ e.preventDefault(); items[soSearchFocusIdx].click(); }
+                    else { e.preventDefault(); doSoSearch(soSearchInput.value); }
+                } else if(e.key === 'Escape'){ hideSoResults(); }
+            });
+            soSearchInput.addEventListener('paste', ()=> setTimeout(()=>{
+                const v = soSearchInput.value.trim();
+                const m = v.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+                if(m){ const la=parseFloat(m[1]), lo=parseFloat(m[2]); if(la>=-90&&la<=90&&lo>=-180&&lo<=180){ setSoPoint(la,lo); moveSoMarker(la,lo); hideSoResults(); } }
+            }, 50));
+        }
         // Klik di luar hasil pencarian menutup daftar
         document.addEventListener('click', e => {
             const box = document.getElementById('so-search-results');
-            if(box && !e.target.closest('#so-search-results') && !e.target.closest('#so-map-search')) {
+            const wrap = document.getElementById('so-map-search');
+            if(box && !e.target.closest('#so-search-results') && !e.target.closest('#so-map-search') && !e.target.closest('#so-map-search-btn')) {
                 box.classList.add('hidden');
             }
         }, { signal: __signal });
