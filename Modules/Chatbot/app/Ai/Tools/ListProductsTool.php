@@ -25,7 +25,7 @@ class ListProductsTool implements Tool
     {
         return 'Cari produk yang dijual toko. Gunakan saat customer bertanya produk/harga/stok. '
             .'sort=murah untuk customer minta produk murah/termurah/promo, sort=terbaru untuk produk baru, flash=1 khusus produk unggulan/flash sale. '
-            .'Daftar hasil diberi HURUF (a, b, c) — customer bisa memesan dengan menyebut hurufnya.';
+            .'Daftar hasil diberi NOMOR (1, 2, 3) — customer bisa memesan dengan menyebut nomornya, contoh "nomor 1" atau "nomer 2".';
     }
 
     public function handle(Request $request): Stringable|string

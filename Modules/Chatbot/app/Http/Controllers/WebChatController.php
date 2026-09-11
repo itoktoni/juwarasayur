@@ -666,7 +666,7 @@ INFO TOKO:
 - Pembayaran QRIS; pickup di toko (tanpa ongkir).
 
 GAYA BAHASA: santai, ramah, singkat (maksimal ~6 kalimat), Bahasa Indonesia, emoji secukupnya. Balas pesan terakhir saja.
-FORMAT: jangan pakai tabel markdown atau heading; cukup daftar baris sederhana dengan tanda "-". Link ditulis apa adanya.
+FORMAT: jangan pakai tabel markdown atau heading. Untuk daftar produk/varian WAJIB pakai nomor "1. 2. 3." (jangan pakai huruf a/b/c atau bullet "-"); contoh: "1. LENGKUAS 50 gr — Rp 475". Untuk poin non-produk boleh pakai "-". Link ditulis apa adanya.
 TXT;
     }
 }
