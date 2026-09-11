@@ -674,11 +674,10 @@
                         alert('Silakan pilih lokasi COD terlebih dahulu.');
                         return;
                     }
-                    // Fee belum diketahui (lokasi tanpa harga tetap) → wajib titik lokasi
-                    if (!codFee && !document.querySelector('#checkout-form input[name="so_lat"]')) {
-                        e.preventDefault();
-                        alert('Lokasi COD ini dihitung dari jarak — gunakan "Gunakan Lokasi Saya" terlebih dahulu.');
-                    }
+                    // COD: fee flat langsung tampil; lokasi "Hitung dari jarak" dihitung server
+                    // dari jarak gudang → titik COD (tanpa butuh GPS customer), jadi tidak
+                    // perlu memblokir submit. Jika quote async masih pending dan codFee
+                    // masih 0, biarkan submit — backend akan hitung ulang ongkir.
                 } else if (method === 'delivery' && !document.querySelector('#checkout-form input[name="so_lat"]')) {
                     e.preventDefault();
                     alert('Silakan tandai lokasi rumah Anda dulu di peta.');
