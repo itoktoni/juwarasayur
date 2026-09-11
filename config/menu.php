@@ -19,6 +19,7 @@ return [
             'label' => 'Dashboard',
             'items' => [
                 ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Dashboard'],
+                ['route' => 'crm.dashboard', 'icon' => 'group', 'label' => 'CRM Dashboard', 'match' => ['crm.*']],
             ],
         ],
         [

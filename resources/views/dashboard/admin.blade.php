@@ -1,8 +1,13 @@
 <x-layouts::app title="Dashboard">
     <div>
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-on-surface">Dashboard Admin</h2>
-            <p class="text-sm text-on-surface-variant mt-1">Ringkasan penjualan & operasional toko.</p>
+        <div class="mb-6 flex items-start justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-on-surface">Dashboard Admin</h2>
+                <p class="text-sm text-on-surface-variant mt-1">Ringkasan penjualan & operasional toko.</p>
+            </div>
+            <a href="{{ route('crm.dashboard') }}" class="btn bg-primary text-on-primary h-10 px-4 inline-flex items-center gap-2 shrink-0">
+                <span class="material-symbols-outlined text-base">group</span> CRM Dashboard
+            </a>
         </div>
 
         {{-- Statistik utama — Finansial (klik menuju menu) --}}

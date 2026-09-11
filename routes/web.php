@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CrmDashboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PrepareController;
 use App\Http\Controllers\ShippingController;
@@ -42,6 +43,7 @@ Route::middleware(['auth', 'verified'])->get('/dashboard/download-prices', [Dash
 Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->group(function () {
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('crm/dashboard', CrmDashboardController::class)->name('crm.dashboard');
 
     Route::auto('/user', 'UsersController', ['name' => 'user']);
 

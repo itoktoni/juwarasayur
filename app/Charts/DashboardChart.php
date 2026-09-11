@@ -164,6 +164,48 @@ class DashboardChart
     }
 
     /**
+     * CRM: Unpaid aging buckets.
+     */
+    public function crmUnpaidAging(): LarapexChart
+    {
+        $today = Carbon::today();
+        $since7 = $today->copy()->subDays(7);
+        $pending = fn () => So::where('so_status', 'pending');
+        $data = [
+            (clone $pending())->whereDate('created_at', '>=', $today->copy()->subDay())->count(),
+            (clone $pending())->whereDate('created_at', '>=', $today->copy()->subDays(3))->whereDate('created_at', '<', $today->copy()->subDay())->count(),
+            (clone $pending())->whereDate('created_at', '>=', $since7)->whereDate('created_at', '<', $today->copy()->subDays(3))->count(),
+            (clone $pending())->whereDate('created_at', '<', $since7)->count(),
+        ];
+
+        return (new LarapexChart)->donutChart()
+            ->setTitle('Unpaid Aging')
+            ->setSubtitle('Order belum bayar')
+            ->addData($data)
+            ->setLabels(['0–1 hari', '1–3 hari', '3–7 hari', '>7 hari'])
+            ->setColors(['#16a34a', '#f59e0b', '#ef4444', '#7c3aed']);
+    }
+
+    public function crmFrequency(): LarapexChart
+    {
+        $since7 = Carbon::today()->subDays(7);
+        $rows = So::whereDate('so_tanggal', '>=', $since7)->whereNotIn('so_status', ['cancelled'])
+            ->selectRaw('COALESCE(CAST(so_id_customer AS CHAR), so_customer_phone) as k, COUNT(*) as cnt')
+            ->groupBy('k')->get();
+        $once = $rows->where('cnt', 1)->count();
+        $twice = $rows->where('cnt', 2)->count();
+        $multi = $rows->where('cnt', '>', 2)->count();
+        $zero = max(0, \App\Models\User::where('type', \App\Enums\UserTypeEnum::CUSTOMER)->count() - $rows->count());
+
+        return (new LarapexChart)->donutChart()
+            ->setTitle('Frekuensi 7 hari')
+            ->setSubtitle('Belanja/minggu')
+            ->addData([$once, $twice, $multi, $zero])
+            ->setLabels(['1×/minggu', '2×/minggu', '>2×', '0×'])
+            ->setColors(['#2563eb', '#16a34a', '#7c3aed', '#e5e7eb']);
+    }
+
+    /**
      * Notifications: read vs unread.
      */
     public function notificationStats(): LarapexChart
