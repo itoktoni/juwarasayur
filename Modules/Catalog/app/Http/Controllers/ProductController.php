@@ -96,7 +96,8 @@ class ProductController extends Controller
             'product_nama', 'product_kode', 'product_harga',
             'product_harga_modal', 'product_stok',
             'reseller_fee_percent', 'affiliator_fee_percent',
-        ])->orderBy('product_nama')->get();
+            'sort_order',
+        ])->orderBy('sort_order')->orderBy('product_nama')->get();
 
         $filename = 'produk_'.date('Y-m-d_His').'.csv';
 
@@ -115,7 +116,7 @@ class ProductController extends Controller
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             // Header
-            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Stok', 'Fee Reseller (%)', 'Fee Affilator (%)'], $delimiter);
+            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Stok', 'Fee Reseller (%)', 'Fee Affilator (%)', 'Sort Order'], $delimiter);
 
             foreach ($products as $product) {
                 fputcsv($handle, [
@@ -126,6 +127,7 @@ class ProductController extends Controller
                     $product->product_stok ?? '',
                     $product->reseller_fee_percent ?? '',
                     $product->affiliator_fee_percent ?? '',
+                    $product->sort_order ?? 0,
                 ], $delimiter);
             }
 
@@ -264,6 +266,10 @@ class ProductController extends Controller
             'fee affilator' => 'affiliator_fee_percent',
             'fee affiliator (%)' => 'affiliator_fee_percent',
             'fee affiliator' => 'affiliator_fee_percent',
+            'sort order' => 'sort_order',
+            'sort_order' => 'sort_order',
+            'sort' => 'sort_order',
+            'urutan' => 'sort_order',
         ];
 
         $result = [];

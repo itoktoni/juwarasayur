@@ -55,4 +55,16 @@ return [
         'api_key' => env('PEXELS_API_KEY'),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'group_id' => env('TELEGRAM_GROUP_ID'),
+        'threads' => [
+            'instagram' => env('TELEGRAM_THREAD_INSTAGRAM'),
+            'tiktok' => env('TELEGRAM_THREAD_TIKTOK'),
+            'threads' => env('TELEGRAM_THREAD_THREADS'),
+            'facebook' => env('TELEGRAM_THREAD_FACEBOOK'),
+            'telegram' => env('TELEGRAM_THREAD_TELEGRAM'),
+        ],
+    ],
+
 ];

@@ -95,6 +95,20 @@ class So extends BaseModel
                 $model->so_unique_amount = $baseTotal + random_int(0, static::uniqueCodeMax());
             }
         });
+
+        // Kirim notifikasi ke Telegram Group via queue:work ketika ada order baru
+        static::created(function (self $model) {
+            // Hindari spam saat seeder/testing tanpa token
+            if (app()->runningInConsole() && app()->environment('testing')) {
+                return;
+            }
+
+            try {
+                \App\Jobs\SendTelegramOrderNotification::dispatch($model->id);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('So::created dispatch Telegram failed', ['id' => $model->id, 'msg' => $e->getMessage()]);
+            }
+        });
     }
 
     public static function generateCode(): string

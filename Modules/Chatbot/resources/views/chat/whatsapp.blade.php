@@ -1015,6 +1015,18 @@
 
             if (method === 'delivery') {
                 extra.innerHTML =
+                    '<div id="chat-deliv-search-wrap" style="position:relative;margin-bottom:8px">' +
+                    '<div style="display:flex;gap:6px">' +
+                    '<div style="position:relative;flex:1">' +
+                    '<span class="material-symbols-outlined" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:18px;color:#999;pointer-events:none">search</span>' +
+                    '<input type="text" id="chat-deliv-search" autocomplete="off" placeholder="Cari alamat / nama tempat (cth: Jl. Panglima Sudirman, Kraksaan)" style="width:100%;height:40px;padding:0 32px 0 36px;margin-top:10px;border:1.5px solid #e2e2e2;border-radius:10px;font-size:13px;background:#fafafa;outline:none">' +
+                    '<button type="button" id="chat-deliv-search-clear" style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:#eee;border-radius:50%;cursor:pointer">×</button>' +
+                    '</div>' +
+                    '<button type="button" id="chat-btn-deliv-search" style="border:1.5px solid {{ $primary }};background:#fff;color:{{ $primary }};border-radius:10px;padding:0 12px;margin-top:10px;font-size:13px;font-weight:600;cursor:pointer">Cari</button>' +
+                    '</div>' +
+                    '<ul id="chat-deliv-search-results" style="display:none;position:absolute;z-index:30;left:0;right:0;margin-top:4px;background:#fff;border:1.5px solid #e2e2e2;border-radius:10px;max-height:180px;overflow:auto;list-style:none"></ul>' +
+                    '<p id="chat-deliv-search-hint" style="font-size:11px;color:#999;margin-top:4px">Ketik minimal 3 huruf lalu pilih dari daftar. Hasil dari OpenStreetMap.</p>' +
+                    '</div>' +
                     '<label>Klik peta untuk pin lokasi, atau pakai GPS</label>' +
                     '<div id="sh-map" class="map-box"></div>' +
                     '<div class="map-hint">Geser pin untuk koreksi lokasi. Ongkir dihitung dari jarak.</div>' +
@@ -1063,6 +1075,47 @@
                         { enableHighAccuracy: true, timeout: 15000 },
                     );
                 });
+
+                // ===== Search alamat (Nominatim) mirip checkout =====
+                const sInput = sheetBody.querySelector('#chat-deliv-search');
+                const sResults = sheetBody.querySelector('#chat-deliv-search-results');
+                const sClear = sheetBody.querySelector('#chat-deliv-search-clear');
+                const sBtn = sheetBody.querySelector('#chat-btn-deliv-search');
+                const sHint = sheetBody.querySelector('#chat-deliv-search-hint');
+                let sAbort = null, sTimer = null;
+                const sCache = new Map();
+                function hideSR(){ sResults.style.display='none'; sResults.innerHTML=''; }
+                function showSR(items){
+                    if(!items.length){ sResults.innerHTML='<li style="padding:10px;font-size:12px;color:#888">Tidak ada hasil.</li>'; sResults.style.display='block'; return; }
+                    sResults.innerHTML = items.map(it=> '<li data-lat="'+it.lat+'" data-lon="'+it.lon+'" data-name="'+it.display_name.replace(/"/g,'&quot;')+'" style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;display:flex;gap:8px"><span class="material-symbols-outlined" style="font-size:18px;color:{{ $primary }};flex-shrink:0">location_on</span><span><span style="display:block;font-weight:600;font-size:12px;color:#222">'+it.display_name.split(',').slice(0,3).join(',')+'</span><span style="display:block;font-size:11px;color:#888">'+it.display_name+'</span></span></li>').join('');
+                    sResults.style.display='block';
+                }
+                function selectSR(lat, lon, displayName){
+                    const fLat=parseFloat(lat), fLon=parseFloat(lon);
+                    hideSR(); sInput.value=displayName.split(',').slice(0,3).join(', '); sClear.style.display='block';
+                    const addrEl=sheetBody.querySelector('#sh-address'); if(addrEl && !addrEl.value.trim()) addrEl.value=displayName;
+                    setMarker(fLat,fLon); map.setView([fLat,fLon],16); setTimeout(()=>map.invalidateSize(),200);
+                }
+                async function doSearch(q){
+                    q=q.trim(); if(q.length<3){ hideSR(); sHint.textContent='Ketik minimal 3 huruf lalu pilih dari daftar. Hasil dari OpenStreetMap.'; return; }
+                    if(sCache.has(q)){ showSR(sCache.get(q)); return; }
+                    if(sAbort) try{sAbort.abort()}catch(e){}
+                    sAbort=new AbortController(); sHint.textContent='Mencari…';
+                    let viewboxParam=''; try{ const b=map.getBounds(); viewboxParam='&viewbox='+b.getWest()+','+b.getNorth()+','+b.getEast()+','+b.getSouth()+'&bounded=0'; }catch(e){}
+                    const url='https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=id&addressdetails=1'+viewboxParam+'&q='+encodeURIComponent(q);
+                    try{
+                        const res=await fetch(url,{signal:sAbort.signal,headers:{'Accept':'application/json'}});
+                        if(!res.ok) throw new Error('HTTP '+res.status);
+                        const data=await res.json(); sCache.set(q,data); showSR(data); sHint.textContent=data.length?'Menampilkan '+data.length+' hasil — klik untuk pasang pin.':'Tidak ada hasil.';
+                    }catch(e){ if(e.name==='AbortError') return; sHint.textContent='Gagal mencari. Coba lagi atau geser peta.'; }
+                }
+                function debouncedSearch(q){ clearTimeout(sTimer); sTimer=setTimeout(()=>doSearch(q),350); }
+                sInput?.addEventListener('input', e=>{ const v=e.target.value; sClear.style.display=v?'block':'none'; if(!v.trim()){ hideSR(); sHint.textContent='Ketik minimal 3 huruf lalu pilih dari daftar. Hasil dari OpenStreetMap.'; return; } debouncedSearch(v); });
+                sBtn?.addEventListener('click', ()=>doSearch(sInput.value));
+                sInput?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); doSearch(sInput.value); } if(e.key==='Escape') hideSR(); });
+                sResults?.addEventListener('click', e=>{ const li=e.target.closest('li[data-lat]'); if(li) selectSR(li.dataset.lat, li.dataset.lon, li.dataset.name); });
+                sClear?.addEventListener('click', ()=>{ sInput.value=''; sClear.style.display='none'; hideSR(); sHint.textContent='Ketik minimal 3 huruf lalu pilih dari daftar. Hasil dari OpenStreetMap.'; sInput.focus(); });
+                sInput?.addEventListener('paste', ()=> setTimeout(()=>{ const v=sInput.value.trim(); const m=v.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/); if(m){ const la=parseFloat(m[1]), lo=parseFloat(m[2]); if(la>=-90&&la<=90&&lo>=-180&&lo<=180) selectSR(la,lo,la+', '+lo); } },50));
             }
         }));
 

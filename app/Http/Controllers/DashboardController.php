@@ -158,6 +158,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $products = Product::where('is_active', true)
+            ->orderBy('sort_order')
             ->orderBy('product_nama')
             ->get();
 
