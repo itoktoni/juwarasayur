@@ -9,6 +9,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Modules\Catalog\Models\Product;
+use Modules\Po\Enums\PoStatusEnum;
+use Modules\Po\Models\Po;
 use Modules\So\Enums\SoStatusEnum;
 use Modules\So\Models\So;
 
@@ -27,26 +29,58 @@ class DashboardController extends Controller
 
     /**
      * Dashboard untuk admin / editor / developer:
-     * ringkasan penjualan, barang yang harus di-prepare, dll.
+     * ringkasan penjualan, barang yang harus di-prepare, + PO sebagai pengeluaran & laba rugi.
      */
     private function adminDashboard(DashboardChart $chart)
     {
         $preparedStatuses = [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED];
-        $paidStatuses = [
-            SoStatusEnum::PAID,
-            SoStatusEnum::CONFIRMED,
-            SoStatusEnum::SHIPPED,
-            SoStatusEnum::DELIVERED,
-        ];
+        // Realisasi: SO dianggap pemasukan jika sudah dibayar (bukan pending/cancel)
+        $realizedSo = [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED, SoStatusEnum::SHIPPED, SoStatusEnum::DELIVERED];
+        // PO dianggap pengeluaran jika ordered/partial/closed (pending = belum keluar uang)
+        $realizedPo = [PoStatusEnum::ORDERED, PoStatusEnum::PARTIAL, PoStatusEnum::CLOSED];
+
+        // Penjualan (revenue) — hanya SO terealisasi
+        $revenue = (float) So::whereIn('so_status', $realizedSo)->sum('so_grand_total');
+        // Pengeluaran — hanya PO terealisasi
+        $pengeluaran = (float) Po::whereIn('po_status', $realizedPo)->sum('po_grand_total');
+        $laba = $revenue - $pengeluaran;
+        $labaMargin = $revenue > 0 ? round($laba / $revenue * 100, 1) : 0;
+
+        // Cash flow — 30 hari & bulan ini (pakai status realisasi yang sama)
+        $today = Carbon::today();
+        $monthStart = Carbon::now()->startOfMonth();
+        $cashIn30 = (float) So::whereDate('so_tanggal', '>=', $today->copy()->subDays(30))
+            ->whereIn('so_status', $realizedSo)->sum('so_grand_total');
+        $cashOut30 = (float) Po::whereDate('po_tanggal', '>=', $today->copy()->subDays(30))
+            ->whereIn('po_status', $realizedPo)->sum('po_grand_total');
+        $cashInMonth = (float) So::whereDate('so_tanggal', '>=', $monthStart)
+            ->whereIn('so_status', $realizedSo)->sum('so_grand_total');
+        $cashOutMonth = (float) Po::whereDate('po_tanggal', '>=', $monthStart)
+            ->whereIn('po_status', $realizedPo)->sum('po_grand_total');
 
         $stats = [
             'total_orders' => So::count(),
-            'revenue' => (float) So::whereNotIn('so_status', [SoStatusEnum::CANCELLED])->sum('so_grand_total'),
+            'revenue' => $revenue,
+            'pengeluaran' => $pengeluaran,
+            'laba' => $laba,
+            'laba_margin' => $labaMargin,
             'to_prepare' => So::whereIn('so_status', $preparedStatuses)->count(),
             'unpaid' => So::where('so_status', SoStatusEnum::PENDING)->count(),
             'total_customers' => User::where('type', UserTypeEnum::CUSTOMER)->count(),
             'total_resellers' => User::where('type', UserTypeEnum::RESELLER)->count(),
             'total_products' => Product::count(),
+            // PO
+            'total_po' => Po::count(),
+            'po_pending' => Po::where('po_status', PoStatusEnum::PENDING)->count(),
+            'po_ordered' => Po::where('po_status', PoStatusEnum::ORDERED)->count(),
+            'po_closed' => Po::where('po_status', PoStatusEnum::CLOSED)->count(),
+            // Cash flow
+            'cash_in_30' => $cashIn30,
+            'cash_out_30' => $cashOut30,
+            'net_30' => $cashIn30 - $cashOut30,
+            'cash_in_month' => $cashInMonth,
+            'cash_out_month' => $cashOutMonth,
+            'net_month' => $cashInMonth - $cashOutMonth,
         ];
 
         // Pesanan yang harus di-prepare (sudah bayar / dikonfirmasi, belum dikirim)
@@ -61,9 +95,16 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        return view('dashboard.admin', compact('stats', 'toPrepare', 'recentOrders'))
+        $recentPos = Po::with(['has_supplier'])
+            ->orderByDesc('po_tanggal')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.admin', compact('stats', 'toPrepare', 'recentOrders', 'recentPos'))
             ->with('salesChart', $chart->salesRevenue())
-            ->with('statusChart', $chart->orderStatusBreakdown());
+            ->with('statusChart', $chart->orderStatusBreakdown())
+            ->with('profitChart', $chart->profitLast7Days())
+            ->with('poStatusChart', $chart->poStatusBreakdown());
     }
 
     /**
