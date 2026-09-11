@@ -25,4 +25,10 @@ class SoPolicy extends BasePolicy
     {
         return $this->table($user);
     }
+
+    // Payment QR + link untuk customer (GET /so/so/payment/{id})
+    public function payment(User $user): Response
+    {
+        return $this->table($user);
+    }
 }

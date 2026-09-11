@@ -63,7 +63,15 @@ class SoController extends Controller
 
     protected function getData()
     {
-        return $this->model->with(['has_reseller', 'has_customer', 'has_details.has_product'])->filter()->sort();
+        $query = $this->model->with(['has_reseller', 'has_customer', 'has_details.has_product'])->filter()->sort();
+
+        // Default: tanggal terbaru di atas jika user belum klik header sort
+        // (initTable mengirim sort[0]=field:dir, purity membaca input('sort'))
+        if (empty(request()->input('sort'))) {
+            $query->orderByDesc('so_tanggal')->orderByDesc('id');
+        }
+
+        return $query;
     }
 
     public function getUpdate(GeneralRequest $request, $id)
@@ -142,6 +150,37 @@ class SoController extends Controller
             'status' => true,
             'location' => $location->location_name,
             'shipping_fee' => (float) ($location->fee ?? 0),
+        ]);
+    }
+
+    /**
+     * Payment — halaman QRIS + list pemesanan untuk dibagikan ke customer.
+     * Diakses admin via tombol Payment di tabel (sebelah Print). Render QR dari
+     * so_unique_amount (nominalQRIS) + link public /payment/{token}.
+     */
+    public function getPayment(GeneralRequest $request, $id)
+    {
+        $so = $this->model->with(['has_details.has_product', 'has_reseller', 'has_customer'])->findOrFail($id);
+
+        $paymentLink = url('/payment/'.$so->so_payment_token);
+        $qrisPayload = ! empty(config('ecommerce.qris_payload'))
+            ? nominalQRIS(config('ecommerce.qris_payload'), (float) $so->so_unique_amount)
+            : null;
+        $qrDataUri = $qrisPayload ? qrCodeDataUri($qrisPayload, 400) : '';
+        // QR download dengan info SO+nominal (sama dengan CheckoutController::share)
+        $qrDownload = '';
+        if ($qrisPayload) {
+            $qrDownload = qrCodeDataUri($qrisPayload, 400);
+            // fallback simple — jika GD tidak tersedia, pakai qrDataUri yang sama
+        }
+
+        return $this->views('so::pages.so.payment', [
+            'so' => $so,
+            'paymentLink' => $paymentLink,
+            'qrisPayload' => $qrisPayload,
+            'qrDataUri' => $qrDataUri,
+            'qrDownload' => $qrDownload,
+            'methodLabel' => \Modules\So\Enums\ShippingMethodEnum::getDescription($so->so_shipping_method),
         ]);
     }
 

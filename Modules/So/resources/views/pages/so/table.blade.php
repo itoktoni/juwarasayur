@@ -46,6 +46,10 @@
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">print</span>
                         </a>
+                        <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}" title="Payment — QR & Link untuk customer"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-700 hover:bg-emerald-600/20 transition-colors">
+                            <span class="material-symbols-outlined text-lg">qr_code_2</span>
+                        </a>
                         @if(in_array($table->so_status, ['paid', 'confirmed'], true))
                             <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
@@ -94,6 +98,10 @@
                                 <a href="{{ route('so-so.getPrintContinues', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Struk 80mm"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">print</span>
+                                </a>
+                                <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}" title="Payment — QR & Link untuk customer"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-700 hover:bg-emerald-600/20 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">qr_code_2</span>
                                 </a>
                                 @if(in_array($table->so_status, ['paid', 'confirmed'], true))
                                     <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
