@@ -81,15 +81,52 @@
                         </button>
                     </div>
                     <p id="copyMsg" class="text-xs text-success mt-2 hidden">Link berhasil disalin!</p>
-                    <div class="flex gap-2 mt-3">
-                        <a id="waShare" href="https://wa.me/?text={{ urlencode('Halo kak, pesanan '.$so->so_code.' total '.formatAngka((float)$so->so_unique_amount,'Rp').' — bayar via link: '.$paymentLink) }}"
-                            target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-[#25D366] text-white text-sm font-semibold">
-                            <span class="material-symbols-outlined text-base">chat</span> Kirim via WhatsApp
-                        </a>
-                        <a href="{{ route('payment.show', ['token' => $so->so_payment_token]) }}" target="_blank"
-                            class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-neutral-800 text-white text-sm font-semibold">
-                            <span class="material-symbols-outlined text-base">open_in_new</span> Buka Halaman Pay
-                        </a>
+
+                    {{-- Tagihan WA: format sesuai request, dinamis per customer / no order / total --}}
+                    @php
+                        $waCustomer = $so->so_customer_name ?: ($so->has_customer?->name ?? 'Kak');
+                        // First name untuk sapaan "Kak Henny"
+                        $waFirstName = trim(explode(' ', $waCustomer)[0]);
+                        $waTotal = formatAngka((float) $so->so_unique_amount, 'Rp');
+                        $waTagihan = "🥬 TAGIHAN JUWARA SAYUR 🥬\n"
+                            ."Halo Kak {$waFirstName}, berikut detail tagihan pesanan sayurnya:\n\n"
+                            ."🧾 No. Pesanan: {$so->so_code}\n"
+                            ."💰 Total Tagihan: {$waTotal}\n\n"
+                            ."Pembayaran dapat dilakukan melalui:\n"
+                            ."🏦 Transfer Bank\n"
+                            ."Bank: BCA\n"
+                            ."No. Rekening: 3452301226\n"
+                            ."a.n. : Deny Irawan\n"
+                            ."atau\n"
+                            ."💳 QRIS\n"
+                            ."Silakan scan QRIS untuk pembayaran.\n\n"
+                            ."🔗 Link Pembayaran:\n{$paymentLink}\n\n"
+                            ."Setelah melakukan pembayaran, mohon kirimkan bukti transfernya ya Kak.\n"
+                            ."Terima kasih sudah berbelanja di Juwara Sayur 🌱\n"
+                            ."Sayur Segar, Pilihan Juara!";
+                    @endphp
+                    <textarea id="waTagihanText" class="hidden">{{ $waTagihan }}</textarea>
+
+                    <div class="mt-4 p-3 rounded-lg bg-surface-container border border-outline-variant">
+                        <p class="text-xs font-semibold text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-base">chat</span> Teks Tagihan WhatsApp</p>
+                        <pre id="waTagihanPreview" class="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-on-surface bg-white border border-outline-variant rounded-lg p-3 max-h-56 overflow-auto">{{ $waTagihan }}</pre>
+                        <div class="flex gap-2 mt-3">
+                            <button type="button" onclick="copyWaTagihan()" id="copyWaBtn"
+                                class="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-primary text-on-primary text-sm font-semibold active:scale-95 transition">
+                                <span class="material-symbols-outlined text-base">content_copy</span> Salin Teks Tagihan
+                            </button>
+                            <a id="waShare" href="https://wa.me/?text={{ urlencode($waTagihan) }}"
+                                target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-[#25D366] text-white text-sm font-semibold">
+                                <span class="material-symbols-outlined text-base">chat</span> Kirim via WhatsApp
+                            </a>
+                        </div>
+                        <p id="copyWaMsg" class="text-xs text-success mt-2 hidden">Teks tagihan berhasil disalin! Tinggal paste di WhatsApp.</p>
+                        <div class="flex gap-2 mt-2">
+                            <a href="{{ route('payment.show', ['token' => $so->so_payment_token]) }}" target="_blank"
+                                class="flex-1 inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-neutral-800 text-white text-sm font-semibold">
+                                <span class="material-symbols-outlined text-base">open_in_new</span> Buka Halaman Pay
+                            </a>
+                        </div>
                     </div>
                     <p class="text-[11px] text-on-surface-variant mt-2">Link ini memakai token UUID acak, aman dibagikan — siapa pun dengan link bisa membayar, tidak perlu login.</p>
                 </div>
@@ -147,7 +184,26 @@
         function legacyCopy(input) { input.select(); input.setSelectionRange(0, 99999); document.execCommand('copy'); showCopied(); }
         function showCopied() {
             document.getElementById('copyMsg').classList.remove('hidden');
-            const btn = document.getElementById('copyBtn'); btn.textContent = 'Tersalin'; setTimeout(()=> btn.textContent='Salin', 2000);
+            const btn = document.getElementById('copyBtn'); btn.textContent = 'Tersalin'; setTimeout(()=> { btn.textContent='Salin'; document.getElementById('copyMsg').classList.add('hidden'); }, 2000);
+        }
+        function copyWaTagihan() {
+            const text = document.getElementById('waTagihanText').value;
+            const done = () => {
+                const msg = document.getElementById('copyWaMsg');
+                msg.classList.remove('hidden');
+                const btn = document.getElementById('copyWaBtn');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined text-base">check</span> Tersalin';
+                setTimeout(()=> { btn.innerHTML = orig; msg.classList.add('hidden'); }, 2000);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(done).catch(() => waLegacyCopy(text, done));
+            } else { waLegacyCopy(text, done); }
+        }
+        function waLegacyCopy(text, cb) {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb();
         }
     </script>
 </x-layouts::app>

@@ -60,7 +60,7 @@
                     <td>{{ $table->so_code }}</td>
                     <td>{{ formatDate($table->so_tanggal) }}</td>
                     <td>{{ $table->has_reseller?->name ?? '-' }}</td>
-                    <td>{{ $table->so_customer_name ?? '-' }}</td>
+                    <td>{{ $table->so_customer_name ?: ($table->has_customer?->name ?? '-') }}</td>
                     <td><span class="badge badge-soft">{{ \Modules\So\Enums\SoStatusEnum::getDescription($table->so_status) }}</span></td>
                     <td>{{ \Modules\So\Enums\ShippingMethodEnum::getDescription($table->so_shipping_method) }}{{ $table->so_cod_location ? ' ('.$table->so_cod_location.')' : '' }}</td>
                     <td class="text-right font-mono">{{ formatAngka((int) $table->so_grand_total, 'Rp') }}</td>
@@ -81,7 +81,7 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Customer</p>
-                                <p class="text-xs font-medium text-primary truncate">{{ $table->has_customer?->name ?? '-' }}</p>
+                                <p class="text-xs font-medium text-primary truncate">{{ $table->so_customer_name ?: ($table->has_customer?->name ?? '-') }}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Status</p>

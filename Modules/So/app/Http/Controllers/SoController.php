@@ -258,6 +258,26 @@ class SoController extends Controller
 
         $customer = ! empty($data['so_id_customer']) ? User::findOrFail($data['so_id_customer']) : null;
 
+        // Snapshot nama & hp customer untuk tabel/struk/tele — form admin
+        // hanya kirim so_id_customer (tanpa input teks nama), jadi isi dari User.
+        if ($customer) {
+            $data['so_customer_name'] = $customer->name;
+            $data['so_customer_phone'] = $customer->phone ?? $so?->so_customer_phone;
+        } else {
+            // Guest / tanpa customer — hormati input manual jika ada (checkout chatbot),
+            // atau pertahankan snapshot lama saat update.
+            if (array_key_exists('so_customer_name', $data) && empty($data['so_customer_name'])) {
+                $data['so_customer_name'] = $so?->so_customer_name;
+            } elseif (! array_key_exists('so_customer_name', $data)) {
+                $data['so_customer_name'] = $so?->so_customer_name;
+            }
+            if (array_key_exists('so_customer_phone', $data) && empty($data['so_customer_phone'])) {
+                $data['so_customer_phone'] = $so?->so_customer_phone;
+            } elseif (! array_key_exists('so_customer_phone', $data)) {
+                $data['so_customer_phone'] = $so?->so_customer_phone;
+            }
+        }
+
         // Input kosong ("") → pertahankan reseller lama saat update,
         // turunkan dari customer terpilih, atau fallback ke user login
         if (empty($data['so_id_reseller'])) {

@@ -260,12 +260,12 @@ use Modules\So\Models\So;
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // IIFE + AbortController: cegah "already been declared" saat Livewire
-        // navigate menukar HTML halaman, dan hapus listener document lama.
-        if (window.__soFormAbort) { window.__soFormAbort.abort(); }
-        const __abort = new AbortController();
-        window.__soFormAbort = __abort;
-        const __signal = __abort.signal;
+        // Guard untuk Livewire navigate (wire:navigate / prefetch): script ini
+        // di-eval ulang saat HTML ditukar. Pakai var/Window agar redeclaration
+        // tidak throw "Identifier '__abort' has already been declared".
+        try { if (window.__soFormAbort) window.__soFormAbort.abort(); } catch(e){}
+        window.__soFormAbort = new AbortController();
+        var __signal = window.__soFormAbort.signal;
 
         (() => {
         const SO_PRICES = {!! json_encode($productPrices ?? []) !!};
