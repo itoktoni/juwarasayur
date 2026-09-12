@@ -33,11 +33,41 @@
 
             <x-slot:body>
                 @foreach($data as $table)
-                <tr>
+                @php
+                    $isAff = in_array($table->type, [\App\Enums\UserTypeEnum::AFFILIATOR, \App\Enums\UserTypeEnum::RESELLER], true);
+                    $isPending = $isAff && empty($table->verified_at);
+                    $isApproved = $isAff && !empty($table->verified_at);
+                @endphp
+                <tr @if($isPending) class="bg-warning/5" @endif>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
-                    <x-table-action :model="$model" :id="$table->field_primary" />
+                    <x-table-action :model="$model" :id="$table->field_primary">
+                        @if($isPending)
+                            <form method="POST" action="{{ route('user.postApprove', ['id' => $table->id]) }}" onsubmit="return confirm('Approve {{ $table->name }} sebagai {{ $table->type }}?')">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-success/10 text-success hover:bg-success/20 transition-colors" title="Approve">
+                                    <span class="material-symbols-outlined text-lg">check_circle</span>
+                                </button>
+                            </form>
+                        @elseif($isApproved)
+                            <form method="POST" action="{{ route('user.postReject', ['id' => $table->id]) }}" onsubmit="return confirm('Batalkan approval {{ $table->name }}?')">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-warning/10 text-warning hover:bg-warning/20 transition-colors" title="Batalkan">
+                                    <span class="material-symbols-outlined text-lg">block</span>
+                                </button>
+                            </form>
+                        @endif
+                    </x-table-action>
                     @foreach ($model::$sortColumns as $column)
-                    <td>{{ $table->$column }}</td>
+                        @if($column === 'type')
+                            <td>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $table->type === 'affiliator' ? 'bg-purple-100 text-purple-800' : ($table->type === 'reseller' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">{{ $table->type ?? '-' }}</span>
+                                @if($isPending) <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs bg-warning/20 text-warning">Pending</span>
+                                @elseif($isApproved) <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs bg-success/20 text-success">Approved</span>
+                                @endif
+                            </td>
+                        @else
+                            <td>{{ $table->$column }}</td>
+                        @endif
                     @endforeach
                 </tr>
                 @endforeach

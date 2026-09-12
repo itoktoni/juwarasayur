@@ -101,4 +101,39 @@ class UsersController extends Controller
 
         return $this->response($response);
     }
+
+    /**
+     * Approve affiliator/reseller: set verified_at = now() (admin approval).
+     * Hanya untuk tipe affiliator/reseller yang masih pending.
+     */
+    public function postApprove(GeneralRequest $request, $id)
+    {
+        $user = $this->model->findOrFail($id);
+
+        if (! in_array($user->type, [\App\Enums\UserTypeEnum::AFFILIATOR, \App\Enums\UserTypeEnum::RESELLER], true)) {
+            return $this->response(['code' => 422, 'status' => false, 'message' => 'Hanya affiliator/reseller yang perlu approval', 'data' => null]);
+        }
+
+        if (! empty($user->verified_at)) {
+            return $this->response(['code' => 200, 'status' => true, 'message' => 'Sudah di-approve sebelumnya', 'data' => $user]);
+        }
+
+        $user->update(['verified_at' => now()]);
+
+        return $this->response(['code' => 200, 'status' => true, 'message' => 'Affiliate di-approve', 'data' => $user]);
+    }
+
+    public function postReject(GeneralRequest $request, $id)
+    {
+        $user = $this->model->findOrFail($id);
+
+        if (! in_array($user->type, [\App\Enums\UserTypeEnum::AFFILIATOR, \App\Enums\UserTypeEnum::RESELLER], true)) {
+            return $this->response(['code' => 422, 'status' => false, 'message' => 'Hanya affiliator/reseller', 'data' => null]);
+        }
+
+        // Reject = hapus verified_at + optional: set type ke user biasa atau blokir
+        $user->update(['verified_at' => null]);
+
+        return $this->response(['code' => 200, 'status' => true, 'message' => 'Approval dibatalkan', 'data' => $user]);
+    }
 }

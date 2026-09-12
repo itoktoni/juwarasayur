@@ -41,7 +41,7 @@ class CreateNewUser implements CreatesNewUsers
         $as = $input['as'] ?? null;
         $isAffiliateType = in_array($as, [UserTypeEnum::RESELLER, UserTypeEnum::AFFILIATOR], true);
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
@@ -51,5 +51,13 @@ class CreateNewUser implements CreatesNewUsers
             'fee' => $isAffiliateType ? (float) config('commission.rate', 2) : null,
             'reference_id' => $referenceId,
         ]);
+
+        // Register biasa (type=user) langsung terverifikasi — tanpa Verify Email.
+        // Affiliator/reseller tetap harus verifikasi email + approval admin (verified_at).
+        if (! $isAffiliateType) {
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        return $user;
     }
 }
