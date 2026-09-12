@@ -84,12 +84,14 @@
 
                     {{-- Tagihan WA: format sesuai request, dinamis per customer / no order / total --}}
                     @php
-                        $waCustomer = $so->so_customer_name ?: ($so->has_customer?->name ?? 'Kak');
-                        // First name untuk sapaan "Kak Henny"
-                        $waFirstName = trim(explode(' ', $waCustomer)[0]);
+                        $waCustomer = trim($so->so_customer_name ?: ($so->has_customer?->name ?? 'Kak'));
+                        // Fallback kalau snapshot kosong/placeholder: pakai has_customer
+                        if ($waCustomer === 'Kak' || $waCustomer === '-' || $waCustomer === '') {
+                            $waCustomer = trim($so->has_customer?->name ?? 'Kak');
+                        }
                         $waTotal = formatAngka((float) $so->so_unique_amount, 'Rp');
                         $waTagihan = "🥬 TAGIHAN JUWARA SAYUR 🥬\n"
-                            ."Halo Kak {$waFirstName}, berikut detail tagihan pesanan sayurnya:\n\n"
+                            ."Halo Kak {$waCustomer}, berikut detail tagihan pesanan sayurnya:\n\n"
                             ."🧾 No. Pesanan: {$so->so_code}\n"
                             ."💰 Total Tagihan: {$waTotal}\n\n"
                             ."Pembayaran dapat dilakukan melalui:\n"

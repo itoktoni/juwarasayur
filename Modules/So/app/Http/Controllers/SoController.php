@@ -218,6 +218,7 @@ class SoController extends Controller
                 $so = So::create(collect($data)->except('details')->toArray());
                 $this->syncDetails($so, $data['details']);
                 $so->recalculateTotals();
+                $this->ensureUniqueAmount($so);
 
                 return $so->load('has_details.has_product');
             });
@@ -238,6 +239,7 @@ class SoController extends Controller
                 $so->update(collect($data)->except('details')->toArray());
                 $this->syncDetails($so, $data['details']);
                 $so->recalculateTotals();
+                $this->ensureUniqueAmount($so);
 
                 return $so->load('has_details.has_product');
             });
@@ -245,6 +247,32 @@ class SoController extends Controller
             return $this->response($this->payload(TOAST_SUCCESS, $so));
         } catch (\Throwable $th) {
             return $this->response($this->payload(TOAST_FAILED, $th->getMessage()));
+        }
+    }
+
+    /**
+     * Pastikan so_unique_amount = so_grand_total + kode unik 0..max.
+     * Bug lama: unique dihitung saat grand masih 0 → jadi cuma 0..99 (Rp 35).
+     * Dipanggil setelah recalculateTotals() agar grand sudah final.
+     */
+    private function ensureUniqueAmount(So $so): void
+    {
+        $so->refresh();
+        $grand = (float) $so->so_grand_total;
+        $unique = $so->so_unique_amount !== null ? (float) $so->so_unique_amount : null;
+        $max = So::uniqueCodeMax();
+        $digits = So::uniqueDigits();
+
+        // Valid jika unique = grand + kode (0..max). Kode = unique % 10^digits bisa 0 juga.
+        $isValid = $unique !== null && $unique >= $grand && $unique <= $grand + $max
+            && (int) fmod($unique, 10 ** $digits) <= $max;
+
+        // Jika grand > 0 tapi unique invalid/kosong/terlalu kecil → regenerasi
+        if ($grand > 0 && ! $isValid) {
+            $so->updateQuietly(['so_unique_amount' => $grand + random_int(0, $max)]);
+        } elseif ($grand == 0 && ($unique === null || $unique == 0)) {
+            // Tetap beri kode unik untuk grand 0 (edge)
+            $so->updateQuietly(['so_unique_amount' => $grand + random_int(0, $max)]);
         }
     }
 
