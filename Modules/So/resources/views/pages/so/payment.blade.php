@@ -2,8 +2,29 @@
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => route('dashboard'), 'label' => 'Home'], ['url' => route('so-so.getTable'), 'label' => 'Pesanan'], ['url' => '', 'label' => 'Payment '.$so->so_code]]" />
 
+    <style>
+        .print-only { display:none; }
+        @media print {
+            header, aside, nav, #toast, .bottom-nav, x-bottom-nav { display:none !important; }
+            main { margin-left:0 !important; padding:0 !important; }
+            main > div { max-width:58mm !important; margin:0 auto !important; padding:0 !important; }
+            body { background:#fff !important; }
+            @page { size:58mm auto; margin:2mm; }
+            #print-area { font-family:'Courier New', Courier, monospace; font-size:10px; line-height:1.35; width:58mm; max-width:58mm; }
+            #print-area .card-print { border:none !important; border-radius:0 !important; padding:6px 0 !important; background:#fff !important; box-shadow:none !important; border-bottom:1px dashed #000 !important; margin-bottom:4px !important; }
+            #print-area .card-print:last-child { border-bottom:none !important; }
+            #print-area .no-print { display:none !important; }
+            .print-only { display:block !important; }
+            /* sembunyikan breadcrumb saat print */
+            nav[aria-label="breadcrumb"], .breadcrumb, x-breadcrumb { display:none !important; }
+            /* QR tetap tampil tapi kecilkan untuk 58mm */
+            #print-area .qr-wrap img { width:50mm !important; height:auto !important; margin:0 auto !important; }
+            #print-area .qr-wrap { width:50mm !important; border-width:1px !important; }
+            #print-area pre { font-size:9px !important; }
+        }
+    </style>
     <div class="content mt-4 lg:mt-0">
-        <div class="max-w-3xl mx-auto space-y-5">
+        <div id="print-area" class="max-w-3xl mx-auto space-y-5">
             <div class="flex items-center justify-between">
                 <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">qr_code_2</span> Payment {{ $so->so_code }}
@@ -12,7 +33,7 @@
             </div>
 
             {{-- Info pesanan --}}
-            <div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest">
+            <div class="card-print p-5 rounded-xl border border-outline-variant bg-surface-container-lowest">
                 <div class="grid grid-cols-2 gap-x-4 gap-y-4">
                     <div>
                         <p class="text-[10px] uppercase tracking-wide text-on-surface-variant">Customer</p>
@@ -41,13 +62,13 @@
             </div>
 
             {{-- QR + Link --}}
-            <div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest text-center">
+            <div class="card-print p-5 rounded-xl border border-outline-variant bg-surface-container-lowest text-center">
                 <p class="text-sm font-semibold text-on-surface inline-flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary text-xl">qr_code_2</span> QRIS Pembayaran
                 </p>
                 <p class="text-xs text-on-surface-variant mt-1">Scan QR untuk membuka halaman pembayaran publik</p>
 
-                <div class="mt-5 mx-auto w-80 bg-white rounded-xl border-2 border-outline-variant shadow-sm overflow-hidden">
+                <div class="qr-wrap mt-5 mx-auto w-80 bg-white rounded-xl border-2 border-outline-variant shadow-sm overflow-hidden">
                     @if($qrDataUri)
                         <img src="{{ $qrDataUri }}" alt="QRIS Pembayaran" class="block w-full h-full object-contain">
                     @else
@@ -70,8 +91,8 @@
                     <p class="text-xl font-bold font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</p>
                 </div>
 
-                {{-- Expiry + Regenerate --}}
-                <div class="mt-3 p-3 rounded-lg border {{ ($isExpired ?? false) ? 'bg-error/5 border-error/20' : 'bg-amber-50 border-amber-200' }} text-left">
+                {{-- Expiry + Regenerate (sembunyikan saat print) --}}
+                <div class="no-print mt-3 p-3 rounded-lg border {{ ($isExpired ?? false) ? 'bg-error/5 border-error/20' : 'bg-amber-50 border-amber-200' }} text-left">
                     <div class="flex items-center justify-between gap-2">
                         <div>
                             <p class="text-xs font-semibold {{ ($isExpired ?? false) ? 'text-error' : 'text-amber-800' }} flex items-center gap-1.5">
@@ -94,8 +115,13 @@
                         </form>
                     </div>
                 </div>
+                <div class="print-only mt-2 text-center text-[8px] leading-tight break-all border-t border-dashed border-black pt-2">
+                    <div>Link: {{ $paymentLink }}</div>
+                    <div class="mt-1">SO: {{ $so->so_code }} — {{ formatAngka((float)$so->so_unique_amount,'Rp') }}</div>
+                    <div class="mt-1">Scan QR di atas untuk bayar</div>
+                </div>
 
-                <div class="mt-5 text-left">
+                <div class="mt-5 text-left no-print">
                     <label class="block text-sm font-semibold text-on-surface mb-2">Link Pembayaran (bagikan ke customer)</label>
                     <div class="flex gap-2">
                         <input id="paymentLink" type="text" readonly value="{{ $paymentLink }}"
@@ -115,21 +141,21 @@
                             $waCustomer = trim($so->has_customer?->name ?? 'Kak');
                         }
                         $waTotal = formatAngka((float) $so->so_unique_amount, 'Rp');
-                        $waTagihan = "🥬 TAGIHAN JUWARA SAYUR 🥬\n"
+                        $waTagihan = "TAGIHAN JUWARA SAYUR\n"
                             ."Halo Kak {$waCustomer}, berikut detail tagihan pesanan sayurnya:\n\n"
-                            ."🧾 No. Pesanan: {$so->so_code}\n"
-                            ."💰 Total Tagihan: {$waTotal}\n\n"
+                            ."No. Pesanan: {$so->so_code}\n"
+                            ."Total Tagihan: {$waTotal}\n\n"
                             ."Pembayaran dapat dilakukan melalui:\n"
-                            ."🏦 Transfer Bank\n"
+                            ."Transfer Bank\n"
                             ."Bank: BCA\n"
                             ."No. Rekening: 3452301226\n"
                             ."a.n. : Deny Irawan\n"
                             ."atau\n"
-                            ."💳 QRIS\n"
+                            ."QRIS\n"
                             ."Silakan scan QRIS untuk pembayaran.\n\n"
-                            ."🔗 Link Pembayaran:\n{$paymentLink}\n\n"
+                            ."Link Pembayaran:\n{$paymentLink}\n\n"
                             ."Setelah melakukan pembayaran, mohon kirimkan bukti transfernya ya Kak.\n"
-                            ."Terima kasih sudah berbelanja di Juwara Sayur 🌱\n"
+                            ."Terima kasih sudah berbelanja di Juwara Sayur\n"
                             ."Sayur Segar, Pilihan Juara!";
                     @endphp
                     <textarea id="waTagihanText" class="hidden">{{ $waTagihan }}</textarea>
@@ -160,7 +186,7 @@
             </div>
 
             {{-- List pemesanan --}}
-            <div class="p-5 rounded-xl border border-outline-variant bg-surface-container-lowest">
+            <div class="card-print p-5 rounded-xl border border-outline-variant bg-surface-container-lowest">
                 <h3 class="font-bold text-on-surface flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">receipt_long</span> List Pemesanan ({{ $so->has_details->count() }} item)
                 </h3>
@@ -192,12 +218,13 @@
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <button onclick="window.print()" class="flex-1 h-11 rounded-lg bg-neutral-800 text-white font-semibold inline-flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-base">print</span> Cetak Halaman Ini
-                </button>
+            <div class="flex gap-2 no-print">
+                <a href="{{ route('so-so.getPaymentPdf', ['id' => $so->id]) }}" class="flex-1 h-11 rounded-lg bg-neutral-800 text-white font-semibold inline-flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Cetak PDF 58mm
+                </a>
                 <a href="{{ route('so-so.getTable') }}" class="h-11 px-6 rounded-lg border border-outline-variant bg-white font-semibold inline-flex items-center justify-center">Tutup</a>
             </div>
+            <p class="text-xs text-on-surface-variant no-print mt-1 text-center">PDF 58mm siap cetak Bluetooth (tanpa dialog print browser).</p>
         </div>
     </div>
 

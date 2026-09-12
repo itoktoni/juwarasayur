@@ -31,4 +31,16 @@ class SoPolicy extends BasePolicy
     {
         return $this->table($user);
     }
+
+    // PDF 58mm Bluetooth (GET /so/so/payment-pdf/{id})
+    public function paymentpdf(User $user): Response
+    {
+        return $this->table($user);
+    }
+
+    // Regenerate QR (POST /so/so/regenerate-payment/{id})
+    public function regeneratepayment(User $user): Response
+    {
+        return $this->table($user);
+    }
 }

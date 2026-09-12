@@ -108,8 +108,8 @@
 
             <div>No&nbsp;&nbsp;: {{ $so->so_code }}</div>
             <div>Tgl&nbsp;&nbsp;: {{ \Illuminate\Support\Carbon::parse($so->so_tanggal)->format('d/m/Y H:i') }}</div>
-            <div>Cs&nbsp;&nbsp;&nbsp;: {{ $so->has_customer?->name ?? $so->so_customer_name ?? '-' }}</div>
-            <div>Res&nbsp;&nbsp;&nbsp;: {{ $so->has_reseller?->name ?? '-' }}</div>
+            <div>Cus&nbsp;&nbsp;&nbsp;: {{ $so->has_customer?->name ?? $so->so_customer_name ?? '-' }}</div>
+            <div>Aff&nbsp;&nbsp;&nbsp;: {{ $so->has_reseller?->name ?? '-' }}</div>
             <div>Kirim: {{ $shippingLabel($so) }}</div>
             @if($so->so_address)<div>Almt&nbsp;: {{ \Illuminate\Support\Str::limit($so->so_address, 60) }}</div>@endif
 
