@@ -110,7 +110,7 @@
                         <form method="POST" action="{{ route('so-so.postRegeneratePayment', ['id' => $so->id]) }}" onsubmit="return confirm('Regenerate QR? Link lama akan tidak berlaku, nominal unik & token baru akan dibuat dan masa berlaku direset. Lanjutkan?')">
                             @csrf
                             <button type="submit" class="h-9 px-4 rounded-lg {{ ($isExpired ?? false) ? 'bg-error text-white' : 'bg-amber-600 text-white' }} text-sm font-semibold inline-flex items-center gap-1.5 hover:opacity-90">
-                                <span class="material-symbols-outlined text-base">refresh</span> Regenerate QR
+                               Regenerate QR
                             </button>
                         </form>
                     </div>
