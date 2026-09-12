@@ -70,6 +70,31 @@
                     <p class="text-xl font-bold font-mono text-primary">{{ formatAngka((float) $so->so_unique_amount, 'Rp') }}</p>
                 </div>
 
+                {{-- Expiry + Regenerate --}}
+                <div class="mt-3 p-3 rounded-lg border {{ ($isExpired ?? false) ? 'bg-error/5 border-error/20' : 'bg-amber-50 border-amber-200' }} text-left">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <p class="text-xs font-semibold {{ ($isExpired ?? false) ? 'text-error' : 'text-amber-800' }} flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-base">{{ ($isExpired ?? false) ? 'timer_off' : 'timer' }}</span>
+                                {{ ($isExpired ?? false) ? 'QR Expired' : 'Masa berlaku QR' }}
+                            </p>
+                            <p class="text-xs {{ ($isExpired ?? false) ? 'text-error' : 'text-on-surface-variant' }} mt-1">
+                                @if($isExpired ?? false)
+                                    Waktu {{ $expiryMinutes ?? 5 }} menit habis (dibuat {{ $so->created_at?->diffForHumans() }}). Regenerate untuk buat QR & link baru.
+                                @else
+                                    Sisa waktu: <span id="qrCountdown" class="font-mono font-bold">{{ sprintf('%02d:%02d', intdiv($secondsLeft ?? 300,60), ($secondsLeft ?? 300)%60) }}</span> ({{ $expiryMinutes ?? 5 }} menit sejak dibuat)
+                                @endif
+                            </p>
+                        </div>
+                        <form method="POST" action="{{ route('so-so.postRegeneratePayment', ['id' => $so->id]) }}" onsubmit="return confirm('Regenerate QR? Link lama akan tidak berlaku, nominal unik & token baru akan dibuat dan masa berlaku direset. Lanjutkan?')">
+                            @csrf
+                            <button type="submit" class="h-9 px-4 rounded-lg {{ ($isExpired ?? false) ? 'bg-error text-white' : 'bg-amber-600 text-white' }} text-sm font-semibold inline-flex items-center gap-1.5 hover:opacity-90">
+                                <span class="material-symbols-outlined text-base">refresh</span> Regenerate QR
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="mt-5 text-left">
                     <label class="block text-sm font-semibold text-on-surface mb-2">Link Pembayaran (bagikan ke customer)</label>
                     <div class="flex gap-2">
@@ -117,7 +142,7 @@
                                 class="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-primary text-on-primary text-sm font-semibold active:scale-95 transition">
                                 <span class="material-symbols-outlined text-base">content_copy</span> Salin Teks Tagihan
                             </button>
-                            <a id="waShare" href="https://wa.me/?text={{ urlencode($waTagihan) }}"
+                            <a id="waShare" href="#" data-wa-base="https://wa.me/?text="
                                 target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-[#25D366] text-white text-sm font-semibold">
                                 <span class="material-symbols-outlined text-base">chat</span> Kirim via WhatsApp
                             </a>
@@ -207,5 +232,32 @@
             ta.value = text; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
             document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb();
         }
+        // Build WhatsApp link via JS encodeURIComponent (UTF-8 safe, emoji tidak jadi �)
+        (function(){
+            function setWaLink(){
+                var ta=document.getElementById('waTagihanText');
+                var a=document.getElementById('waShare');
+                if(!ta||!a) return;
+                var base=a.getAttribute('data-wa-base')||'https://wa.me/?text=';
+                // Jika ada nomor HP customer, bisa pakai wa.me/<no>?text= — untuk sekarang tanpa nomor (pemilih kontak)
+                a.href = base + encodeURIComponent(ta.value);
+            }
+            setWaLink();
+            document.addEventListener('DOMContentLoaded', setWaLink);
+            // update jika textarea berubah (misal future edit)
+            var ta=document.getElementById('waTagihanText');
+            if(ta) ta.addEventListener('input', setWaLink);
+        })();
+        // Countdown QR expiry
+        (function(){
+            var el=document.getElementById('qrCountdown');
+            if(!el) return;
+            var sec={{ (int)($secondsLeft ?? 0) }};
+            function fmt(s){ var m=Math.floor(s/60), sc=s%60; return (m<10?'0':'')+m+':' + (sc<10?'0':'')+sc; }
+            var iv=setInterval(function(){
+                if(sec<=0){ clearInterval(iv); el.textContent='00:00'; el.closest('.bg-amber-50')?.classList.add('!bg-error/5','!border-error/20'); return; }
+                sec--; el.textContent=fmt(sec);
+            },1000);
+        })();
     </script>
 </x-layouts::app>

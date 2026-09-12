@@ -676,17 +676,34 @@ use Modules\So\Models\So;
         }, { signal: __signal });
 
         // --- Detail rows ---
+        function initSoProductSelect(el){
+            if(!el || el.tomselect) return;
+            if(!window.TomSelect){
+                // Vite belum load, retry sebentar
+                setTimeout(function(){ initSoProductSelect(el); }, 200);
+                return;
+            }
+            try{ new TomSelect(el, {create:false, allowEmptyOption:true}); }catch(e){}
+        }
+
         window.addSoRow = function(){
             const wrap = document.getElementById('so-details');
             const tpl = document.getElementById('so-row-template').innerHTML;
             const idx = wrap.querySelectorAll('.so-detail-row').length;
             wrap.insertAdjacentHTML('beforeend', tpl.replaceAll('__IDX__', idx));
+            // TomSelect untuk row baru (product kedua dst sebelumnya tidak ter-init)
+            const newRow = wrap.querySelectorAll('.so-detail-row')[idx];
+            const sel = newRow ? newRow.querySelector('.so-product-select') : null;
+            initSoProductSelect(sel);
             updateSummary();
         }
         window.removeSoRow = function(btn){
             const wrap = document.getElementById('so-details');
             if(wrap.querySelectorAll('.so-detail-row').length <= 1){ alert('Minimal 1 produk'); return; }
-            btn.closest('.so-detail-row')?.remove();
+            const row = btn.closest('.so-detail-row');
+            const sel = row ? row.querySelector('.so-product-select') : null;
+            if(sel && sel.tomselect){ try{ sel.tomselect.destroy(); }catch(e){} }
+            row?.remove();
             wrap.querySelectorAll('.so-detail-row').forEach((row,i)=>{
                 row.dataset.index = i;
                 row.querySelectorAll('[name]').forEach(el=>{

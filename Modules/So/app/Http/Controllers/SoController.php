@@ -9,6 +9,7 @@ use App\Services\Commission\FeeResolver;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Catalog\Models\Product;
 use Modules\Ecommerce\Models\CodLocation;
 use Modules\So\Enums\ShippingMethodEnum;
@@ -181,6 +182,10 @@ class SoController extends Controller
             // fallback simple — jika GD tidak tersedia, pakai qrDataUri yang sama
         }
 
+        $expiryMinutes = (int) env('QRIS_EXPIRY_MINUTES', 5);
+        $secondsLeft = max(0, $expiryMinutes * 60 - (int) $so->created_at?->diffInSeconds(now()));
+        $isExpired = $so->so_status === SoStatusEnum::PENDING && $secondsLeft <= 0;
+
         return $this->views('so::pages.so.payment', [
             'so' => $so,
             'paymentLink' => $paymentLink,
@@ -188,7 +193,35 @@ class SoController extends Controller
             'qrDataUri' => $qrDataUri,
             'qrDownload' => $qrDownload,
             'methodLabel' => \Modules\So\Enums\ShippingMethodEnum::getDescription($so->so_shipping_method),
+            'secondsLeft' => $secondsLeft,
+            'expiryMinutes' => $expiryMinutes,
+            'isExpired' => $isExpired,
         ]);
+    }
+
+    /**
+     * Regenerate QR pembayaran — reset expiry (created_at) + unique amount + token baru.
+     * Dipakai ketika QR expired atau ingin buat link baru (admin).
+     */
+    public function postRegeneratePayment(GeneralRequest $request, $id)
+    {
+        $so = $this->model->findOrFail($id);
+
+        $newToken = (string) Str::uuid();
+        $grand = (float) $so->so_grand_total;
+        $newUnique = $grand + random_int(0, So::uniqueCodeMax());
+
+        // Update created_at agar countdown mulai dari 0 lagi
+        \Illuminate\Support\Facades\DB::table($so->getTable())
+            ->where('id', $so->id)
+            ->update([
+                'so_payment_token' => $newToken,
+                'so_unique_amount' => $newUnique,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+        return $this->response($this->payload(TOAST_SUCCESS, $this->model->find($id)));
     }
 
     /**
