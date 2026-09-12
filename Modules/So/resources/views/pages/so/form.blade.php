@@ -268,9 +268,10 @@ use Modules\So\Models\So;
         var __signal = window.__soFormAbort.signal;
 
         (() => {
-        const SO_PRICES = {!! json_encode($productPrices ?? []) !!};
+         const SO_PRICES = {!! json_encode($productPrices ?? []) !!};
         const SO_RESELLER_FEES = {!! json_encode($productResellerFees ?? []) !!};
         const SO_USER_TYPES = {!! json_encode($resellerTypes ?? []) !!};
+        const SO_CUSTOMER_OWNERS = {!! json_encode($customerOwners ?? []) !!};
         const AUTH_TYPE = '{{ auth()->user()?->type ?? '' }}';
         const SO_WAREHOUSE = {!! $warehouseJson !!};
         const SO_COD_LOCATIONS = {!! $codLocationsJson !!};
@@ -580,7 +581,61 @@ use Modules\So\Models\So;
             }
         }, { signal: __signal });
 
+        function setResellerByCustomer(customerId){
+            const ownerId = SO_CUSTOMER_OWNERS[customerId];
+            const resellerSel = document.querySelector('select[name="so_id_reseller"]');
+            if(!resellerSel) return;
+            // Jika customer punya affiliator/reseller, auto-select; jika tidak, biarkan kosong (fallback ke login)
+            const target = ownerId ? String(ownerId) : '';
+            if(resellerSel.tomselect){
+                resellerSel.tomselect.setValue(target);
+            } else {
+                resellerSel.value = target;
+                resellerSel.dispatchEvent(new Event('change', {bubbles:true}));
+            }
+            // trigger harga ulang setelah owner ganti
+            refreshAutoHarga();
+            updateSummary();
+        }
+        // Hook TomSelect customer -> auto affiliator (TomSelect onChange tidak selalu bubble)
+        function hookCustomerTomSelect(){
+            var cSel=document.querySelector('select[name="so_id_customer"]');
+            if(cSel && cSel.tomselect){
+                // cegah double hook
+                if(cSel.tomselect._soHooked) return;
+                cSel.tomselect._soHooked=true;
+                cSel.tomselect.on('change', function(v){ if(v) setResellerByCustomer(v); else {
+                    var rSel=document.querySelector('select[name="so_id_reseller"]');
+                    if(rSel && rSel.tomselect) rSel.tomselect.clear(); else if(rSel){ rSel.value=''; rSel.dispatchEvent(new Event('change',{bubbles:true}));}
+                    refreshAutoHarga(); updateSummary();
+                }});
+            }
+        }
+        setTimeout(hookCustomerTomSelect, 400);
+        document.addEventListener('DOMContentLoaded', hookCustomerTomSelect);
+        document.addEventListener('livewire:navigated', hookCustomerTomSelect);
+        // Init: jika customer sudah terisi (edit / old input) dan reseller masih kosong → auto isi
+        setTimeout(function(){
+            var cSel=document.querySelector('select[name="so_id_customer"]');
+            var rSel=document.querySelector('select[name="so_id_reseller"]');
+            if(cSel && cSel.value && rSel && !rSel.value){
+                setResellerByCustomer(cSel.value);
+            }
+        }, 700);
+
         document.addEventListener('change', e => {
+            if(e.target.name === 'so_id_customer'){
+                if(e.target.value) setResellerByCustomer(e.target.value);
+                // jika customer dikosongkan, kosongkan reseller juga ke default (login)
+                if(!e.target.value){
+                    const resellerSel = document.querySelector('select[name="so_id_reseller"]');
+                    if(resellerSel){
+                        if(resellerSel.tomselect) resellerSel.tomselect.clear();
+                        else { resellerSel.value=''; resellerSel.dispatchEvent(new Event('change',{bubbles:true})); }
+                        refreshAutoHarga(); updateSummary();
+                    }
+                }
+            }
             if(e.target.name === 'so_shipping_method'){ renderShippingPanes(); }
             if(e.target.classList.contains('so-product-select')){
                 const row = e.target.closest('.so-detail-row');

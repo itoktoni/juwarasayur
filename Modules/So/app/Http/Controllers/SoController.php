@@ -39,9 +39,16 @@ class SoController extends Controller
                 'fee' => (float) ($loc->fee ?? 0),
             ]);
 
+        // Map customer_id -> reference_id (affiliator/reseller pemilik) untuk auto-select di form
+        $customerOwners = User::where('type', UserTypeEnum::CUSTOMER)
+            ->pluck('reference_id', 'id')
+            ->map(fn ($v) => $v ? (int) $v : null)
+            ->all();
+
         return array_merge([
             'model' => $this->model,
             'customerOptions' => $this->customerOptions(),
+            'customerOwners' => $customerOwners,
             'resellerOptions' => $this->resellerOptions(),
             'statusOptions' => SoStatusEnum::getOptions(),
             'shippingMethodOptions' => ShippingMethodEnum::getOptions(),
