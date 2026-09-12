@@ -39,10 +39,13 @@
 
         <x-card label="Upload & Import" icon="upload" :noGrid="true" class="mt-5">
             <p class="text-sm text-on-surface-variant mb-3">
-                Upload file CSV. Produk baru ditambahkan, yang sudah ada (via kode/nama) diupdate harganya.
+                Upload file CSV. <b>Jika Kode Produk sudah ada di DB maka di-update</b>, jika belum maka di-create. Tambahkan kolom <code class="bg-surface-container px-1 py-0.5 rounded">Flag</code> opsional isi <code>update</code>/<code>create</code>/<code>delete</code> untuk paksa aksi (delete = hapus soft-delete).
+            </p>
+            <p class="text-xs text-on-surface-variant mb-2">
+                Format: <code class="bg-surface-container px-1 py-0.5 rounded">Nama Produk;Kode Produk;Harga Jual;Harga Modal;Stok;Fee Reseller (%);Fee Affilator (%);Sort Order;Flag</code> (delimiter <code>;</code> sesuai <code>config/website.php</code>)
             </p>
             <p class="text-xs text-on-surface-variant mb-4">
-                Format: <code class="bg-surface-container px-1 py-0.5 rounded">Nama Produk,Kode Produk,Harga Jual,Harga Modal,Fee Reseller (%),Fee Affilator (%)</code>
+                Contoh Flag: <code>delete</code> di baris <code>PRD-0200</code> akan hapus produk tersebut. Kosong = upsert otomatis. File contoh: <code>docs/produk_2026-09-12_131315.csv</code>
             </p>
             <form action="{{ route('catalog-product.import.post') }}" method="POST" enctype="multipart/form-data">
                 @csrf

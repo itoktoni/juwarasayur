@@ -115,8 +115,8 @@ class ProductController extends Controller
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
-            // Header
-            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Stok', 'Fee Reseller (%)', 'Fee Affilator (%)', 'Sort Order'], $delimiter);
+            // Header + Flag (create/update/delete — kosong = upsert otomatis jika kode sudah ada → update)
+            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Stok', 'Fee Reseller (%)', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
 
             foreach ($products as $product) {
                 fputcsv($handle, [
@@ -128,6 +128,7 @@ class ProductController extends Controller
                     $product->reseller_fee_percent ?? '',
                     $product->affiliator_fee_percent ?? '',
                     $product->sort_order ?? 0,
+                    '', // Flag kosong = upsert
                 ], $delimiter);
             }
 
@@ -184,6 +185,7 @@ class ProductController extends Controller
 
         $added = 0;
         $updated = 0;
+        $deleted = 0;
         $errors = [];
         $rowNum = 1;
 
@@ -192,34 +194,96 @@ class ProductController extends Controller
         try {
             while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                 $rowNum++;
-                if (count($row) < count($headerMap)) {
-                    $errors[] = "Baris {$rowNum}: kolom kurang dari header.";
-
+                // skip empty rows
+                if (count(array_filter($row, fn ($v) => trim((string) $v) !== '')) === 0) {
                     continue;
                 }
-
+                // allow flag column to make row shorter/longer — mapRow handles missing
                 $data = $this->mapRowToFields($row, $headerMap);
 
-                if (empty($data['product_nama'])) {
-                    $errors[] = "Baris {$rowNum}: nama produk kosong.";
+                // flag: update | create | delete (hapus) — jika ada maka paksa aksi, jika kosong = upsert
+                $flag = strtolower(trim((string) ($data['flag'] ?? '')));
+                unset($data['flag']);
+                $isDelete = in_array($flag, ['delete', 'hapus', 'del', 'remove', 'deleted'], true);
+                $isCreate = in_array($flag, ['create', 'insert', 'baru', 'add'], true);
+                $isUpdate = in_array($flag, ['update', 'edit', 'ubah'], true);
+
+                if (empty($data['product_nama']) && empty($data['product_kode'])) {
+                    $errors[] = "Baris {$rowNum}: nama/kode produk kosong.";
 
                     continue;
                 }
 
                 $product = $this->findProduct($data);
 
-                if ($product) {
+                // Flag delete: hapus jika ada, skip jika tidak ada
+                if ($isDelete) {
+                    if ($product) {
+                        $product->delete();
+                        $deleted++;
+                    } else {
+                        $errors[] = "Baris {$rowNum}: flag=delete tapi kode '".($data['product_kode'] ?? $data['product_nama'])."' tidak ditemukan.";
+                    }
+                    continue;
+                }
+
+                // Flag create: hanya insert, jangan update
+                if ($isCreate) {
+                    if ($product) {
+                        $errors[] = "Baris {$rowNum}: flag=create tapi kode '{$data['product_kode']}' sudah ada — dilewati.";
+
+                        continue;
+                    }
+                    if (empty($data['product_nama'])) {
+                        $errors[] = "Baris {$rowNum}: flag=create butuh nama produk.";
+
+                        continue;
+                    }
+                    $data['product_status'] = 'active';
+                    $data['is_active'] = 1;
+                    // bersihkan null agar saving hook tidak error
+                    $data = array_filter($data, fn ($v) => $v !== null);
+                    foreach (['product_harga', 'product_harga_modal', 'product_stok', 'sort_order'] as $intField) {
+                        if (isset($data[$intField])) $data[$intField] = (int) $data[$intField];
+                    }
+                    Product::create($data);
+                    $added++;
+                    continue;
+                }
+
+                // Flag update: hanya update, jangan create
+                if ($isUpdate) {
+                    if (! $product) {
+                        $errors[] = "Baris {$rowNum}: flag=update tapi kode '".($data['product_kode'] ?? $data['product_nama'])."' tidak ditemukan.";
+
+                        continue;
+                    }
                     $clean = array_filter($data, fn ($v) => $v !== null);
-                    // Force numeric fields to int so Eloquent dirty-check triggers
                     foreach (['product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'] as $intField) {
-                        if (isset($clean[$intField])) {
-                            $clean[$intField] = (int) $clean[$intField];
-                        }
+                        if (isset($clean[$intField])) $clean[$intField] = (int) $clean[$intField];
                     }
                     foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $decField) {
-                        if (isset($clean[$decField])) {
-                            $clean[$decField] = (float) $clean[$decField];
-                        }
+                        if (isset($clean[$decField])) $clean[$decField] = (float) $clean[$decField];
+                    }
+                    $product->update($clean);
+                    $updated++;
+                    continue;
+                }
+
+                // Default upsert: jika ada kode di DB maka update, jika tidak maka create
+                if (empty($data['product_nama'])) {
+                    $errors[] = "Baris {$rowNum}: nama produk kosong.";
+
+                    continue;
+                }
+
+                if ($product) {
+                    $clean = array_filter($data, fn ($v) => $v !== null);
+                    foreach (['product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'] as $intField) {
+                        if (isset($clean[$intField])) $clean[$intField] = (int) $clean[$intField];
+                    }
+                    foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $decField) {
+                        if (isset($clean[$decField])) $clean[$decField] = (float) $clean[$decField];
                     }
                     $product->update($clean);
                     $updated++;
@@ -241,9 +305,13 @@ class ProductController extends Controller
 
         fclose($handle);
 
-        $summary = "Import selesai: {$added} ditambahkan, {$updated} diperbarui.";
+        $parts = [];
+        if ($added) $parts[] = "{$added} ditambahkan";
+        if ($updated) $parts[] = "{$updated} diperbarui";
+        if ($deleted) $parts[] = "{$deleted} dihapus";
+        $summary = "Import selesai: ".(empty($parts) ? "tidak ada perubahan" : implode(', ', $parts)).".";
         if ($errors !== []) {
-            $summary .= ' '.count($errors).' baris errors (lihat flash message).';
+            $summary .= ' '.count($errors).' baris errors (lihat detail).';
         }
 
         return redirect()->route('catalog-product.getTable')
@@ -270,6 +338,12 @@ class ProductController extends Controller
             'sort_order' => 'sort_order',
             'sort' => 'sort_order',
             'urutan' => 'sort_order',
+            // flag aksi: update / create / delete (hapus)
+            'flag' => 'flag',
+            'aksi' => 'flag',
+            'action' => 'flag',
+            'status' => 'flag',
+            'keterangan' => 'flag',
         ];
 
         $result = [];
