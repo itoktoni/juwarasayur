@@ -10,7 +10,14 @@
     <meta name="user-id" content="{{ auth()->id() }}"/>
     @endauth
     @php
-        $faviconUrl = \App\Models\WebsiteSetting::fileUrl(\App\Models\WebsiteSetting::merged()['favicon'] ?? null) ?? '/favicon.ico';
+        $rawFavicon = \App\Models\WebsiteSetting::merged()['favicon'] ?? null;
+        $faviconUrl = \App\Models\WebsiteSetting::fileUrl($rawFavicon) ?? '/favicon.ico';
+        if ($rawFavicon && ! str_starts_with($faviconUrl, 'http')) {
+            $faviconPath = public_path(ltrim($faviconUrl, '/'));
+            if (is_file($faviconPath)) {
+                $faviconUrl .= '?v='.filemtime($faviconPath);
+            }
+        }
     @endphp
     <title>{{ config('website.name', $title ?? 'CMS') }}</title>
     <link rel="icon" href="{{ $faviconUrl }}" sizes="any">

@@ -13,9 +13,27 @@ use Illuminate\Support\Facades\Auth;
 use Modules\Ecommerce\Http\Controllers\HomeController;
 use Modules\Ecommerce\Http\Controllers\StorefrontController;
 
-// Halaman khusus pendaftaran reseller (POST tetap ditangani Fortify: register.store)
+// Favicon dinamis dari Settings → Website (hilangkan 404 GET /favicon.ico di console & globe di auth pages)
+Route::get('/favicon.ico', function () {
+    $raw = \App\Models\WebsiteSetting::merged()['favicon'] ?? null;
+    $url = \App\Models\WebsiteSetting::fileUrl($raw);
+    $path = $url ? public_path(ltrim($url, '/')) : null;
+    if ($path && is_file($path)) {
+        return response()->file($path, ['Cache-Control' => 'public, max-age=31536000']);
+    }
+    // fallback: file di public/storage/website/ terbaru jika config belum kebaca
+    $fallback = public_path('storage/website/6aa575ef4f3f4_favicon.png');
+    if (is_file($fallback)) {
+        return response()->file($fallback, ['Cache-Control' => 'public, max-age=31536000']);
+    }
+    abort(404);
+});
+
+// Halaman khusus pendaftaran reseller & affiliator (POST tetap ditangani Fortify: register.store)
 Route::middleware('guest')->get('/register/reseller', fn () => view('pages::auth.register-reseller'))
     ->name('register.reseller');
+Route::middleware('guest')->get('/register/affiliator', fn () => view('pages::auth.register-affiliator'))
+    ->name('register.affiliator');
 
 Route::middleware('auth')->post('/centrifugo/token', function (Request $request) {
     if (! config('centrifugo.enabled')) {

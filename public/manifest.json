@@ -12,14 +12,14 @@
     "categories": ["business", "productivity"],
     "icons": [
         {
-            "src": "/favicon.ico",
+            "src": "/storage/website/6aa575ef4f3f4_favicon.png",
             "sizes": "any",
-            "type": "image/x-icon"
+            "type": "image/png"
         },
         {
-            "src": "/favicon.svg",
+            "src": "/storage/website/6aa575ef4f3f4_favicon.png",
             "sizes": "any",
-            "type": "image/svg+xml",
+            "type": "image/png",
             "purpose": "any"
         },
         {
@@ -34,12 +34,12 @@
         {
             "name": "Dashboard",
             "url": "/admin/dashboard",
-            "icons": [{ "src": "/favicon.ico", "sizes": "any" }]
+            "icons": [{ "src": "/storage/website/6aa575ef4f3f4_favicon.png", "sizes": "any" }]
         },
         {
             "name": "Katalog",
             "url": "/product",
-            "icons": [{ "src": "/favicon.ico", "sizes": "any" }]
+            "icons": [{ "src": "/storage/website/6aa575ef4f3f4_favicon.png", "sizes": "any" }]
         }
     ]
 }

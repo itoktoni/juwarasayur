@@ -30,9 +30,9 @@
                     <span>{{ __("Don't have an account?") }}</span>
                     <a href="{{ route('register') }}" class="link link-primary">{{ __('Sign up') }}</a>
                 </div>
-                @if (Route::has('register.reseller'))
+                @if (Route::has('register.affiliator'))
                     <div>
-                        <a href="{{ route('register.reseller') }}" class="link link-secondary font-semibold">Daftar jadi Reseller</a>
+                        <a href="{{ route('register.affiliator') }}" class="link link-secondary font-semibold">Daftar jadi Affiliator</a>
                     </div>
                 @endif
             </div>

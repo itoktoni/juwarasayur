@@ -107,9 +107,11 @@ class WebsiteSettingController extends Controller
         if ($request->hasFile('favicon')) {
             $this->deleteOld($existing['favicon'] ?? null);
             $validated['favicon'] = 'storage/website/'.$this->storeFile($request->file('favicon'), $dir);
+            $this->syncFaviconArtifacts($validated['favicon']);
         } elseif (! empty($validated['remove_favicon'])) {
             $this->deleteOld($existing['favicon'] ?? null);
             $validated['favicon'] = null;
+            $this->syncFaviconArtifacts(null);
         } else {
             unset($validated['favicon']);
         }
@@ -222,6 +224,47 @@ class WebsiteSettingController extends Controller
         $file->move($dir, $name);
 
         return $name;
+    }
+
+    private function syncFaviconArtifacts(?string $faviconPath): void
+    {
+        // Sinkronkan public/favicon.ico dan public/manifest.json agar browser yang request /favicon.ico
+        // atau baca manifest tetap dapat icon terbaru (home tanpa manifest tetap pakai <link rel="icon">).
+        try {
+            $manifestPath = public_path('manifest.json');
+            $faviconIcoPath = public_path('favicon.ico');
+
+            if ($faviconPath) {
+                $url = '/'.ltrim($faviconPath, '/');
+                // Jangan copy png → favicon.ico (png bukan ico valid, bikin browser globe). Biarkan /favicon.ico 404, browser pakai <link rel="icon"> png.
+                if (is_file($manifestPath)) {
+                    $json = json_decode(file_get_contents($manifestPath), true);
+                    if (is_array($json)) {
+                        if (isset($json['icons'][0]['src'])) $json['icons'][0]['src'] = $url;
+                        if (isset($json['icons'][1]['src'])) $json['icons'][1]['src'] = $url;
+                        if (isset($json['shortcuts'][0]['icons'][0]['src'])) $json['shortcuts'][0]['icons'][0]['src'] = $url;
+                        if (isset($json['shortcuts'][1]['icons'][0]['src'])) $json['shortcuts'][1]['icons'][0]['src'] = $url;
+                        file_put_contents($manifestPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+                    }
+                }
+            } else {
+                // favicon dihapus → kembalikan manifest ke default /favicon.ico (akan 404, tapi tidak crash)
+                if (is_file($faviconIcoPath)) unlink($faviconIcoPath);
+                if (is_file($manifestPath)) {
+                    $json = json_decode(file_get_contents($manifestPath), true);
+                    if (is_array($json)) {
+                        $fallback = '/favicon.ico';
+                        if (isset($json['icons'][0]['src'])) $json['icons'][0]['src'] = $fallback;
+                        if (isset($json['icons'][1]['src'])) $json['icons'][1]['src'] = $fallback;
+                        if (isset($json['shortcuts'][0]['icons'][0]['src'])) $json['shortcuts'][0]['icons'][0]['src'] = $fallback;
+                        if (isset($json['shortcuts'][1]['icons'][0]['src'])) $json['shortcuts'][1]['icons'][0]['src'] = $fallback;
+                        file_put_contents($manifestPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // jangan block save settings jika manifest gagal ditulis
+        }
     }
 
     private function deleteOld(?string $path): void

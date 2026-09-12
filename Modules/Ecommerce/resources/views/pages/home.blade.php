@@ -9,7 +9,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $siteName }} — Toko Sayur & Sembako Segar</title>
-    @php $faviconUrl = \App\Models\WebsiteSetting::fileUrl(\App\Models\WebsiteSetting::merged()['favicon'] ?? null) ?? asset('favicon.ico'); @endphp
+    @php
+        $rawFaviconHome = \App\Models\WebsiteSetting::merged()['favicon'] ?? null;
+        $faviconUrl = \App\Models\WebsiteSetting::fileUrl($rawFaviconHome) ?? asset('favicon.ico');
+        if ($rawFaviconHome && ! str_starts_with($faviconUrl, 'http')) {
+            $fp = public_path(ltrim($faviconUrl, '/'));
+            if (is_file($fp)) $faviconUrl .= '?v='.filemtime($fp);
+        }
+    @endphp
     <link rel="icon" href="{{ $faviconUrl }}" sizes="any">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />

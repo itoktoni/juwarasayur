@@ -5,7 +5,15 @@
 
 @php
     $wsName = ($websiteSettings ?? [])['name'] ?? config('app.name', 'Laravel');
-    $faviconUrl = \App\Models\WebsiteSetting::fileUrl(($websiteSettings ?? [])['favicon'] ?? null) ?? '/favicon.ico';
+    $rawFavicon = ($websiteSettings ?? [])['favicon'] ?? null;
+    $faviconUrl = \App\Models\WebsiteSetting::fileUrl($rawFavicon) ?? '/favicon.ico';
+    // Cache-bust agar browser tidak cache favicon lama setelah upload di Settings → Website
+    if ($rawFavicon && ! str_starts_with($faviconUrl, 'http')) {
+        $faviconPath = public_path(ltrim($faviconUrl, '/'));
+        if (is_file($faviconPath)) {
+            $faviconUrl .= '?v='.filemtime($faviconPath);
+        }
+    }
 @endphp
 
 <title>{{ filled($title ?? null) ? $title.' - '.$wsName : $wsName }}</title>

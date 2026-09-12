@@ -24,8 +24,8 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'phone' => ['nullable', 'string', 'max:20'],
-            // Form register reseller mengirim as=reseller agar akun otomatis ber-type reseller
-            'as' => ['nullable', 'string', 'in:'.UserTypeEnum::RESELLER],
+            // Form register reseller/affiliator mengirim as=reseller|affiliator agar akun otomatis ber-type sesuai route
+            'as' => ['nullable', 'string', 'in:'.UserTypeEnum::RESELLER.','.UserTypeEnum::AFFILIATOR],
             'password' => $this->passwordRules(),
         ])->validate();
 
@@ -38,14 +38,17 @@ class CreateNewUser implements CreatesNewUsers
         // Cegah self-referral tidak mungkin di register (belum punya id), tapi tetap jaga jika code milik email yang sama
         // reference_id hanya diisi saat register; tidak overwrite jika sudah ada
 
+        $as = $input['as'] ?? null;
+        $isAffiliateType = in_array($as, [UserTypeEnum::RESELLER, UserTypeEnum::AFFILIATOR], true);
+
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
             'phone' => $input['phone'] ?? null,
-            'type' => ($input['as'] ?? null) === UserTypeEnum::RESELLER ? UserTypeEnum::RESELLER : 'user',
-            // Fee komisi awal dari konfigurasi global; hanya admin yang bisa adjust per-reseller
-            'fee' => ($input['as'] ?? null) === UserTypeEnum::RESELLER ? (float) config('commission.rate', 2) : null,
+            'type' => $isAffiliateType ? $as : 'user',
+            // Fee komisi awal dari konfigurasi global; hanya admin yang bisa adjust per-reseller/affiliator
+            'fee' => $isAffiliateType ? (float) config('commission.rate', 2) : null,
             'reference_id' => $referenceId,
         ]);
     }
