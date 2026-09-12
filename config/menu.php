@@ -115,9 +115,9 @@ return [
 
     'bottom_nav' => [
 
-        ['route' => 'catalog-product.getTable', 'icon' => 'spa', 'label' => 'Product'],
-        ['route' => 'prepare.index', 'icon' => 'inventory_2', 'label' => 'Prepare SO'],
         ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Home'],
+        ['route' => 'catalog-product.getTable', 'icon' => 'spa', 'label' => 'Product'],
+        ['route' => 'so-so.getTable', 'icon' => 'receipt_long', 'label' => 'SO'],
         ['route' => 'po-generate.preview', 'icon' => 'auto_awesome', 'label' => 'PO-SO'],
         ['route' => 'po-po.getTable', 'icon' => 'shopping_cart', 'label' => 'PO'],
 
