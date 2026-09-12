@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\So\Http\Controllers\AffiliatorController;
 use Modules\So\Http\Controllers\ConsignmentController;
 use Modules\So\Http\Controllers\CustomerController;
 use Modules\So\Http\Controllers\DiscountController;
@@ -11,6 +12,7 @@ Route::auto('/so/so', SoController::class, ['name' => 'so-so']);
 Route::auto('/so/consignment', ConsignmentController::class, ['name' => 'so-consignment']);
 Route::auto('/so/customer', CustomerController::class, ['name' => 'so-customer']);
 Route::auto('/so/reseller', ResellerController::class, ['name' => 'so-reseller']);
+Route::auto('/so/affiliator', AffiliatorController::class, ['name' => 'so-affiliator']);
 Route::auto('/so/discount', DiscountController::class, ['name' => 'so-discount']);
 
 // AJAX endpoints (getShippingCost / getCodFee) sudah ter-cover oleh Route::auto:

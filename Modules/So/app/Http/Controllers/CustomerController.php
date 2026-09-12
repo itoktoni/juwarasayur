@@ -23,6 +23,16 @@ class CustomerController extends Controller
         ], $data);
     }
 
+    public function getCreate(GeneralRequest $request)
+    {
+        // Prefill pemilik dari query ?reference_id= untuk flow affiliator -> tambah customer
+        if ($request->has('reference_id') && ! $this->model->exists) {
+            $this->model->reference_id = (int) $request->query('reference_id');
+        }
+
+        return parent::getCreate($request);
+    }
+
     protected function getData()
     {
         $query = User::query()
@@ -153,7 +163,12 @@ class CustomerController extends Controller
     {
         $auth = Auth::user();
         if ($auth && ($auth->isAdmin() || $auth->isDeveloper())) {
-            return User::where('type', UserTypeEnum::RESELLER)->orderBy('name')->pluck('name', 'id')->all();
+            return User::whereIn('type', [UserTypeEnum::RESELLER, UserTypeEnum::AFFILIATOR])
+                ->orderBy('name')
+                ->get(['id', 'name', 'type'])
+                ->mapWithKeys(fn ($u) => [
+                    $u->id => $u->type === UserTypeEnum::AFFILIATOR ? "{$u->name} (Affiliator)" : $u->name,
+                ])->all();
         }
 
         return [];

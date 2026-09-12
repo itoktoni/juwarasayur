@@ -29,18 +29,39 @@
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Phone</th>
-                <th>Affiliator / Reseller</th>
+                <th>Referral</th>
+                <th class="text-center">Jumlah Customer</th>
             </x-slot:head>
 
             <x-slot:body>
                 @foreach($data as $table)
                 <tr>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
-                    <x-table-action :model="$model" :id="$table->field_primary" />
+                    <x-table-action :model="$model" :id="$table->field_primary">
+                        <a href="{{ url('/admin/so/customer/table') }}?filter[reference_id]={{ $table->id }}"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            title="Lihat customer milik affiliator ini">
+                            <span class="material-symbols-outlined text-lg">group</span>
+                        </a>
+                        @if($table->referral_code)
+                        <button type="button" onclick="navigator.clipboard.writeText('{{ url('/r/'.$table->referral_code) }}'); alert('Link referral disalin: {{ url('/r/'.$table->referral_code) }}')"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 transition-colors"
+                            title="Salin link referral">
+                            <span class="material-symbols-outlined text-lg">link</span>
+                        </button>
+                        @endif
+                    </x-table-action>
                     <td>{{ $table->name }}</td>
                     <td>{{ $table->email }}</td>
                     <td>{{ $table->phone ?? '-' }}</td>
-                    <td>{{ $table->hasReseller?->name ?? '-' }}{{ $table->hasReseller && $table->hasReseller->type === \App\Enums\UserTypeEnum::AFFILIATOR ? ' (Affiliator)' : '' }}</td>
+                    <td class="font-mono text-xs">
+                        @if($table->referral_code)
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 border border-amber-200 text-amber-800">{{ $table->referral_code }}</span>
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td class="text-center font-mono">{{ $table->hasCustomers()->count() }}</td>
                 </tr>
                 @endforeach
             </x-slot:body>
@@ -61,17 +82,21 @@
                                 <p class="text-xs font-medium text-on-surface">{{ $table->phone ?? '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Affiliator / Reseller</p>
-                                <p class="text-xs font-medium text-on-surface">{{ $table->hasReseller?->name ?? '-' }}{{ $table->hasReseller && $table->hasReseller->type === \App\Enums\UserTypeEnum::AFFILIATOR ? ' (Affiliator)' : '' }}</p>
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Referral</p>
+                                <p class="text-xs font-mono font-medium text-amber-700">{{ $table->referral_code ?? '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">ID</p>
-                                <p class="text-xs font-mono font-medium text-on-surface">{{ $table->id }}</p>
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Jumlah Customer</p>
+                                <p class="text-xs font-mono font-medium text-on-surface">{{ $table->hasCustomers()->count() }}</p>
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">
                             <span class="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">{{ $table->field_primary }}</span>
                             <div class="flex gap-1" onclick="event.stopPropagation()">
+                                <a href="{{ url('/admin/so/customer/table') }}?filter[reference_id]={{ $table->id }}"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Lihat customer">
+                                    <span class="material-symbols-outlined text-base">group</span>
+                                </a>
                                 <x-table-action :model="$model" :id="$table->field_primary" />
                             </div>
                         </div>

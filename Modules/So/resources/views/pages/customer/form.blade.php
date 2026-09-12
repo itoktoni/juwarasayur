@@ -12,7 +12,7 @@
                 <x-input col="6" name="password" type="password" :helper="$model->exists ? 'Kosongkan jika tidak ingin mengganti password' : null" />
 
                 @if(!empty($resellerOptions))
-                    <x-select col="6" name="reference_id" label="Reseller" :options="$resellerOptions" class="search" />
+                    <x-select col="6" name="reference_id" label="Affiliator / Reseller" :options="$resellerOptions" class="search" placeholder="-- Pilih Pemilik --" />
                 @endif
 
                 <x-file
