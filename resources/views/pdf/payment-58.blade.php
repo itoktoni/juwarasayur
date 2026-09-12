@@ -122,39 +122,6 @@
     </tr>
   </table>
 
-  <!-- ========== QR ========== -->
-  @if($qrDataUri)
-  <table width="100%" cellpadding="0" cellspacing="0">
-  <tr><td align="center" style="padding:8pt 0 5pt 0;">
-    <img src="{{ $qrDataUri }}" alt="QRIS" width="110" height="110" style="border:1px solid #ddd; padding:3pt; background:#fff;">
-    <div style="font-size:7px; color:#555; margin-top:3pt;">Scan QRIS untuk bayar</div>
-  </td></tr>
-  </table>
-  @endif
-
-  <!-- ========== LINK BOX ========== -->
-  <table width="100%" cellpadding="5" cellspacing="0" style="border:1px dashed #999; background:#f5f5f5;">
-    <tr>
-      <td align="center" style="font-size:6.5px; color:#333; word-break:break-all; line-height:1.5;">
-        {{ $paymentLink }}<br>
-        Exp {{ $expiryMinutes }} mnt &middot; Dibuat {{ $so->created_at?->format('d/m H:i') }}
-      </td>
-    </tr>
-  </table>
-
-  <!-- DIVIDER -->
-  <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px dashed #000; font-size:1px; line-height:1px; padding-top:4pt;">&nbsp;</td></tr></table>
-
-  <!-- ========== FOOTER ========== -->
-  <table width="100%" cellpadding="0" cellspacing="0">
-  <tr>
-  <td align="center" style="font-size:7.5px; line-height:1.5; padding:4pt 0 6pt 0;">
-    ~~ Terima kasih ~~<br>
-    Sayur Segar, Pilihan Juara!
-  </td>
-  </tr>
-  </table>
-
 </td>
 </tr>
 </table>

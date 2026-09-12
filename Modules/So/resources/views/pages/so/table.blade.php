@@ -30,7 +30,7 @@
                 <th>Actions</th>
                 <th>Kode</th>
                 <th>Tanggal</th>
-                <th>Reseller</th>
+                <th>Affiliator</th>
                 <th>Customer</th>
                 <th>Status</th>
                 <th>Pengiriman</th>

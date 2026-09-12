@@ -27,7 +27,7 @@ use Modules\So\Models\So;
                 <x-input col="4" name="so_tanggal" label="Tanggal" type="date" />
                 <x-select col="4" name="so_id_customer" label="Customer" :options="$customerOptions" class="search" placeholder="-- Pilih Customer --" />
                 @if(!empty($resellerOptions))
-                    <x-select col="6" name="so_id_reseller" label="Reseller" :options="$resellerOptions" class="search" placeholder="-- User Login (Saya) --" helper="Kosongkan untuk memakai user login sebagai reseller" />
+                    <x-select col="6" name="so_id_reseller" label="Affiliator" :options="$resellerOptions" class="search" placeholder="-- User Login (Saya) --" helper="Kosongkan untuk memakai user login sebagai reseller" />
                 @endif
                 <x-select col="6" name="so_status" label="Status" :options="$statusOptions" />
                 <x-textarea col="12" name="so_keterangan" label="Keterangan" />
