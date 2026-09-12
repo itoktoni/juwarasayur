@@ -12,6 +12,76 @@
             <p class="text-sm text-on-primary/80 mt-1">Pantau performa penjualan tokohmu di sini.</p>
         </div>
 
+        {{-- Referral Link Affiliator --}}
+        <div id="referral-card" class="p-5 rounded-2xl bg-white border border-outline-variant/50 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-primary/10 grid place-items-center"><span class="material-symbols-outlined text-primary">link</span></span>
+                    <div>
+                        <h3 class="font-bold text-on-surface">Link Referral Kamu</h3>
+                        <p class="text-xs text-on-surface-variant">Bagikan link ini — setiap yang daftar / checkout via link akan terikat ke kamu (30 hari cookie).</p>
+                    </div>
+                </div>
+                <span class="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-primary/10 text-primary">Aktif</span>
+            </div>
+
+            @php $refCode = $user->referral_code; $refLink = $refCode ? url('/r/'.$refCode) : ''; $refLinkQuery = $refCode ? url('/?ref='.$refCode) : ''; @endphp
+
+            @if($refCode)
+                <div class="mt-4 space-y-3">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="flex-1 relative">
+                            <input id="ref-link-main" type="text" readonly value="{{ $refLink }}" class="w-full h-11 pr-10 pl-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm font-mono text-on-surface outline-none">
+                            <button type="button" onclick="copyRef('ref-link-main', this)" class="absolute right-1 top-1 h-9 px-3 rounded-lg bg-primary text-on-primary text-xs font-bold hover:opacity-90">Salin</button>
+                        </div>
+                        <a href="{{ $refLink }}" target="_blank" class="h-11 inline-flex items-center justify-center gap-1 px-4 rounded-xl border border-outline-variant text-sm font-semibold hover:bg-surface-container">Buka <span class="material-symbols-outlined text-base">open_in_new</span></a>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="flex-1 flex items-center gap-2 text-xs text-on-surface-variant">
+                            <span class="shrink-0">Alternatif:</span>
+                            <code class="flex-1 truncate bg-surface-container px-2 py-1 rounded text-[11px] font-mono">{{ $refLinkQuery }}</code>
+                            <button type="button" onclick="navigator.clipboard.writeText('{{ $refLinkQuery }}'); this.textContent='Tersalin'; setTimeout(()=>this.textContent='Salin',1500)" class="shrink-0 text-primary font-semibold">Salin</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <button type="button" onclick="document.getElementById('ref-custom-form').classList.toggle('hidden')" class="text-primary font-semibold hover:underline">Ubah kode</button>
+                        <span class="text-outline">•</span>
+                        <span class="text-on-surface-variant">Kode: <span class="font-mono font-bold text-on-surface">{{ $refCode }}</span></span>
+                    </div>
+                </div>
+
+                <form id="ref-custom-form" method="POST" action="{{ route('account.referral.generate') }}" class="hidden mt-4 p-3 rounded-xl bg-surface-container-low border border-outline-variant/50 flex flex-col sm:flex-row gap-2">
+                    @csrf
+                    <input type="text" name="referral_code" placeholder="Kosongkan untuk generate otomatis (A-Z0-9, 4-20 char)" maxlength="20" class="flex-1 h-10 px-3 bg-white border border-outline-variant rounded-lg text-sm font-mono uppercase outline-none focus:border-primary">
+                    <button type="submit" class="h-10 px-4 rounded-xl bg-primary text-on-primary text-sm font-bold">Simpan</button>
+                    <button type="button" onclick="this.closest('form').requestSubmit()" class="hidden"></button>
+                </form>
+                @error('referral_code')<p class="text-xs text-error mt-2">{{ $message }}</p>@enderror
+            @else
+                <div class="mt-4">
+                    <p class="text-sm text-on-surface-variant">Kamu belum punya kode referral.</p>
+                    <form method="POST" action="{{ route('account.referral.generate') }}" class="mt-3 flex gap-2">
+                        @csrf
+                        <button type="submit" class="h-11 px-5 rounded-xl bg-primary text-on-primary text-sm font-bold inline-flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base">bolt</span> Buat Kode Referral
+                        </button>
+                    </form>
+                </div>
+            @endif
+
+            <script>
+                function copyRef(id, btn){
+                    const el = document.getElementById(id);
+                    if(!el) return;
+                    el.select(); el.setSelectionRange(0, 99999);
+                    navigator.clipboard.writeText(el.value).then(()=>{
+                        const o = btn.textContent; btn.textContent='Tersalin ✓';
+                        setTimeout(()=>btn.textContent=o, 1500);
+                    });
+                }
+            </script>
+        </div>
+
         {{-- Stat cards --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm">

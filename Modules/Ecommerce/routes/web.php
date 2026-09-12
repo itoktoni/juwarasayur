@@ -48,6 +48,7 @@ Route::get('/payment/{token}/status', [PaymentController::class, 'status'])->nam
 Route::middleware('auth')->group(function () {
     Route::get('/account/orders', [OrderController::class, 'index'])->name('ecommerce.orders.index');
     Route::get('/account/orders/{id}', [OrderController::class, 'show'])->name('ecommerce.orders.show');
+    Route::post('/account/orders/{id}/regenerate', [OrderController::class, 'regenerate'])->name('ecommerce.orders.regenerate');
 });
 
 /*
@@ -57,6 +58,8 @@ Route::middleware('auth')->group(function () {
 */
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/account/dashboard', [AccountController::class, 'dashboard'])->name('account.dashboard');
+    Route::get('/account/crm', [AccountController::class, 'crm'])->name('account.crm');
+    Route::post('/account/referral', [AccountController::class, 'referralGenerate'])->name('account.referral.generate');
     Route::post('/account/bank', [AccountController::class, 'updateBank'])->name('account.bank.update');
     Route::post('/account/withdraw', [AccountController::class, 'withdraw'])->name('account.withdraw');
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');

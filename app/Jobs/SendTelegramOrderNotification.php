@@ -15,16 +15,14 @@ class SendTelegramOrderNotification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Pastikan job hanya jalan setelah transaksi DB commit.
-     */
-    public $afterCommit = true;
-
     public int $tries = 3;
 
     public int $backoff = 30;
 
-    public function __construct(public int $soId) {}
+    public function __construct(public int $soId)
+    {
+        $this->afterCommit = true;
+    }
 
     public function handle(TelegramService $telegram): void
     {

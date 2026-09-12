@@ -4,6 +4,7 @@ namespace Modules\Ecommerce\Http\Controllers;
 
 use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\CaptureAffiliateRef;
 use App\Models\User;
 use App\Services\Commission\FeeResolver;
 use BaconQrCode\Common\ErrorCorrectionLevel;
@@ -242,6 +243,13 @@ class CheckoutController extends Controller
         $isReseller = $user && $user->isReseller();
         $isAffiliator = $user && $user->isAffiliator();
 
+        // Guest atau customer tanpa reference_id dapat teratribusi dari cookie aff_ref
+        $affiliatorId = CaptureAffiliateRef::resolvedAffiliatorId($request);
+        // Cegah self-referral: affiliator tidak bisa merefer dirinya sendiri
+        if ($affiliatorId && $user && (int) $affiliatorId === (int) $user->id) {
+            $affiliatorId = null;
+        }
+
         if ($user && ! $isReseller && ! $isAffiliator && $user->type !== UserTypeEnum::CUSTOMER) {
             abort(403, 'Hanya customer/reseller/affiliator yang dapat melakukan pemesanan.');
         }
@@ -278,7 +286,22 @@ class CheckoutController extends Controller
         } else {
             $buyerName = $validated['customer_name'];
             $buyerPhone = $validated['customer_phone'];
-            $soIdReseller = $user ? ($user->reference_id ?: $user->id) : null;
+            // Jika customer sudah terikat reference_id, pakai itu; jika belum dan ada aff_ref cookie, pakai affiliatorId
+            // Jika guest checkout dengan aff_ref, SO tetap teratribusi ke affiliator
+            if ($user) {
+                // Auto-bind reference_id sekali (lifetime lock) jika belum punya
+                if (empty($user->reference_id) && $affiliatorId) {
+                    $user->update(['reference_id' => $affiliatorId]);
+                    $user->refresh();
+                }
+                $soIdReseller = $user->reference_id ?: $user->id;
+                // Jika masih null (customer biasa tanpa referrer) fallback ke affiliatorId dari cookie
+                if (empty($soIdReseller) && $affiliatorId) {
+                    $soIdReseller = $affiliatorId;
+                }
+            } else {
+                $soIdReseller = $affiliatorId;
+            }
             $soIdCustomer = $user?->id;
         }
 

@@ -44,6 +44,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
 
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('crm/dashboard', CrmDashboardController::class)->name('crm.dashboard');
+    Route::get('crm/referral', \App\Http\Controllers\CrmReferralController::class)->name('crm.referral');
 
     Route::auto('/user', 'UsersController', ['name' => 'user']);
 
@@ -111,6 +112,12 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
         });
     });
 });
+
+// Referral short link: /r/CODE → set cookie+session via middleware lalu redirect home
+Route::get('/r/{code}', function (string $code) {
+    // Middleware CaptureAffiliateRef sudah set cookie+session; tinggal redirect
+    return redirect()->route('home');
+})->name('referral.redirect');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 

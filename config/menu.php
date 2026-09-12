@@ -19,7 +19,8 @@ return [
             'label' => 'Dashboard',
             'items' => [
                 ['route' => 'dashboard', 'icon' => 'home', 'label' => 'Dashboard'],
-                ['route' => 'crm.dashboard', 'icon' => 'group', 'label' => 'CRM Dashboard', 'match' => ['crm.*']],
+                ['route' => 'crm.dashboard', 'icon' => 'group', 'label' => 'CRM Dashboard', 'match' => ['crm.dashboard']],
+                ['route' => 'crm.referral', 'icon' => 'link', 'label' => 'CRM Referral', 'match' => ['crm.referral*']],
             ],
         ],
         [

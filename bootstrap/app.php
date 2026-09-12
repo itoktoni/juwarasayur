@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'access' => AccessMiddleware::class,
             'admin' => AdminMiddleware::class,
             'verified' => VerifyVerified::class,
+            'affiliate' => \App\Http\Middleware\CaptureAffiliateRef::class,
             // 'skip_verified' => SkipVerifiedCheck::class,
         ]);
 
@@ -56,6 +57,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'chatbot/webhook/whatsapp',
             'chat/*',
             'chat/send',
+        ]);
+
+        // Capture referral di semua web request (tamu & login) — sebelum response
+        $middleware->web(append: [
+            \App\Http\Middleware\CaptureAffiliateRef::class,
         ]);
 
         $middleware->append([

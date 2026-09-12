@@ -27,7 +27,7 @@ use Modules\So\Models\Consignment;
 /**
  * @mixin IdeHelperUser
  */
-#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'phone', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee', 'consignasi'])]
+#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'referral_code', 'phone', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee', 'consignasi'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -86,9 +86,40 @@ class User extends Authenticatable implements MustVerifyEmail
             'role' => 'string',
             'type' => 'nullable|string|in:'.implode(',', UserTypeEnum::getValues()),
             'reference_id' => 'nullable|integer|exists:users,id',
+            'referral_code' => 'nullable|string|max:20|unique:users,referral_code',
             'password' => 'string',
             'avatar' => 'nullable|string|max:255',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            if (empty($model->referral_code) && in_array($model->type, [UserTypeEnum::AFFILIATOR, UserTypeEnum::RESELLER], true)) {
+                $model->referral_code = static::generateReferralCode();
+            }
+        });
+    }
+
+    public static function generateReferralCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (static::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Link referral yang bisa di-share affiliator (dipakai di dashboard).
+     */
+    public function getReferralLinkAttribute(): string
+    {
+        if (empty($this->referral_code)) {
+            return '';
+        }
+
+        return url('/r/'.$this->referral_code);
     }
 
     public static function field_name(): string

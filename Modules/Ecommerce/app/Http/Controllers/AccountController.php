@@ -104,6 +104,62 @@ class AccountController extends Controller
         ]);
     }
 
+    public function crm(Request $request): View
+    {
+        $this->authorizeAffiliator();
+        $user = Auth::user();
+        $range = $request->input('range', '30');
+        $since = match ($range) {
+            '7' => now()->today()->subDays(7),
+            '90' => now()->today()->subDays(90),
+            'all' => null,
+            default => now()->today()->subDays(30),
+        };
+        $hasHits = \Illuminate\Support\Facades\Schema::hasTable('referral_hits');
+        $hitsQ = $hasHits ? \Illuminate\Support\Facades\DB::table('referral_hits')->where('affiliator_id', $user->id)->when($since, fn ($q) => $q->where('created_at', '>=', $since)) : null;
+        $totalHits = $hasHits ? (clone $hitsQ)->count() : 0;
+        $hitsToday = $hasHits ? \Illuminate\Support\Facades\DB::table('referral_hits')->where('affiliator_id', $user->id)->whereDate('created_at', now()->today())->count() : 0;
+        $customersQ = User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->when($since, fn ($q) => $q->where('created_at', '>=', $since));
+        $totalCustomers = (clone $customersQ)->count();
+        $newCustomers7 = User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->where('created_at', '>=', now()->today()->subDays(7))->count();
+        $ordersQ = So::where('so_id_reseller', $user->id)->when($since, fn ($q) => $q->where('so_tanggal', '>=', $since));
+        $totalOrders = (clone $ordersQ)->count();
+        $pendingOrders = (clone $ordersQ)->where('so_status', SoStatusEnum::PENDING)->count();
+        // Pendapatan REAL affiliator = total fee (komisi), bukan omzet so_grand_total
+        $revenue = (float) \Modules\So\Models\SoDetail::whereHas('has_so', function ($q) use ($user, $since) {
+            $q->where('so_id_reseller', $user->id)
+              ->whereNotIn('so_status', [SoStatusEnum::CANCELLED])
+              ->when($since, fn ($qq) => $qq->where('so_tanggal', '>=', $since));
+        })->sum('fee_amount');
+
+        $trend = collect(range(13, 0))->map(function (int $i) use ($user, $hasHits) {
+            $day = now()->today()->subDays($i);
+            $hits = $hasHits ? \Illuminate\Support\Facades\DB::table('referral_hits')->where('affiliator_id', $user->id)->whereDate('created_at', $day)->count() : 0;
+            $regs = User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->whereDate('created_at', $day)->count();
+            return ['label' => $day->format('d/m'), 'hits' => $hits, 'regs' => $regs];
+        });
+
+        $recentHits = $hasHits ? \Illuminate\Support\Facades\DB::table('referral_hits')->where('affiliator_id', $user->id)->orderByDesc('created_at')->limit(10)->get() : collect();
+        $recentCustomers = User::where('type', UserTypeEnum::CUSTOMER)->where('reference_id', $user->id)->orderByDesc('id')->limit(10)->get();
+
+        $chart = (new \ArielMejiaDev\LarapexCharts\LarapexChart)->lineChart()
+            ->addData($trend->pluck('hits')->toArray(), 'Klik link')
+            ->addData($trend->pluck('regs')->toArray(), 'Register baru')
+            ->setXAxis($trend->pluck('label')->toArray())
+            ->setColors(['#1976d2', '#388e3c'])
+            ->setGrid()->setHeight(300)
+            ->setOptions(['chart'=>['background'=>'#fff','fontFamily'=>'inherit'],'grid'=>['borderColor'=>'#e5e7eb','opacity'=>0.6]]);
+
+        return view('ecommerce::pages.account.crm', [
+            'range' => $range,
+            'stats' => compact('totalHits','hitsToday','totalCustomers','newCustomers7','totalOrders','pendingOrders','revenue'),
+            'trend' => $trend,
+            'recentHits' => $recentHits,
+            'recentCustomers' => $recentCustomers,
+            'chart' => $chart,
+        ]);
+    }
+
     /**
      * Simpan/ubah rekening bank reseller.
      */
@@ -118,6 +174,48 @@ class AccountController extends Controller
         Auth::user()->update($data);
 
         flash()->success('Rekening berhasil disimpan.');
+
+        return redirect()->route('account.dashboard');
+    }
+
+    /**
+     * Generate / regenerate referral code affiliator.
+     */
+    public function referralGenerate(Request $request): RedirectResponse
+    {
+        $this->authorizeAffiliator();
+
+        $user = Auth::user();
+
+        $request->validate([
+            'referral_code' => ['nullable', 'string', 'min:4', 'max:20', 'regex:/^[A-Z0-9_-]+$/i', Rule::unique('users', 'referral_code')->ignore($user->id)],
+        ], [
+            'referral_code.unique' => 'Kode sudah dipakai affiliator lain, coba kode lain.',
+            'referral_code.regex' => 'Kode hanya boleh huruf, angka, dash dan underscore.',
+        ]);
+
+        $code = $request->input('referral_code');
+        if (! empty($code)) {
+            $code = strtoupper(trim($code));
+            // Double-check race + case-insensitive duplicate
+            if (User::whereRaw('UPPER(referral_code) = ?', [$code])->where('id', '!=', $user->id)->exists()) {
+                return back()->withErrors(['referral_code' => 'Kode sudah dipakai, coba kode lain.'])->withInput();
+            }
+        } else {
+            $code = User::generateReferralCode();
+        }
+
+        try {
+            $user->update(['referral_code' => $code]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // 1062 duplicate entry (MySQL unique violation) — race condition
+            if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'UNIQUE constraint')) {
+                return back()->withErrors(['referral_code' => 'Kode sudah dipakai affiliator lain (duplicate). Silakan coba lagi.'])->withInput();
+            }
+            throw $e;
+        }
+
+        flash()->success('Kode referral berhasil disimpan: '.$code);
 
         return redirect()->route('account.dashboard');
     }

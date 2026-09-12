@@ -11,9 +11,9 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="space-y-5">
             {{-- Produk --}}
-            <div class="md:col-span-2 p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
+            <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
                 <h3 class="font-bold text-on-surface mb-3">Produk</h3>
                 <div class="divide-y divide-outline-variant/60">
                     @foreach($model->has_details as $detail)
@@ -44,6 +44,22 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Aksi pembayaran untuk pending --}}
+            @if($model->so_status === \Modules\So\Enums\SoStatusEnum::PENDING)
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('payment.show', ['token' => $model->so_payment_token]) }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-sm hover:bg-primary/90">
+                        <span class="material-symbols-outlined text-lg">qr_code_2</span> Bayar Sekarang
+                    </a>
+                    <form method="POST" action="{{ route('ecommerce.orders.regenerate', ['id' => $model->id]) }}" onsubmit="return confirm('Generate ulang link pembayaran? Token & nominal unik akan diperbarui.')">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-outline-variant text-sm font-semibold hover:bg-surface-container">
+                            <span class="material-symbols-outlined text-lg">refresh</span> Generate Ulang Pembayaran
+                        </button>
+                    </form>
+                    <span class="text-xs text-on-surface-variant self-center">Timer 5 menit akan reset &amp; nominal unik diperbarui di DB ({{ $model->so_payment_token }})</span>
+                </div>
+            @endif
 
             {{-- Info pengiriman --}}
             <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest h-fit">
