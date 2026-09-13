@@ -157,7 +157,8 @@ class DashboardController extends Controller
     public function downloadPrices(Request $request)
     {
         $user = $request->user();
-        $products = Product::where('is_active', true)
+        $products = Product::with('has_category')
+            ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('product_nama')
             ->get();
@@ -165,6 +166,37 @@ class DashboardController extends Controller
         $isAdmin = in_array($user->role, ['admin', 'editor', 'developer']);
         $isReseller = $user->isReseller();
 
+        // Group by category_nama — DMA burst single fetch (with eager load), bukan N+1
+        $grouped = $products->groupBy(function ($product) {
+            return $product->has_category?->category_nama ?? 'Tanpa Kategori';
+        })->map(function ($group) {
+            $cat = $group->first()->has_category;
+
+            $items = $group->map(function ($product) {
+                $hargaNormal = (float) $product->product_harga;
+                $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
+                $hargaReseller = $hargaNormal * (1 - $resellerFee / 100);
+
+                return [
+                    'nama' => $product->product_nama,
+                    'harga_normal' => $hargaNormal,
+                    'harga_reseller' => $hargaReseller,
+                    'reseller_fee' => $resellerFee,
+                ];
+            });
+
+            return [
+                'category' => $cat,
+                'name' => $cat?->category_nama ?? 'Tanpa Kategori',
+                'sort_order' => $cat?->sort_order ?? 9999,
+                'items' => $items,
+                'count' => $items->count(),
+                'min_price' => $items->min('harga_normal'),
+                'max_price' => $items->max('harga_normal'),
+            ];
+        })->sortBy('sort_order')->values();
+
+        // Fallback flat items untuk backward-compat (jika view lama masih dipakai)
         $items = $products->map(function ($product) {
             $hargaNormal = (float) $product->product_harga;
             $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
@@ -181,6 +213,7 @@ class DashboardController extends Controller
         $pdf = Pdf::loadView('pdf.product-prices', [
             'user' => $user,
             'items' => $items,
+            'grouped' => $grouped,
             'isAdmin' => $isAdmin,
             'isReseller' => $isReseller,
             'date' => Carbon::now()->format('d M Y'),
