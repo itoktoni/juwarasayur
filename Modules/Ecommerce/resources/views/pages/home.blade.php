@@ -26,15 +26,16 @@
 
     {{-- Navbar --}}
     <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-outline-variant">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
-            <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
-                <img src="{{ asset('images/logo.png') }}" alt="Juwara Sayur" class="h-10 w-auto">
-            </a>
-            <form method="GET" action="{{ route('shop.index') }}" class="hidden md:flex flex-1 max-w-xl">
-                <input type="search" name="q" placeholder="Cari produk..." class="w-full h-10 px-4 bg-surface-container border border-outline-variant rounded-l-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
-                <button type="submit" class="h-10 px-4 bg-primary text-on-primary rounded-r-lg"><span class="material-symbols-outlined text-base">search</span></button>
-            </form>
-            <div class="ml-auto flex items-center gap-2 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="h-16 flex items-center gap-4">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
+                    <img src="{{ asset('images/logo.png') }}" alt="Juwara Sayur" class="h-10 w-auto">
+                </a>
+                <form method="GET" action="{{ route('shop.index') }}" class="hidden md:flex flex-1 max-w-xl">
+                    <input type="search" name="q" placeholder="Cari produk..." class="w-full h-10 px-4 bg-surface-container border border-outline-variant rounded-l-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                    <button type="submit" class="h-10 px-4 bg-primary text-on-primary rounded-r-lg"><span class="material-symbols-outlined text-base">search</span></button>
+                </form>
+                <div class="ml-auto flex items-center gap-2 relative">
                 <a href="{{ route('shop.index') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">Belanja</a>
                 <a href="{{ route('blog') }}" class="text-sm text-on-surface hover:text-primary px-2 hidden sm:block">About</a>
                 <a href="{{ route('cart.index') }}" class="relative p-2 rounded-full hover:bg-surface-container" title="Keranjang">
@@ -85,7 +86,14 @@
                 @else
                     <a href="{{ route('login') }}" class="btn btn-primary btn-sm">Masuk</a>
                 @endauth
+                </div>
             </div>
+            {{-- Search mobile: tampil di < md (ponytail: desktop form hidden md:flex, mobile butuh affordance sendiri) --}}
+            <form method="GET" action="{{ route('shop.index') }}" class="md:hidden flex gap-2 pb-3">
+                <label for="q-mobile-home" class="sr-only">Cari produk</label>
+                <input id="q-mobile-home" type="search" name="q" placeholder="Cari produk..." class="flex-1 h-10 px-4 bg-surface-container border border-outline-variant rounded-l-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                <button type="submit" class="h-10 px-4 bg-primary text-on-primary rounded-r-lg" aria-label="Cari"><span class="material-symbols-outlined text-base">search</span></button>
+            </form>
         </div>
     </header>
 

@@ -64,6 +64,21 @@
                     @endif
                 </nav>
             </div>
+            {{-- Search mobile: tampil di < md (ponytail: desktop form hidden md:flex, mobile butuh affordance sendiri agar q tetap bisa dipakai tanpa JS) --}}
+            <form method="GET" action="{{ route('shop.index') }}" class="md:hidden flex gap-2 pb-3">
+                @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
+                @if(request('tag'))<input type="hidden" name="tag" value="{{ request('tag') }}">@endif
+                @if(request('brand'))<input type="hidden" name="brand" value="{{ request('brand') }}">@endif
+                @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+                <label for="q-mobile" class="sr-only">Cari produk</label>
+                <div class="join flex-1">
+                    <input id="q-mobile" type="search" name="q" value="{{ $q }}" placeholder="Cari produk, kode, atau SKU..." class="input input-sm join-item flex-1" />
+                    <button type="submit" class="btn btn-primary btn-sm join-item px-4" aria-label="Cari"><span class="material-symbols-outlined text-base">search</span></button>
+                </div>
+                @if($q !== '')
+                    <a href="{{ $buildUrl(['q' => null]) }}" class="btn btn-soft btn-sm shrink-0">Reset</a>
+                @endif
+            </form>
         </div>
     </header>
 
@@ -400,7 +415,7 @@
             @php
                 $items = [
                     ['href' => route('home'), 'label' => 'Home', 'icon' => 'home', 'active' => request()->routeIs('home')],
-                    ['href' => route('cart.index'), 'label' => 'Keranjang', 'icon' => 'shopping_cart', 'active' => request()->routeIs('cart.*') || request()->routeIs('checkout.*') || request()->routeIs('payment.*')],
+                    ['href' => route('shop.index'), 'label' => 'Katalog', 'icon' => 'storefront', 'active' => request()->routeIs('shop.*')],
                     ['href' => $txUrl, 'label' => 'Transaksi', 'icon' => 'receipt_long', 'active' => request()->routeIs('ecommerce.orders.*')],
                     ['href' => $profileUrl, 'label' => 'Profile', 'icon' => 'person', 'active' => request()->routeIs('profile.*')],
                 ];

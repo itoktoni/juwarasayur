@@ -52,6 +52,14 @@
                     @endauth
                 </nav>
             </div>
+            {{-- Search mobile: tampil di < md --}}
+            <form method="GET" action="{{ route('shop.index') }}" class="md:hidden flex gap-2 pb-3">
+                <label for="q-mobile-layout" class="sr-only">Cari produk</label>
+                <div class="join flex-1">
+                    <input id="q-mobile-layout" type="search" name="q" value="{{ request('q') }}" placeholder="Cari produk, kode, atau SKU..." class="input input-sm join-item flex-1" />
+                    <button type="submit" class="btn btn-primary btn-sm join-item px-4" aria-label="Cari"><span class="material-symbols-outlined text-base">search</span></button>
+                </div>
+            </form>
         </div>
     </header>
 
@@ -68,7 +76,7 @@
             @php
                 $bottomItems = [
                     ['href' => route('home'), 'label' => 'Home', 'icon' => 'home', 'active' => request()->routeIs('home')],
-                    ['href' => route('cart.index'), 'label' => 'Keranjang', 'icon' => 'shopping_cart', 'active' => request()->routeIs('cart.*') || request()->routeIs('checkout.*') || request()->routeIs('payment.*')],
+                    ['href' => route('shop.index'), 'label' => 'Katalog', 'icon' => 'storefront', 'active' => request()->routeIs('shop.*')],
                     ['href' => $txUrl, 'label' => 'Transaksi', 'icon' => 'receipt_long', 'active' => request()->routeIs('ecommerce.orders.*')],
                     ['href' => $profileUrl, 'label' => 'Profile', 'icon' => 'person', 'active' => request()->routeIs('profile.*')],
                 ];
