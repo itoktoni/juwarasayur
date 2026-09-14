@@ -6,8 +6,16 @@
         {{-- Filters --}}
         <x-filter :per-page="25" :fields="$fields">
             <x-slot:advanced>
+                <x-filter-item label="Affiliator" name="so_id_reseller" :options="$resellerOptions ?? []" />
+                <x-filter-item label="Customer" name="so_id_customer" :options="$customerOptions ?? []" />
+                <x-filter-item label="Tanggal Mulai" name="so_tanggal" type="date" operator="$gte" />
+                <x-filter-item label="Tanggal Selesai" name="so_tanggal" type="date" operator="$lte" />
+                <x-filter-item label="Pengiriman" name="so_shipping_method" :options="$shippingMethodOptions ?? []" />
+
                 @foreach ($fields as $key => $advance)
-                <x-filter-item :label="$advance" :name="$key"/>
+                    @if(!in_array($key, ['so_id_reseller','so_id_customer','so_tanggal','so_shipping_method']))
+                    <x-filter-item :label="$advance" :name="$key"/>
+                    @endif
                 @endforeach
 
                 <x-button variant="primary" class="btn-block" onclick="applyAdvanced()">Apply</x-button>

@@ -56,11 +56,13 @@ class BaseModel extends Model
     public function __construct(array $attributes = [])
     {
         if (! empty(static::$filterColumns)) {
-            $this->filterFields = array_values(static::$filterColumns);
+            $isAssoc = array_keys(static::$filterColumns) !== range(0, count(static::$filterColumns) - 1);
+            $this->filterFields = $isAssoc ? array_keys(static::$filterColumns) : array_values(static::$filterColumns);
         }
 
         if (! empty(static::$sortColumns)) {
-            $this->sortFields = array_values(static::$sortColumns);
+            $isAssocSort = array_keys(static::$sortColumns) !== range(0, count(static::$sortColumns) - 1);
+            $this->sortFields = $isAssocSort ? array_keys(static::$sortColumns) : array_values(static::$sortColumns);
         }
 
         parent::__construct($attributes);

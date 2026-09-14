@@ -20,6 +20,10 @@ class So extends BaseModel
 
     public static $filterColumns = [
         'so_code' => 'Kode SO',
+        'so_id_reseller' => 'Affiliator',
+        'so_id_customer' => 'Customer',
+        'so_customer_name' => 'Nama Customer',
+        'so_tanggal' => 'Tanggal',
         'so_status' => 'Status',
         'so_shipping_method' => 'Pengiriman',
         'so_discount_note' => 'Keterangan Diskon',

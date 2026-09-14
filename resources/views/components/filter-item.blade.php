@@ -9,7 +9,7 @@
 ])
 
 @php
-if(str_contains($name, '_at')) {
+if(str_contains($name, '_at') || str_contains($name, 'tanggal') || $name === 'so_tanggal') {
     $type = 'date';
 }
 @endphp
@@ -26,6 +26,9 @@ if(str_contains($name, '_at')) {
         </select>
         <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-xl">expand_more</span>
     </div>
+    @else
+    @if(in_array($operator, ['$gte', '$lte', '$gt', '$lt']) && $type === 'date')
+    <input type="{{ $type }}" class="w-full h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all" data-field="{{ $name }}" data-op="{{ $operator }}" value="{{ request('filters.' . $name . '.' . $operator) }}" placeholder="{{ $placeholder }}">
     @else
     <div class="grid" style="grid-template-columns: 30% 70%; gap: 0.5rem;">
         @if(count($operators))
@@ -62,5 +65,6 @@ if(str_contains($name, '_at')) {
         @endif
         <input type="{{ $type }}" class="h-12 px-4 bg-white border border-outline-variant rounded-lg font-body-sm focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all" data-field="{{ $name }}" value="{{ request('filters.' . $name . '.' . $operator) }}" placeholder="{{ $placeholder }}">
     </div>
+    @endif
     @endif
 </div>

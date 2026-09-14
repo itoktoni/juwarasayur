@@ -51,17 +51,25 @@ window.buildUrl = function() {
         }
     }
 
-    document.querySelectorAll('[data-field]').forEach(function(input) {
-        var fieldName = input.dataset.field;
-        var opEl = document.querySelector('[data-op="' + fieldName + '"]');
-        var operator = opEl ? opEl.value : '$eq';
-        var value = input.tagName === 'SELECT' ? input.value : (input.value || '').trim();
+    var advFields = document.querySelectorAll('[data-field]');
+    var seenFields = {};
+    advFields.forEach(function(inp) { seenFields[inp.dataset.field] = true; });
+    Object.keys(seenFields).forEach(function(fn) {
         for (var k of Array.from(params.keys())) {
-            if (k.indexOf('filters[' + fieldName + '][') === 0) params.delete(k);
+            if (k.indexOf('filters[' + fn + '][') === 0) params.delete(k);
         }
-        params.delete('filter_op[' + fieldName + ']');
+        params.delete('filter_op[' + fn + ']');
+    });
+    advFields.forEach(function(input) {
+        var fieldName = input.dataset.field;
+        var operator = input.dataset.op || (function() {
+            var opEl = document.querySelector('[data-op="' + fieldName + '"]');
+            return opEl ? opEl.value : '$eq';
+        })();
+        var value = input.tagName === 'SELECT' ? input.value : (input.value || '').trim();
         if (value) {
             params.set('filters[' + fieldName + '][' + operator + ']', value);
+            // remember operator for legacy filter_op, last wins if multiple
             params.set('filter_op[' + fieldName + ']', operator);
         }
     });
