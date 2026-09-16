@@ -62,11 +62,7 @@
     </td>
     <td valign="middle" style="padding-left:10px;">
       <div class="brand">{{ strtoupper($site['name'] ?? 'JUWARASAYUR.ID') }}</div>
-      @php $customTagline = ! empty($site['tagline']) && $site['tagline'] !== 'Web Application'; @endphp
-      <div class="brand-sub">{{ $customTagline ? $site['tagline'] : 'JUWARA SAYUR' }}</div>
-      @if(! $customTagline)
       <div class="meta">Kualitas Juwara, Segar Setiap Hari</div>
-      @endif
       <div class="meta">{{ $site['alamat'] ?: 'Jl. Masjid Al-Huda no.93' }} &nbsp;||&nbsp; Call us : {{ $site['telepon'] ?: '0851 1103 7383' }}</div>
     </td>
   </tr>
