@@ -17,7 +17,7 @@ class Product extends BaseModel
     protected $fillable = [
         'product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode',
         'product_deskripsi', 'product_deskripsi_lengkap',
-        'product_harga', 'product_harga_modal', 'product_harga_grosir',
+        'product_harga', 'product_harga_modal', 'product_harga_grosir', 'is_grosir',
         'reseller_fee_percent', 'affiliator_fee_percent',
         'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi',
         'product_stok', 'product_stok_minimum',
@@ -26,9 +26,9 @@ class Product extends BaseModel
         'product_id_product_master', 'product_id_brand', 'product_id_satuan', 'product_id_category',
     ];
 
-    public static $sortColumns = ['product_nama', 'product_kode', 'product_harga', 'product_stok', 'product_status', 'sort_order'];
+    public static $sortColumns = ['product_nama', 'product_kode', 'product_harga', 'product_stok', 'product_status', 'is_grosir', 'sort_order'];
 
-    public static $filterColumns = ['product_nama', 'product_kode', 'product_sku', 'product_status', 'is_active', 'is_featured'];
+    public static $filterColumns = ['product_nama', 'product_kode', 'product_sku', 'product_status', 'is_active', 'is_featured', 'is_grosir'];
 
     public static function field_name(): string
     {
@@ -50,6 +50,7 @@ class Product extends BaseModel
             'product_galeri' => 'array',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
+            'is_grosir' => 'boolean',
         ];
     }
 
@@ -146,6 +147,7 @@ class Product extends BaseModel
             'product_harga' => ['required', 'integer', 'min:0'],
             'product_harga_modal' => ['nullable', 'integer', 'min:0'],
             'product_harga_grosir' => ['nullable', 'integer', 'min:0'],
+            'is_grosir' => ['nullable', 'boolean'],
             'reseller_fee_percent' => ['nullable', 'numeric', 'between:0,100'],
             'affiliator_fee_percent' => ['nullable', 'numeric', 'between:0,100'],
             'product_berat' => ['nullable', 'numeric', 'min:0'],

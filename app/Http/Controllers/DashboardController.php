@@ -162,11 +162,13 @@ class DashboardController extends Controller
         $isReseller = $user->isReseller();
 
         [$grouped, $items] = $this->buildPriceData();
+        [$groupedGrosir] = $this->buildPriceData(true);
 
         $pdf = Pdf::loadView('pdf.product-prices', [
             'user' => $user,
             'items' => $items,
             'grouped' => $grouped,
+            'groupedGrosir' => $groupedGrosir,
             'isAdmin' => $isAdmin,
             'isReseller' => $isReseller,
             'date' => Carbon::now()->format('d M Y'),
@@ -185,12 +187,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        [$grouped, $items] = $this->buildPriceData();
+        [$grouped, $items] = $this->buildPriceData(true);
 
         $pdf = Pdf::loadView('pdf.product-prices', [
             'user' => $user,
             'items' => $items,
             'grouped' => $grouped,
+            'groupedGrosir' => $grouped,
             'isAdmin' => false,
             'isReseller' => true,
             'date' => Carbon::now()->format('d M Y'),
@@ -204,13 +207,15 @@ class DashboardController extends Controller
     /**
      * Data harga per kategori: harga_normal (jual) + harga_reseller (grosir).
      * Group by category_nama — DMA burst single fetch (with eager load), bukan N+1.
+     * $grosirOnly = true → hanya produk dengan flag is_grosir (untuk download grosir).
      *
      * @return array{0: \Illuminate\Support\Collection, 1: \Illuminate\Support\Collection}
      */
-    private function buildPriceData(): array
+    private function buildPriceData(bool $grosirOnly = false): array
     {
         $products = Product::with('has_category')
             ->where('is_active', true)
+            ->when($grosirOnly, fn ($q) => $q->where('is_grosir', true))
             ->orderBy('sort_order')
             ->orderBy('product_nama')
             ->get();

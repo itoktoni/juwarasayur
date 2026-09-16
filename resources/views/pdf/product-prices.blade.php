@@ -64,9 +64,9 @@
             <p style="text-align:center; padding:20px; color:#888;">Tidak ada produk aktif.</p>
         @endforelse
 
-        {{-- ===== 2. HARGA RESELLER (GROSIR) ===== --}}
+        {{-- ===== 2. HARGA RESELLER (GROSIR) — hanya flag is_grosir ===== --}}
         <div class="price-title">Harga Reseller (Grosir)</div>
-        @forelse($grouped as $group)
+        @forelse(($groupedGrosir ?? $grouped) as $group)
             <div class="category-title">{{ $group['name'] }}</div>
             <table>
                 <thead>

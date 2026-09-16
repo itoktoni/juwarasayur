@@ -27,6 +27,7 @@
                 <th>Nama</th>
                 <th>Kode</th>
                 <th>Harga Jual / Grosir</th>
+                <th>Tampil Grosir</th>
                 <th>Komisi Affiliator</th>
                 <th>Stok</th>
                 <th>Status</th>
@@ -46,6 +47,7 @@
                     <td>{{ $table->product_nama }}</td>
                     <td>{{ $table->product_kode ?? '-' }}</td>
                     <td>{{ formatAngka((int) $table->product_harga, 'Rp ') }}@if($table->product_harga_grosir)<br><span class="text-xs text-on-surface-variant">Grosir: {{ formatAngka((int) $table->product_harga_grosir, 'Rp ') }}</span>@endif</td>
+                    <td><x-badge :label="$table->is_grosir ? 'Ya' : 'Tidak'" :variant="$table->is_grosir ? 'success' : 'soft'" /></td>
                     <td>{{ $table->affiliator_fee_percent ? $table->affiliator_fee_percent . '%' : '-' }}</td>
                     <td>{{ $table->product_stok }}</td>
                     <td><x-badge :label="ucfirst($table->product_status)" :variant="$table->product_status === 'active' ? 'success' : 'soft'" /></td>

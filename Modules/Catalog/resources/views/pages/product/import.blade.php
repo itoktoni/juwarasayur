@@ -42,7 +42,7 @@
                 Upload file CSV. <b>Jika Kode Produk sudah ada di DB maka di-update</b>, jika belum maka di-create. Tambahkan kolom <code class="bg-surface-container px-1 py-0.5 rounded">Flag</code> opsional isi <code>update</code>/<code>create</code>/<code>delete</code> untuk paksa aksi (delete = hapus soft-delete).
             </p>
             <p class="text-xs text-on-surface-variant mb-2">
-                Format: <code class="bg-surface-container px-1 py-0.5 rounded">Nama Produk;Kode Produk;Harga Jual;Harga Grosir;Harga Modal;Stok;Fee Affilator (%);Sort Order;Flag</code> (delimiter <code>;</code> sesuai <code>config/website.php</code>)
+                Format: <code class="bg-surface-container px-1 py-0.5 rounded">Nama Produk;Kode Produk;Harga Jual;Harga Grosir;Is Grosir;Harga Modal;Stok;Fee Affilator (%);Sort Order;Flag</code> (delimiter <code>;</code> sesuai <code>config/website.php</code>)
             </p>
             <p class="text-xs text-on-surface-variant mb-4">
                 Contoh Flag: <code>delete</code> di baris <code>PRD-0200</code> akan hapus produk tersebut. Kosong = upsert otomatis. File contoh: <code>docs/produk_2026-09-12_131315.csv</code>

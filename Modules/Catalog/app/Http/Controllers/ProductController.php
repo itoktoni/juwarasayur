@@ -93,7 +93,7 @@ class ProductController extends Controller
     public function getExport()
     {
         $products = Product::select([
-            'product_nama', 'product_kode', 'product_harga', 'product_harga_grosir',
+            'product_nama', 'product_kode', 'product_harga', 'product_harga_grosir', 'is_grosir',
             'product_harga_modal', 'product_stok',
             'affiliator_fee_percent',
             'sort_order',
@@ -116,8 +116,9 @@ class ProductController extends Controller
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             // Header + Flag (create/update/delete — kosong = upsert otomatis jika kode sudah ada → update)
-            // Fee Reseller dihilangkan — reseller pakai Harga Grosir langsung
-            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Grosir', 'Harga Modal', 'Stok', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
+            // Fee Reseller dihilangkan — reseller pakai Harga Grosir langsung.
+            // Is Grosir 1 = tampil di download grosir, 0 = disembunyikan.
+            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Grosir', 'Is Grosir', 'Harga Modal', 'Stok', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
 
             foreach ($products as $product) {
                 fputcsv($handle, [
@@ -125,6 +126,7 @@ class ProductController extends Controller
                     $product->product_kode,
                     $product->product_harga,
                     $product->product_harga_grosir ?? '',
+                    $product->is_grosir ? 1 : 0,
                     $product->product_harga_modal ?? '',
                     $product->product_stok ?? '',
                     $product->affiliator_fee_percent ?? '',
@@ -338,6 +340,9 @@ class ProductController extends Controller
             'harga jual' => 'product_harga',
             'harga grosir' => 'product_harga_grosir',
             'harga reseller' => 'product_harga_grosir',
+            'is grosir' => 'is_grosir',
+            'grosir' => 'is_grosir',
+            'tampil grosir' => 'is_grosir',
             'harga modal' => 'product_harga_modal',
             'stok' => 'product_stok',
             'stock' => 'product_stok',
@@ -429,6 +434,12 @@ class ProductController extends Controller
             $data[$field] = max(0, min(100, $value));
         }
 
+        // Flag tampil grosir: 1 = tampil di download grosir, 0 = sembunyi
+        if (isset($data['is_grosir'])) {
+            $raw = strtolower(trim((string) $data['is_grosir']));
+            $data['is_grosir'] = in_array($raw, ['1', 'ya', 'y', 'yes', 'true', 'tampil'], true) ? 1 : 0;
+        }
+
         return $data;
     }
 
@@ -472,7 +483,7 @@ class ProductController extends Controller
      */
     private function normalizeBooleans(GeneralRequest $request): void
     {
-        foreach (['is_featured', 'is_active'] as $field) {
+        foreach (['is_featured', 'is_active', 'is_grosir'] as $field) {
             if ($request->has($field)) {
                 $request->merge([
                     $field => (int) filter_var($request->input($field), FILTER_VALIDATE_BOOLEAN),
