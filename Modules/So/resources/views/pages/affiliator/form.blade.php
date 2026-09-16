@@ -10,6 +10,7 @@
                 <x-input col="6" name="email" type="email" />
                 <x-input col="6" name="phone" label="No. HP / WhatsApp" />
                 <x-input col="6" name="password" type="password" :helper="$model->exists ? 'Kosongkan jika tidak ingin mengganti password' : null" />
+                <x-textarea col="12" name="address" label="Alamat" rows="2" />
                 <x-input col="6" name="fee" type="number" step="1" min="0" max="100"
                     label="Fee Komisi (%)"
                     placeholder="{{ rtrim(rtrim((string) config('commission.rate', 2), '0'), '.') }}"

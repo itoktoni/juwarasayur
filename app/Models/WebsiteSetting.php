@@ -33,6 +33,9 @@ class WebsiteSetting
             'commission_rate' => 'RESELLER_COMMISSION_RATE',
             'min_withdraw' => 'RESELLER_MIN_WITHDRAW',
             // Payment settings
+            'bank_name' => 'BANK_NAME',
+            'bank_account_no' => 'BANK_ACCOUNT_NO',
+            'bank_account_name' => 'BANK_ACCOUNT_NAME',
             'qris_expiry' => 'QRIS_EXPIRY_MINUTES',
             'unique_digits' => 'QRIS_UNIQUE_DIGITS',
             'notifyhook_secret' => 'NOTIFYHOOK_SECRET',

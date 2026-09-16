@@ -29,6 +29,7 @@
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Alamat</th>
                 <th>Affiliator / Reseller</th>
             </x-slot:head>
 
@@ -40,6 +41,7 @@
                     <td>{{ $table->name }}</td>
                     <td>{{ $table->email }}</td>
                     <td>{{ $table->phone ?? '-' }}</td>
+                    <td title="{{ $table->address ?? '' }}">{{ $table->address ? Str::limit($table->address, 50) : '-' }}</td>
                     <td>{{ $table->hasReseller?->name ?? '-' }}{{ $table->hasReseller && $table->hasReseller->type === \App\Enums\UserTypeEnum::AFFILIATOR ? ' (Affiliator)' : '' }}</td>
                 </tr>
                 @endforeach
@@ -59,6 +61,10 @@
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Phone</p>
                                 <p class="text-xs font-medium text-on-surface">{{ $table->phone ?? '-' }}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Alamat</p>
+                                <p class="text-xs font-medium text-on-surface">{{ $table->address ?? '-' }}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Affiliator / Reseller</p>

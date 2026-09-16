@@ -29,6 +29,7 @@
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Alamat</th>
                 <th>Referral</th>
                 <th class="text-center">Jumlah Customer</th>
             </x-slot:head>
@@ -54,6 +55,7 @@
                     <td>{{ $table->name }}</td>
                     <td>{{ $table->email }}</td>
                     <td>{{ $table->phone ?? '-' }}</td>
+                    <td title="{{ $table->address ?? '' }}">{{ $table->address ? Str::limit($table->address, 50) : '-' }}</td>
                     <td class="font-mono text-xs">
                         @if($table->referral_code)
                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 border border-amber-200 text-amber-800">{{ $table->referral_code }}</span>
@@ -80,6 +82,10 @@
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Phone</p>
                                 <p class="text-xs font-medium text-on-surface">{{ $table->phone ?? '-' }}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Alamat</p>
+                                <p class="text-xs font-medium text-on-surface">{{ $table->address ?? '-' }}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Referral</p>

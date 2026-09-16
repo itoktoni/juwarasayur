@@ -233,7 +233,8 @@ class SoController extends Controller
     }
 
     /**
-     * PDF Struk 58mm Bluetooth — ganti windows.print, download PDF siap cetak.
+     * PDF Invoice A4 — format seperti invoice juwarasayur.id
+     * (header + info + detail pesanan + pembayaran bank/QRIS).
      */
     public function getPaymentPdf(GeneralRequest $request, $id)
     {
@@ -248,7 +249,7 @@ class SoController extends Controller
         $methodLabel = \Modules\So\Enums\ShippingMethodEnum::getDescription($so->so_shipping_method);
         $expiryMinutes = (int) env('QRIS_EXPIRY_MINUTES', 5);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.payment-58', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', [
             'so' => $so,
             'paymentLink' => $paymentLink,
             'qrDataUri' => $qrDataUri,
@@ -256,15 +257,11 @@ class SoController extends Controller
             'methodLabel' => $methodLabel,
             'expiryMinutes' => $expiryMinutes,
         ]);
-        // 58mm = 164.4pt width, height dinamis sesuai konten
-        $itemCount = $so->has_details->count();
-        $paperHeight = 320 + ($itemCount * 65); // base + per item (with padding)
-        if ($qrDataUri) $paperHeight += 170;
-        $pdf->setPaper([0, 0, 164.4, $paperHeight], 'portrait');
+        $pdf->setPaper('a4', 'portrait');
         $pdf->setOption('isRemoteEnabled', true);
         $pdf->setOption('isHtml5ParserEnabled', true);
 
-        $filename = 'struk-'.$so->so_code.'.pdf';
+        $filename = 'invoice-'.$so->so_code.'.pdf';
 
         return $pdf->download($filename);
     }

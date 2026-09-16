@@ -10,6 +10,7 @@
                 <x-input col="6" name="email" type="email" />
                 <x-input col="6" name="phone" label="No. HP / WhatsApp" />
                 <x-input col="6" name="password" type="password" :helper="$model->exists ? 'Kosongkan jika tidak ingin mengganti password' : null" />
+                <x-textarea col="12" name="address" label="Alamat" rows="2" />
 
                 @if(!empty($resellerOptions))
                     <x-select col="6" name="reference_id" label="Affiliator / Reseller" :options="$resellerOptions" class="search" placeholder="-- Pilih Pemilik --" />

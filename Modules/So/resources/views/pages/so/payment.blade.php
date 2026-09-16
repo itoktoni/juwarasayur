@@ -220,11 +220,10 @@
 
             <div class="flex gap-2 no-print">
                 <a href="{{ route('so-so.getPaymentPdf', ['id' => $so->id]) }}" class="flex-1 h-11 rounded-lg bg-neutral-800 text-white font-semibold inline-flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Cetak PDF 58mm
+                    <span class="material-symbols-outlined text-base">picture_as_pdf</span> Cetak Invoice PDF
                 </a>
                 <a href="{{ route('so-so.getTable') }}" class="h-11 px-6 rounded-lg border border-outline-variant bg-white font-semibold inline-flex items-center justify-center">Tutup</a>
             </div>
-            <p class="text-xs text-on-surface-variant no-print mt-1 text-center">PDF 58mm siap cetak Bluetooth (tanpa dialog print browser).</p>
         </div>
     </div>
 

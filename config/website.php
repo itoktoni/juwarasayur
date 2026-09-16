@@ -33,6 +33,10 @@ return [
     'commission_rate' => env('RESELLER_COMMISSION_RATE', '2'),
     // Minimal pencairan komisi (Rp)
     'min_withdraw' => env('RESELLER_MIN_WITHDRAW', '25000'),
+    // Rekening pembayaran untuk invoice (bisa diubah via .env)
+    'bank_name' => env('BANK_NAME', 'BCA'),
+    'bank_account_no' => env('BANK_ACCOUNT_NO', '3452301226'),
+    'bank_account_name' => env('BANK_ACCOUNT_NAME', 'Deny Irawan'),
     // CSV import delimiter: , (koma) atau ; (titik koma)
     'csv_delimiter' => env('CSV_DELIMITER', ';'),
 ];

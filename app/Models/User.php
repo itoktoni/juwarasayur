@@ -27,7 +27,7 @@ use Modules\So\Models\Consignment;
 /**
  * @mixin IdeHelperUser
  */
-#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'referral_code', 'phone', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee', 'consignasi'])]
+#[Fillable(['name', 'email', 'password', 'role', 'type', 'reference_id', 'referral_code', 'phone', 'address', 'avatar', 'verified_at', 'bank_name', 'bank_account_name', 'bank_account_no', 'fee', 'consignasi'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -63,6 +63,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name' => 'Name',
         'email' => 'Email',
         'phone' => 'Phone',
+        'address' => 'Alamat',
         'role' => 'Role',
         'type' => 'Type',
     ];
@@ -71,6 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'phone',
+        'address',
         'role',
         'type',
     ];
@@ -84,6 +86,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'name' => 'required|string',
             'email' => 'required|string',
             'role' => 'string',
+            'address' => 'nullable|string|max:1000',
             'type' => 'nullable|string|in:'.implode(',', UserTypeEnum::getValues()),
             'reference_id' => 'nullable|integer|exists:users,id',
             'referral_code' => 'nullable|string|max:20|unique:users,referral_code',

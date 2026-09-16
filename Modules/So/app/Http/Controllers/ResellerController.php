@@ -119,6 +119,7 @@ class ResellerController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:1000'],
             'password' => [$existing ? 'nullable' : 'required', 'string', 'min:6'],
             'reference_id' => ['nullable', 'integer', 'exists:users,id'],
             'avatar' => ['nullable', 'string', 'max:255'],
