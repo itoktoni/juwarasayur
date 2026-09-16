@@ -11,9 +11,9 @@
         .header h1 { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
         .meta { font-size: 10px; color: #555; margin-top: 4px; }
         .price-title { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px 0; padding-bottom: 4px; border-bottom: 2px solid #1a1a1a; }
-        .category-title { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; margin: 10px 0 4px 2px; }
+        .category-title { background-color: #1a1a1a; color: #fff; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; text-align: center; margin: 10px 0 0 0; padding: 5px 8px; }
         table { width: 100%; border-collapse: collapse; }
-        th { background-color: #1a1a1a; color: #fff; font-weight: bold; text-align: left; padding: 5px 8px; font-size: 10px; text-transform: uppercase; }
+        th { color: #1a1a1a; font-weight: bold; text-align: left; padding: 5px 8px; font-size: 10px; text-transform: uppercase; border-bottom: 2px solid #1a1a1a; }
         td { padding: 4px 8px; border-bottom: 1px solid #e0e0e0; font-size: 10.5px; }
         tr:nth-child(even) td { background-color: #f7f7f7; }
         .no-col { width: 32px; text-align: center; }
