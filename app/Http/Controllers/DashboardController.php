@@ -150,67 +150,18 @@ class DashboardController extends Controller
 
     /**
      * Download PDF daftar harga produk.
-     * - Admin/Editor/Developer: 2 kolom (harga normal + harga reseller)
-     * - Reseller: 1 kolom (harga reseller setelah diskon)
-     * - Customer/Affiliator: 1 kolom (harga normal)
+     * - Admin/Editor/Developer: 2 daftar (harga customer + harga reseller grosir)
+     * - Reseller: 1 daftar (harga grosir)
+     * - Customer/Affiliator: 1 daftar (harga normal)
      */
     public function downloadPrices(Request $request)
     {
         $user = $request->user();
-        $products = Product::with('has_category')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('product_nama')
-            ->get();
 
         $isAdmin = in_array($user->role, ['admin', 'editor', 'developer']);
         $isReseller = $user->isReseller();
 
-        // Group by category_nama — DMA burst single fetch (with eager load), bukan N+1
-        $grouped = $products->groupBy(function ($product) {
-            return $product->has_category?->category_nama ?? 'Tanpa Kategori';
-        })->map(function ($group) {
-            $cat = $group->first()->has_category;
-
-            $items = $group->map(function ($product) {
-                $hargaNormal = (float) $product->product_harga;
-                $hargaGrosir = (float) ($product->product_harga_grosir ?? 0);
-                $hargaReseller = $hargaGrosir > 0 ? $hargaGrosir : $hargaNormal;
-                $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
-
-                return [
-                    'nama' => $product->product_nama,
-                    'harga_normal' => $hargaNormal,
-                    'harga_reseller' => $hargaReseller,
-                    'reseller_fee' => $resellerFee,
-                ];
-            });
-
-            return [
-                'category' => $cat,
-                'name' => $cat?->category_nama ?? 'Tanpa Kategori',
-                'sort_order' => $cat?->sort_order ?? 9999,
-                'items' => $items,
-                'count' => $items->count(),
-                'min_price' => $items->min('harga_normal'),
-                'max_price' => $items->max('harga_normal'),
-            ];
-        })->sortBy('sort_order')->values();
-
-        // Fallback flat items untuk backward-compat (jika view lama masih dipakai)
-        $items = $products->map(function ($product) {
-            $hargaNormal = (float) $product->product_harga;
-            $hargaGrosir = (float) ($product->product_harga_grosir ?? 0);
-            $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
-            $hargaReseller = $hargaGrosir > 0 ? $hargaGrosir : $hargaNormal;
-
-            return [
-                'nama' => $product->product_nama,
-                'harga_normal' => $hargaNormal,
-                'harga_reseller' => $hargaReseller,
-                'reseller_fee' => $resellerFee,
-            ];
-        });
+        [$grouped, $items] = $this->buildPriceData();
 
         $pdf = Pdf::loadView('pdf.product-prices', [
             'user' => $user,
@@ -224,5 +175,80 @@ class DashboardController extends Controller
         $filename = 'daftar-harga-'.Carbon::now()->format('Y-m-d').'.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Download PDF khusus harga reseller (grosir) — semua role login.
+     * Selalu tampil sebagai daftar grosir regardless tipe user.
+     */
+    public function downloadResellerPrices(Request $request)
+    {
+        $user = $request->user();
+
+        [$grouped, $items] = $this->buildPriceData();
+
+        $pdf = Pdf::loadView('pdf.product-prices', [
+            'user' => $user,
+            'items' => $items,
+            'grouped' => $grouped,
+            'isAdmin' => false,
+            'isReseller' => true,
+            'date' => Carbon::now()->format('d M Y'),
+        ]);
+
+        $filename = 'daftar-harga-grosir-'.Carbon::now()->format('Y-m-d').'.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Data harga per kategori: harga_normal (jual) + harga_reseller (grosir).
+     * Group by category_nama — DMA burst single fetch (with eager load), bukan N+1.
+     *
+     * @return array{0: \Illuminate\Support\Collection, 1: \Illuminate\Support\Collection}
+     */
+    private function buildPriceData(): array
+    {
+        $products = Product::with('has_category')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('product_nama')
+            ->get();
+
+        $mapItem = function ($product) {
+            $hargaNormal = (float) $product->product_harga;
+            $hargaGrosir = (float) ($product->product_harga_grosir ?? 0);
+            $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
+
+            return [
+                'nama' => $product->product_nama,
+                'harga_normal' => $hargaNormal,
+                'harga_reseller' => $hargaGrosir > 0 ? $hargaGrosir : $hargaNormal,
+                'reseller_fee' => $resellerFee,
+            ];
+        };
+
+        $grouped = $products->groupBy(function ($product) {
+            return $product->has_category?->category_nama ?? 'Tanpa Kategori';
+        })->map(function ($group) use ($mapItem) {
+            $cat = $group->first()->has_category;
+
+            $items = $group->map($mapItem);
+
+            return [
+                'category' => $cat,
+                'name' => $cat?->category_nama ?? 'Tanpa Kategori',
+                'sort_order' => $cat?->sort_order ?? 9999,
+                'items' => $items,
+                'count' => $items->count(),
+                'min_price' => $items->min('harga_normal'),
+                'max_price' => $items->max('harga_normal'),
+            ];
+        })->sortBy('sort_order')->values();
+
+        // Fallback flat items untuk backward-compat (jika view lama masih dipakai)
+        $items = $products->map($mapItem);
+
+        return [$grouped, $items];
     }
 }
