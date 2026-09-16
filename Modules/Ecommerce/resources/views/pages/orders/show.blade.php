@@ -19,7 +19,7 @@
                     @foreach($model->has_details as $detail)
                         <div class="flex items-center justify-between py-2 gap-3">
                             <div class="min-w-0">
-                                <p class="text-sm text-on-surface truncate">{{ $detail->has_product?->product_nama ?? '-' }}</p>
+                                <p class="text-sm text-on-surface truncate">{{ ($detail->applied_role === 'reseller' ? $detail->has_product?->nama_grosir : $detail->has_product?->product_nama) ?? '-' }}</p>
                                 <p class="text-xs text-on-surface-variant font-mono">{{ formatAngka((int) $detail->so_detail_qty, '') }} × {{ formatAngka((int) $detail->so_detail_harga, 'Rp') }}</p>
                             </div>
                             <span class="text-sm font-mono text-on-surface shrink-0">{{ formatAngka((int) ($detail->so_detail_qty * (float) $detail->so_detail_harga), 'Rp') }}</span>

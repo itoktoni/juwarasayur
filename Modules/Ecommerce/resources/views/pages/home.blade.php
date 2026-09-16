@@ -158,7 +158,7 @@
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $isReseller ? $p->nama_grosir : $p->product_nama }}</a>
                         <div class="px-3 pb-2 mt-auto">
                             @if($showDualPrice)
                                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -208,7 +208,7 @@
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $isReseller ? $p->nama_grosir : $p->product_nama }}</a>
                         <div class="px-3 pb-2 mt-auto">
                             @if($showDualPrice)
                                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -255,7 +255,7 @@
                                 <div class="w-full h-full grid place-items-center text-outline-variant"><span class="material-symbols-outlined text-4xl">image</span></div>
                             @endif
                         </a>
-                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                        <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $isReseller ? $p->nama_grosir : $p->product_nama }}</a>
                         <div class="px-3 pb-2 mt-auto">
                             @if($showDualPrice)
                                 <div class="flex items-center gap-1.5 flex-wrap">

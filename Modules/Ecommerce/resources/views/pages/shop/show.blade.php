@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $product->product_nama }} — {{ config('app.name', 'Mayur') }}</title>
+    <title>{{ $isReseller ? $product->nama_grosir : $product->product_nama }} — {{ config('app.name', 'Mayur') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
         @include('ecommerce::components.brand')
@@ -42,7 +42,7 @@
                 <a href="{{ route('shop.index', ['category' => $product->has_category->category_slug]) }}" class="hover:underline">{{ $product->has_category->category_nama }}</a>
                 <span>›</span>
             @endif
-            <span class="text-on-surface font-medium line-clamp-1">{{ $product->product_nama }}</span>
+            <span class="text-on-surface font-medium line-clamp-1">{{ $isReseller ? $product->nama_grosir : $product->product_nama }}</span>
         </nav>
 
         <div class="grid lg:grid-cols-2 gap-6">
@@ -78,7 +78,7 @@
                             <a href="{{ route('shop.index', ['tag' => $t->tag_slug]) }}" class="badge text-xs text-white border-transparent" style="background: {{ $t->tag_warna ?? '#64748b' }}">{{ $t->tag_nama }}</a>
                         @endforeach
                     </div>
-                    <h1 class="text-headline-lg-mobile lg:text-headline-lg font-bold leading-tight">{{ $product->product_nama }}</h1>
+                    <h1 class="text-headline-lg-mobile lg:text-headline-lg font-bold leading-tight">{{ $isReseller ? $product->nama_grosir : $product->product_nama }}</h1>
                     <p class="text-sm text-on-surface-variant mt-1">
                         SKU: <span class="font-mono">{{ $product->product_sku ?? $product->product_kode ?? '-' }}</span>
                         @if($product->product_barcode) · Barcode: {{ $product->product_barcode }} @endif
@@ -166,7 +166,7 @@
                             </a>
                             <div class="px-3 pb-1 pt-2.5 flex-1">
                                 <p class="text-xs text-on-surface-variant line-clamp-1">{{ $p->has_category?->category_nama ?? '' }}</p>
-                                <a href="{{ route('shop.show', $p->product_slug) }}" class="font-medium text-sm line-clamp-2 leading-tight hover:text-primary transition-colors">{{ $p->product_nama }}</a>
+                                <a href="{{ route('shop.show', $p->product_slug) }}" class="font-medium text-sm line-clamp-2 leading-tight hover:text-primary transition-colors">{{ $isReseller ? $p->nama_grosir : $p->product_nama }}</a>
                             </div>
                             <div class="px-3 pb-2 mt-auto">
                                 @if($relShowDual)

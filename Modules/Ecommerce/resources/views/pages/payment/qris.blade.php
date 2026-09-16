@@ -22,7 +22,7 @@
                     <div class="mt-4 p-3 rounded-lg border border-outline-variant text-left text-sm divide-y divide-outline-variant/60">
                         @foreach($so->has_details as $d)
                             <div class="flex items-center justify-between py-1.5 gap-2">
-                                <span class="truncate">{{ $d->has_product?->product_nama }} × {{ $d->so_detail_qty }}</span>
+                                <span class="truncate">{{ $d->applied_role === 'reseller' ? $d->has_product?->nama_grosir : $d->has_product?->product_nama }} × {{ $d->so_detail_qty }}</span>
                                 <span class="font-mono shrink-0">{{ formatAngka((int) ($d->so_detail_qty * (float) $d->so_detail_harga), 'Rp') }}</span>
                             </div>
                         @endforeach
@@ -157,7 +157,7 @@
                                     class="w-14 h-14 rounded-lg object-cover border border-outline-variant shrink-0"
                                     onerror="this.style.display='none'">
                                 <div class="flex-1 min-w-0">
-                                    <p class="font-semibold text-on-surface text-sm truncate">{{ $d->has_product?->product_nama }}</p>
+                                    <p class="font-semibold text-on-surface text-sm truncate">{{ $d->applied_role === 'reseller' ? $d->has_product?->nama_grosir : $d->has_product?->product_nama }}</p>
                                     <p class="text-xs font-mono text-on-surface-variant">
                                         {{ formatAngka((float) $d->so_detail_harga, 'Rp') }} × {{ $d->so_detail_qty }}
                                     </p>

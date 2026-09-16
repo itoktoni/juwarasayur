@@ -59,7 +59,7 @@
 
                             {{-- Info produk --}}
                             <div class="flex-1 min-w-0 pr-6">
-                                <a href="{{ route('shop.show', $item->has_product?->product_slug) }}" class="font-semibold text-sm text-on-surface hover:text-on-surface-variant line-clamp-2 leading-snug block">{{ $item->has_product?->product_nama }}</a>
+                                <a href="{{ route('shop.show', $item->has_product?->product_slug) }}" class="font-semibold text-sm text-on-surface hover:text-on-surface-variant line-clamp-2 leading-snug block">{{ $isReseller ? $item->has_product?->nama_grosir : $item->has_product?->product_nama }}</a>
 
                                 {{-- Harga --}}
                                 <div class="mt-1">

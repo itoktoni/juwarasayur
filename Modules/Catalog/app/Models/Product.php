@@ -15,7 +15,7 @@ class Product extends BaseModel
     protected $table = 'catalog_products';
 
     protected $fillable = [
-        'product_nama', 'product_slug', 'product_kode', 'product_sku', 'product_barcode',
+        'product_nama', 'product_nama_grosir', 'product_slug', 'product_kode', 'product_sku', 'product_barcode',
         'product_deskripsi', 'product_deskripsi_lengkap',
         'product_harga', 'product_harga_modal', 'product_harga_grosir', 'is_grosir',
         'reseller_fee_percent', 'affiliator_fee_percent',
@@ -28,7 +28,7 @@ class Product extends BaseModel
 
     public static $sortColumns = ['product_nama', 'product_kode', 'product_harga', 'product_stok', 'product_status', 'is_grosir', 'sort_order'];
 
-    public static $filterColumns = ['product_nama', 'product_kode', 'product_sku', 'product_status', 'is_active', 'is_featured', 'is_grosir'];
+    public static $filterColumns = ['product_nama', 'product_nama_grosir', 'product_kode', 'product_sku', 'product_status', 'is_active', 'is_featured', 'is_grosir'];
 
     public static function field_name(): string
     {
@@ -57,6 +57,14 @@ class Product extends BaseModel
     public function getProductGambarUrlAttribute(): string
     {
         return fileUrl($this->product_gambar);
+    }
+
+    /**
+     * Nama untuk reseller (grosir); fallback ke nama biasa jika kosong.
+     */
+    public function getNamaGrosirAttribute(): string
+    {
+        return $this->product_nama_grosir ?: $this->product_nama;
     }
 
     public function has_product_master(): BelongsTo
@@ -138,6 +146,7 @@ class Product extends BaseModel
     {
         return [
             'product_nama' => ['required', 'string', 'max:255'],
+            'product_nama_grosir' => ['nullable', 'string', 'max:255'],
             'product_slug' => ['nullable', 'string', 'max:255', 'unique:catalog_products,product_slug,'.($this->id ?? '')],
             'product_kode' => ['nullable', 'string', 'max:50', 'unique:catalog_products,product_kode,'.($this->id ?? '')],
             'product_sku' => ['nullable', 'string', 'max:100', 'unique:catalog_products,product_sku,'.($this->id ?? '')],

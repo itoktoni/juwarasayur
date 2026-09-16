@@ -93,7 +93,7 @@ class ProductController extends Controller
     public function getExport()
     {
         $products = Product::select([
-            'product_nama', 'product_kode', 'product_harga', 'product_harga_grosir', 'is_grosir',
+            'product_nama', 'product_nama_grosir', 'product_kode', 'product_harga', 'product_harga_grosir', 'is_grosir',
             'product_harga_modal', 'product_stok',
             'affiliator_fee_percent',
             'sort_order',
@@ -118,11 +118,12 @@ class ProductController extends Controller
             // Header + Flag (create/update/delete — kosong = upsert otomatis jika kode sudah ada → update)
             // Fee Reseller dihilangkan — reseller pakai Harga Grosir langsung.
             // Is Grosir 1 = tampil di download grosir, 0 = disembunyikan.
-            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Grosir', 'Is Grosir', 'Harga Modal', 'Stok', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
+            fputcsv($handle, ['Nama Produk', 'Nama Grosir', 'Kode Produk', 'Harga Jual', 'Harga Grosir', 'Is Grosir', 'Harga Modal', 'Stok', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
 
             foreach ($products as $product) {
                 fputcsv($handle, [
                     $product->product_nama,
+                    $product->product_nama_grosir ?? '',
                     $product->product_kode,
                     $product->product_harga,
                     $product->product_harga_grosir ?? '',
@@ -336,6 +337,7 @@ class ProductController extends Controller
     {
         $map = [
             'nama produk' => 'product_nama',
+            'nama grosir' => 'product_nama_grosir',
             'kode produk' => 'product_kode',
             'harga jual' => 'product_harga',
             'harga grosir' => 'product_harga_grosir',

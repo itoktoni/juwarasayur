@@ -80,7 +80,7 @@
                     @foreach($group['items'] as $index => $item)
                     <tr>
                         <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $item['nama'] }}</td>
+                        <td>{{ $item['nama_grosir'] ?? $item['nama'] }}</td>
                         <td class="harga-col">Rp {{ number_format($item['harga_reseller'], 0, ',', '.') }}</td>
                     </tr>
                     @endforeach
@@ -105,7 +105,7 @@
                     @foreach($group['items'] as $index => $item)
                     <tr>
                         <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $item['nama'] }}</td>
+                        <td>{{ $isReseller ? ($item['nama_grosir'] ?? $item['nama']) : $item['nama'] }}</td>
                         <td class="harga-col">Rp {{ number_format($isReseller ? $item['harga_reseller'] : $item['harga_normal'], 0, ',', '.') }}</td>
                     </tr>
                     @endforeach

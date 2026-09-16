@@ -123,7 +123,7 @@
                             class="w-14 h-14 rounded-lg object-cover border border-outline-variant shrink-0"
                             onerror="this.style.display='none'">
                         <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-on-surface text-sm truncate">{{ $d->has_product?->product_nama }}</p>
+                            <p class="font-semibold text-on-surface text-sm truncate">{{ $d->applied_role === 'reseller' ? $d->has_product?->nama_grosir : $d->has_product?->product_nama }}</p>
                             <p class="text-xs font-mono text-on-surface-variant">
                                 {{ formatAngka((float) $d->so_detail_harga, 'Rp') }} × {{ $d->so_detail_qty }}
                             </p>

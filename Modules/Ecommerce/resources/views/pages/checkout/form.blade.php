@@ -182,7 +182,7 @@
                             $itemIsGrosir = ($isReseller && $itemGrosir > 0);
                         @endphp
                         <div class="flex items-center justify-between py-2 gap-2">
-                            <span class="truncate text-on-surface">{{ $item->has_product?->product_nama }} <span class="text-on-surface-variant">× {{ $item->qty }}</span></span>
+                            <span class="truncate text-on-surface">{{ $isReseller ? $item->has_product?->nama_grosir : $item->has_product?->product_nama }} <span class="text-on-surface-variant">× {{ $item->qty }}</span></span>
                             <span class="font-mono shrink-0">
                                 @if($isReseller && $itemIsGrosir)
                                     <span class="line-through opacity-60 text-xs">{{ formatAngka((int) ($item->qty * $itemHarga), 'Rp') }}</span>

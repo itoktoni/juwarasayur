@@ -248,7 +248,7 @@
                                         <span class="absolute right-2 top-2 z-10 rounded-full bg-error px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-widest text-on-error shadow-lg shadow-error/40">Habis</span>
                                     @endif
                                 </a>
-                                <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $p->product_nama }}</a>
+                                <a href="{{ route('shop.show', $p->product_slug) }}" class="block px-3 pb-1 pt-2.5 text-[13px] font-semibold leading-snug text-on-surface line-clamp-2 min-h-[2.6rem] transition-colors hover:text-primary">{{ $isReseller ? $p->nama_grosir : $p->product_nama }}</a>
                                 <div class="px-3 pb-2 mt-auto">
                                     @if($showDualPrice)
                                         <div class="flex items-center gap-1.5 flex-wrap">

@@ -44,7 +44,7 @@
                             <span class="text-on-surface-variant text-xs">-</span>
                         @endif
                     </td>
-                    <td>{{ $table->product_nama }}</td>
+                    <td>{{ $table->product_nama }}@if($table->product_nama_grosir && $table->product_nama_grosir !== $table->product_nama)<br><span class="text-xs text-on-surface-variant">Grosir: {{ $table->product_nama_grosir }}</span>@endif</td>
                     <td>{{ $table->product_kode ?? '-' }}</td>
                     <td>{{ formatAngka((int) $table->product_harga, 'Rp ') }}@if($table->product_harga_grosir)<br><span class="text-xs text-on-surface-variant">Grosir: {{ formatAngka((int) $table->product_harga_grosir, 'Rp ') }}</span>@endif</td>
                     <td><x-badge :label="$table->is_grosir ? 'Ya' : 'Tidak'" :variant="$table->is_grosir ? 'success' : 'soft'" /></td>

@@ -42,6 +42,9 @@
   $telpCust = $so->so_customer_phone ?: ($so->has_customer?->phone ?? '-');
   $alamatCust = $so->so_address ?: ($so->has_customer?->address ?? '-');
   $fmt = fn ($v) => number_format((float) $v, 0, '.', ',');
+  // Customer reseller (grosir) → nama produk versi grosir
+  $isGrosirOrder = ($so->has_customer?->type === \App\Enums\UserTypeEnum::RESELLER);
+  $namaProduk = fn ($d) => $isGrosirOrder ? ($d->has_product?->nama_grosir ?? $d->has_product?->product_nama ?? '-') : ($d->has_product?->product_nama ?? '-');
   $logoFile = null;
   if (! empty($site['logo'])) {
       $candidate = public_path(ltrim(\App\Models\WebsiteSetting::fileUrl($site['logo']), '/'));
@@ -121,7 +124,7 @@
     @foreach($so->has_details as $d)
     <tr>
       <td class="center">{{ $loop->iteration }}</td>
-      <td>{{ strtoupper($d->has_product?->product_nama ?? '-') }}@if($d->so_detail_keterangan) <span style="font-size:9px;">({{ $d->so_detail_keterangan }})</span>@endif</td>
+      <td>{{ strtoupper($namaProduk($d)) }}@if($d->so_detail_keterangan) <span style="font-size:9px;">({{ $d->so_detail_keterangan }})</span>@endif</td>
       <td class="center">{{ $d->so_detail_qty }}</td>
       <td class="num">{{ $fmt($d->so_detail_harga) }}</td>
       <td class="num">{{ $fmt((int) $d->so_detail_qty * (float) $d->so_detail_harga) }}</td>

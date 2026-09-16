@@ -227,6 +227,7 @@ class DashboardController extends Controller
 
             return [
                 'nama' => $product->product_nama,
+                'nama_grosir' => $product->product_nama_grosir ?: $product->product_nama,
                 'harga_normal' => $hargaNormal,
                 'harga_reseller' => $hargaGrosir > 0 ? $hargaGrosir : $hargaNormal,
                 'reseller_fee' => $resellerFee,

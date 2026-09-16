@@ -68,7 +68,7 @@
             <tbody>
                 @foreach($so->has_details as $d)
                     <tr>
-                        <td>{{ $d->has_product?->product_nama ?? '-' }}</td>
+                        <td>{{ ($d->applied_role === 'reseller' ? $d->has_product?->nama_grosir : $d->has_product?->product_nama) ?? '-' }}</td>
                         <td class="num">{{ $d->so_detail_qty }}</td>
                         <td class="num">{{ formatAngka((float) $d->so_detail_harga, 'Rp') }}</td>
                         <td class="num">{{ formatAngka((int) $d->so_detail_qty * (float) $d->so_detail_harga, 'Rp') }}</td>

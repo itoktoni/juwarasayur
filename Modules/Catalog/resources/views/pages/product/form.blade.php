@@ -11,6 +11,7 @@ use Modules\Catalog\Models\Product;
             @bind($model ?? null)
                 <x-input col="6" name="product_nama" label="Nama Produk *" required />
                 <x-input col="6" name="product_slug" label="Slug" placeholder="Auto generate jika kosong" />
+                <x-input col="12" name="product_nama_grosir" label="Nama Grosir (Reseller)" placeholder="Kosongkan = pakai nama biasa" helper="Nama yang tampil saat login sebagai reseller & di download harga grosir" />
                 <x-input col="4" name="product_kode" label="Kode Produk" placeholder="Auto generate jika kosong" />
                 <x-input col="4" name="product_sku" label="SKU" />
                 <x-input col="4" name="product_barcode" label="Barcode" />
