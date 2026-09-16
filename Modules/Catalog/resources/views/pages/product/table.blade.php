@@ -26,8 +26,7 @@
                 <th>Gambar</th>
                 <th>Nama</th>
                 <th>Kode</th>
-                <th>Harga</th>
-                <th>Diskon Reseller</th>
+                <th>Harga Jual / Grosir</th>
                 <th>Komisi Affiliator</th>
                 <th>Stok</th>
                 <th>Status</th>
@@ -46,8 +45,7 @@
                     </td>
                     <td>{{ $table->product_nama }}</td>
                     <td>{{ $table->product_kode ?? '-' }}</td>
-                    <td>{{ formatAngka((int) $table->product_harga, 'Rp ') }}</td>
-                    <td>{{ $table->reseller_fee_percent ? $table->reseller_fee_percent . '%' : '-' }}</td>
+                    <td>{{ formatAngka((int) $table->product_harga, 'Rp ') }}@if($table->product_harga_grosir)<br><span class="text-xs text-on-surface-variant">Grosir: {{ formatAngka((int) $table->product_harga_grosir, 'Rp ') }}</span>@endif</td>
                     <td>{{ $table->affiliator_fee_percent ? $table->affiliator_fee_percent . '%' : '-' }}</td>
                     <td>{{ $table->product_stok }}</td>
                     <td><x-badge :label="ucfirst($table->product_status)" :variant="$table->product_status === 'active' ? 'success' : 'soft'" /></td>
@@ -69,10 +67,10 @@
                                 <span class="text-xs text-on-surface-variant">Harga</span>
                                 <span class="text-sm font-medium text-right">{{ formatAngka((int) $table->product_harga, 'Rp ') }}</span>
                             </div>
-                            @if($table->reseller_fee_percent)
+                            @if($table->product_harga_grosir)
                             <div class="flex justify-between items-center gap-2">
-                                <span class="text-xs text-on-surface-variant">Diskon Reseller</span>
-                                <span class="text-sm font-medium text-right">{{ $table->reseller_fee_percent }}%</span>
+                                <span class="text-xs text-on-surface-variant">Harga Grosir</span>
+                                <span class="text-sm font-medium text-right">{{ formatAngka((int) $table->product_harga_grosir, 'Rp ') }}</span>
                             </div>
                             @endif
                             @if($table->affiliator_fee_percent)

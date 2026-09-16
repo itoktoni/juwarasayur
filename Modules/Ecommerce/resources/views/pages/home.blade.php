@@ -145,8 +145,8 @@
                 @foreach($flashSaleProducts as $p)
                     @php
                         $harga = (int) $p->product_harga;
-                        $resellerPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
-                        $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        $hargaGrosir = (int) ($p->product_harga_grosir ?? 0);
+                        $hargaReseller = ($isReseller && $hargaGrosir > 0) ? $hargaGrosir : 0;
                         $showDualPrice = $isReseller && $hargaReseller > 0;
                     @endphp
                     <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
@@ -163,7 +163,7 @@
                             @if($showDualPrice)
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</span>
-                                    <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $resellerPct }}%</span>
+                                    <span class="text-[9px] font-bold text-primary bg-primary/10 rounded px-1 py-0.5 leading-none">Grosir</span>
                                 </div>
                                 <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
                             @else
@@ -196,8 +196,8 @@
                 @foreach($bestSellingProducts as $p)
                     @php
                         $harga = (int) $p->product_harga;
-                        $resellerPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
-                        $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        $hargaGrosir = (int) ($p->product_harga_grosir ?? 0);
+                        $hargaReseller = ($isReseller && $hargaGrosir > 0) ? $hargaGrosir : 0;
                         $showDualPrice = $isReseller && $hargaReseller > 0;
                     @endphp
                     <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
@@ -213,7 +213,7 @@
                             @if($showDualPrice)
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</span>
-                                    <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $resellerPct }}%</span>
+                                    <span class="text-[9px] font-bold text-primary bg-primary/10 rounded px-1 py-0.5 leading-none">Grosir</span>
                                 </div>
                                 <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
                             @else
@@ -243,8 +243,8 @@
                 @foreach($latestProducts as $p)
                     @php
                         $harga = (int) $p->product_harga;
-                        $resellerPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
-                        $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                        $hargaGrosir = (int) ($p->product_harga_grosir ?? 0);
+                        $hargaReseller = ($isReseller && $hargaGrosir > 0) ? $hargaGrosir : 0;
                         $showDualPrice = $isReseller && $hargaReseller > 0;
                     @endphp
                     <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">
@@ -260,7 +260,7 @@
                             @if($showDualPrice)
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="text-[11px] text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</span>
-                                    <span class="text-[9px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $resellerPct }}%</span>
+                                    <span class="text-[9px] font-bold text-primary bg-primary/10 rounded px-1 py-0.5 leading-none">Grosir</span>
                                 </div>
                                 <p class="text-sm font-extrabold text-primary leading-tight">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
                             @else

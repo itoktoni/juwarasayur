@@ -42,11 +42,11 @@ class CartController extends Controller
 
         $selectedCustomerId = $isAffiliator ? (int) Session::get('reseller_customer_id', 0) : 0;
 
-        // Hitung subtotal dengan diskon reseller
+        // Hitung subtotal: reseller pakai harga grosir langsung
         $subtotal = $items->sum(function ($item) use ($isReseller) {
             $harga = (float) ($item->has_product?->product_harga ?? 0);
-            $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
-            $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+            $grosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
+            $hargaEfektif = ($isReseller && $grosir > 0) ? $grosir : $harga;
 
             return $item->qty * $hargaEfektif;
         });

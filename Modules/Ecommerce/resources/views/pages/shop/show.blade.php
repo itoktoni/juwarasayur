@@ -89,17 +89,17 @@
                     <div class="card-body">
                         @php
                             $harga = (int) $product->product_harga;
-                            $resellerPct = $isReseller ? (float) ($product->reseller_fee_percent ?? 0) : 0;
-                            $hargaReseller = $resellerPct > 0 ? (int) ($harga * (1 - $resellerPct / 100)) : 0;
+                            $hargaGrosir = (int) ($product->product_harga_grosir ?? 0);
+                            $hargaReseller = ($isReseller && $hargaGrosir > 0) ? $hargaGrosir : 0;
                         @endphp
                         @if($isReseller && $hargaReseller > 0)
                             <p class="text-sm text-on-surface-variant line-through">{{ formatAngka($harga, 'Rp ') }}</p>
                             <p class="text-2xl font-bold text-primary">{{ formatAngka($hargaReseller, 'Rp ') }}</p>
-                            <p class="text-xs text-on-surface-variant mt-0.5">Harga reseller (diskon {{ $resellerPct }}%)</p>
+                            <p class="text-xs text-on-surface-variant mt-0.5">Harga grosir (reseller)</p>
                         @else
                             <p class="text-2xl font-bold text-primary">{{ formatAngka($harga, 'Rp ') }}</p>
                         @endif
-                        @if($product->product_harga_grosir)
+                        @if($product->product_harga_grosir && !($isReseller && $hargaReseller > 0))
                             <p class="text-xs text-on-surface-variant">Grosir: {{ formatAngka((int) $product->product_harga_grosir, 'Rp ') }}</p>
                         @endif
                         <div class="mt-3 flex flex-wrap gap-2 text-xs">
@@ -152,8 +152,8 @@
                     @foreach($related as $p)
                         @php
                             $relHarga = (int) $p->product_harga;
-                            $relPct = $isReseller ? (float) ($p->reseller_fee_percent ?? 0) : 0;
-                            $relHargaReseller = $relPct > 0 ? (int) ($relHarga * (1 - $relPct / 100)) : 0;
+                            $relGrosir = (int) ($p->product_harga_grosir ?? 0);
+                            $relHargaReseller = ($isReseller && $relGrosir > 0) ? $relGrosir : 0;
                             $relShowDual = $isReseller && $relHargaReseller > 0;
                         @endphp
                         <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-outline-variant/60 bg-white shadow-[0_1px_3px_rgba(15,61,17,0.08)] hover:-translate-y-1 hover:border-primary-fixed hover:shadow-[0_14px_30px_-10px_rgba(46,125,50,0.4)] transition-all duration-300">

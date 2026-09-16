@@ -29,7 +29,7 @@ class SoController extends Controller
     {
         $products = Product::where('is_active', true)
             ->orderBy('product_nama')
-            ->get(['id', 'product_nama', 'product_harga', 'reseller_fee_percent']);
+            ->get(['id', 'product_nama', 'product_harga', 'product_harga_grosir']);
         $trim = fn ($v) => $v === null || $v === '' ? $v : rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');
 
         $codLocations = CodLocation::active()
@@ -41,9 +41,16 @@ class SoController extends Controller
             ]);
 
         // Map customer_id -> reference_id (affiliator/reseller pemilik) untuk auto-select di form
-        $customerOwners = User::where('type', UserTypeEnum::CUSTOMER)
+        // Termasuk tipe reseller (grosir) karena bisa dipilih sebagai so_id_customer
+        $customerOwners = User::whereIn('type', [UserTypeEnum::CUSTOMER, UserTypeEnum::RESELLER])
             ->pluck('reference_id', 'id')
             ->map(fn ($v) => $v ? (int) $v : null)
+            ->all();
+
+        // Map customer_id -> type untuk penentuan harga reseller di JS
+        // (customer bertipe reseller/grosir dapat harga lebih murah)
+        $customerTypes = User::whereIn('type', [UserTypeEnum::CUSTOMER, UserTypeEnum::RESELLER])
+            ->pluck('type', 'id')
             ->all();
 
         return array_merge([
@@ -58,7 +65,8 @@ class SoController extends Controller
             'codLocations' => $codLocations->all(),
             'productOptions' => $products->pluck('product_nama', 'id')->all(),
             'productPrices' => $products->mapWithKeys(fn ($p) => [$p->id => $trim($p->product_harga)])->all(),
-            'productResellerFees' => $products->mapWithKeys(fn ($p) => [$p->id => $trim($p->reseller_fee_percent ?? 0)])->all(),
+            'productGrosirPrices' => $products->mapWithKeys(fn ($p) => [$p->id => $p->product_harga_grosir ? $trim($p->product_harga_grosir) : null])->filter()->all(),
+            'customerTypes' => $customerTypes,
             'resellerTypes' => $this->resellerTypes(),
             'warehouse' => config('so.shipping.warehouse'),
             'shippingConfig' => [
@@ -443,15 +451,23 @@ class SoController extends Controller
             $data['so_shipping_fee'] = 0;
         }
 
-        // Terapkan FeeResolver per baris berdasarkan USER YANG DIPILIH (so_id_reseller),
-        // bukan user login — sehingga admin bisa membuat order utk reseller/affiliator:
-        //   - customer/user biasa : harga = product_harga
-        //   - reseller            : harga = product_harga - (product_harga * reseller_fee_percent)
-        //   - affiliator          : harga = product_harga + snapshot fee_percent/fee_amount
-        // Basis harga SELALU product_harga dari DB agar tidak bisa dimanipulasi/double-diskon.
+        // Terapkan FeeResolver per baris berdasarkan CUSTOMER YANG DIPILIH
+        // (so_id_customer) ATAU pemilik order (so_id_reseller):
+        //   - customer biasa    : harga jual (product_harga)
+        //   - customer reseller (grosir) ATAU owner reseller : harga grosir
+        //     (product_harga_grosir) langsung, fallback ke harga jual jika kosong
+        //   - affiliator        : harga tetap + snapshot fee_percent/fee_amount
+        // Basis harga SELALU dari DB agar tidak bisa dimanipulasi/double-diskon.
         if (! empty($data['details']) && is_array($data['details'])) {
             $ownerId = (int) ($data['so_id_reseller'] ?? 0);
             $owner = $ownerId ? User::find($ownerId) : Auth::user();
+
+            // Jika customer yang dipilih bertipe reseller (grosir),
+            // harga mengikuti harga reseller meskipun owner-nya admin/login.
+            $pricingUser = $owner;
+            if ($customer && $customer->type === UserTypeEnum::RESELLER) {
+                $pricingUser = $customer;
+            }
 
             foreach ($data['details'] as $idx => $row) {
                 $product = Product::find((int) ($row['so_detail_id_product'] ?? 0));
@@ -459,10 +475,10 @@ class SoController extends Controller
                     continue;
                 }
                 $qty = (int) ($row['so_detail_qty'] ?? 1);
-                $res = $this->fees->resolve($product, $owner, $qty, (float) $product->product_harga);
-                // Reseller: harga sudah didiskon, affiliator/customer: harga tetap
+                $res = $this->fees->resolve($product, $pricingUser, $qty, (float) $product->product_harga);
+                // FeeResolver untuk reseller sudah mengembalikan harga grosir langsung
                 $data['details'][$idx]['so_detail_harga'] = $res->hargaEfektif;
-                if ($owner?->isAffiliator()) {
+                if ($pricingUser?->isAffiliator()) {
                     $data['details'][$idx]['fee_percent'] = $res->percent;
                     $data['details'][$idx]['fee_amount'] = $res->amount;
                     $data['details'][$idx]['fee_source'] = $res->source;
@@ -532,16 +548,31 @@ class SoController extends Controller
         return $code;
     }
 
+    /**
+     * Pilihan customer untuk form SO: tipe customer ATAU reseller (grosir).
+     * Label reseller diberi suffix agar jelas di dropdown.
+     */
     private function customerOptions(): array
     {
+        $label = fn ($u) => $u->type === UserTypeEnum::RESELLER ? "{$u->name} (Reseller/Grosir)" : $u->name;
+
         $user = Auth::user();
 
         if ($user && in_array($user->type, [UserTypeEnum::RESELLER, UserTypeEnum::AFFILIATOR], true)) {
-            return $user->hasCustomers()->orderBy('name')->pluck('name', 'id')->all();
+            return $user->hasCustomers()
+                ->whereIn('type', [UserTypeEnum::CUSTOMER, UserTypeEnum::RESELLER])
+                ->orderBy('name')
+                ->get(['id', 'name', 'type'])
+                ->mapWithKeys(fn ($u) => [$u->id => $label($u)])
+                ->all();
         }
 
-        // Admin/developer: semua customer
-        return User::where('type', UserTypeEnum::CUSTOMER)->orderBy('name')->pluck('name', 'id')->all();
+        // Admin/developer: semua customer + reseller (grosir)
+        return User::whereIn('type', [UserTypeEnum::CUSTOMER, UserTypeEnum::RESELLER])
+            ->orderBy('name')
+            ->get(['id', 'name', 'type'])
+            ->mapWithKeys(fn ($u) => [$u->id => $label($u)])
+            ->all();
     }
 
     /**

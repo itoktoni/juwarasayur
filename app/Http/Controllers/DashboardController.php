@@ -174,8 +174,9 @@ class DashboardController extends Controller
 
             $items = $group->map(function ($product) {
                 $hargaNormal = (float) $product->product_harga;
+                $hargaGrosir = (float) ($product->product_harga_grosir ?? 0);
+                $hargaReseller = $hargaGrosir > 0 ? $hargaGrosir : $hargaNormal;
                 $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
-                $hargaReseller = $hargaNormal * (1 - $resellerFee / 100);
 
                 return [
                     'nama' => $product->product_nama,
@@ -199,8 +200,9 @@ class DashboardController extends Controller
         // Fallback flat items untuk backward-compat (jika view lama masih dipakai)
         $items = $products->map(function ($product) {
             $hargaNormal = (float) $product->product_harga;
+            $hargaGrosir = (float) ($product->product_harga_grosir ?? 0);
             $resellerFee = $product->reseller_fee_percent ? (float) $product->reseller_fee_percent : 0;
-            $hargaReseller = $hargaNormal * (1 - $resellerFee / 100);
+            $hargaReseller = $hargaGrosir > 0 ? $hargaGrosir : $hargaNormal;
 
             return [
                 'nama' => $product->product_nama,

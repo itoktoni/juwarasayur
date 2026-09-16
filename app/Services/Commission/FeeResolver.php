@@ -30,11 +30,12 @@ class FeeResolver
         }
 
         if ($role === UserTypeEnum::RESELLER) {
-            $pct = $product->reseller_fee_percent !== null ? (float) $product->reseller_fee_percent : 0;
-            $pct = max(0, min(100, $pct));
-            $hargaEfektif = $harga * (1 - $pct / 100);
+            // Reseller (grosir) pakai harga grosir langsung dari CSV,
+            // bukan harga jual x persentase. Fallback ke harga jual jika grosir kosong.
+            $grosir = (float) ($product->product_harga_grosir ?? 0);
+            $hargaEfektif = $grosir > 0 ? $grosir : $harga;
 
-            return new FeeResult($pct, 0, $product->reseller_fee_percent !== null ? 'product' : null, 'reseller', $hargaEfektif);
+            return new FeeResult(0, 0, $grosir > 0 ? 'grosir' : null, 'reseller', $hargaEfektif);
         }
 
         return new FeeResult(0, 0, null, $role, $harga);

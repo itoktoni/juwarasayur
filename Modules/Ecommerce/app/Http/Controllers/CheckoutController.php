@@ -105,11 +105,11 @@ class CheckoutController extends Controller
                 : $user;
         }
 
-        // Hitung subtotal dengan diskon reseller
+        // Hitung subtotal: reseller pakai harga grosir langsung
         $subtotal = $items->sum(function ($item) use ($isReseller) {
             $harga = (float) ($item->has_product?->product_harga ?? 0);
-            $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
-            $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+            $grosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
+            $hargaEfektif = ($isReseller && $grosir > 0) ? $grosir : $harga;
 
             return $item->qty * $hargaEfektif;
         });
@@ -360,12 +360,12 @@ class CheckoutController extends Controller
         }
 
         // Subtotal wajib sama dengan tampilan checkout: pakai harga efektif
-        // per item (termasuk diskon reseller) supaya total bayar tidak berubah
+        // per item (reseller = harga grosir) supaya total bayar tidak berubah
         // saat masuk ke halaman pembayaran/QRIS.
         $subtotal = $cartItems->sum(function ($item) use ($isReseller) {
             $harga = (float) ($item->has_product?->product_harga ?? 0);
-            $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
-            $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+            $grosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
+            $hargaEfektif = ($isReseller && $grosir > 0) ? $grosir : $harga;
 
             return $item->qty * $hargaEfektif;
         });
@@ -405,11 +405,11 @@ class CheckoutController extends Controller
             $feeResolver = app(FeeResolver::class);
             foreach ($cartItems as $item) {
                 $harga = (float) ($item->has_product?->product_harga ?? 0);
-                $pct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
-                $hargaEfektif = $pct > 0 ? $harga * (1 - $pct / 100) : $harga;
+                $grosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
+                $hargaEfektif = ($isReseller && $grosir > 0) ? $grosir : $harga;
                 $qty = (int) $item->qty;
 
-                // Hitung fee snapshot per baris: reseller = diskon harga (fee=0),
+                // Hitung fee snapshot per baris: reseller = harga grosir (fee=0),
                 // affiliator = komisi % dari harga produk, customer = tanpa fee.
                 $fee = $feeResolver->resolve($item->has_product, $user, $qty, $harga);
 

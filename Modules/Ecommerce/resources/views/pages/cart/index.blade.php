@@ -37,8 +37,9 @@
                     @foreach($items as $item)
                         @php
                             $itemHarga = (float) ($item->has_product?->product_harga ?? 0);
-                            $itemResellerPct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
-                            $itemHargaReseller = $itemResellerPct > 0 ? $itemHarga * (1 - $itemResellerPct / 100) : $itemHarga;
+                            $itemGrosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
+                            $itemHargaReseller = ($isReseller && $itemGrosir > 0) ? $itemGrosir : $itemHarga;
+                            $itemIsGrosir = ($isReseller && $itemGrosir > 0);
                         @endphp
                         <div class="relative flex gap-3 p-3 rounded-2xl border border-outline-variant/60 bg-white shadow-sm" id="cart-row-{{ $item->id }}">
 
@@ -62,10 +63,10 @@
 
                                 {{-- Harga --}}
                                 <div class="mt-1">
-                                    @if($isReseller && $itemResellerPct > 0)
+                                    @if($isReseller && $itemIsGrosir)
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <span class="text-xs text-on-surface-variant line-through">{{ formatAngka((int) $itemHarga, 'Rp') }}</span>
-                                            <span class="text-[10px] font-bold text-on-error bg-error/10 rounded px-1 py-0.5 leading-none">-{{ $itemResellerPct }}%</span>
+                                            <span class="text-[10px] font-bold text-primary bg-primary/10 rounded px-1 py-0.5 leading-none">Grosir</span>
                                         </div>
                                         <p class="text-sm font-bold text-primary">{{ formatAngka((int) $itemHargaReseller, 'Rp') }}</p>
                                     @else

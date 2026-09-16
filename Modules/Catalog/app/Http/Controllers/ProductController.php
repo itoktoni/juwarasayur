@@ -93,9 +93,9 @@ class ProductController extends Controller
     public function getExport()
     {
         $products = Product::select([
-            'product_nama', 'product_kode', 'product_harga',
+            'product_nama', 'product_kode', 'product_harga', 'product_harga_grosir',
             'product_harga_modal', 'product_stok',
-            'reseller_fee_percent', 'affiliator_fee_percent',
+            'affiliator_fee_percent',
             'sort_order',
         ])->orderBy('sort_order')->orderBy('product_nama')->get();
 
@@ -116,16 +116,17 @@ class ProductController extends Controller
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
             // Header + Flag (create/update/delete — kosong = upsert otomatis jika kode sudah ada → update)
-            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Modal', 'Stok', 'Fee Reseller (%)', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
+            // Fee Reseller dihilangkan — reseller pakai Harga Grosir langsung
+            fputcsv($handle, ['Nama Produk', 'Kode Produk', 'Harga Jual', 'Harga Grosir', 'Harga Modal', 'Stok', 'Fee Affilator (%)', 'Sort Order', 'Flag'], $delimiter);
 
             foreach ($products as $product) {
                 fputcsv($handle, [
                     $product->product_nama,
                     $product->product_kode,
                     $product->product_harga,
+                    $product->product_harga_grosir ?? '',
                     $product->product_harga_modal ?? '',
                     $product->product_stok ?? '',
-                    $product->reseller_fee_percent ?? '',
                     $product->affiliator_fee_percent ?? '',
                     $product->sort_order ?? 0,
                     '', // Flag kosong = upsert
@@ -201,6 +202,10 @@ class ProductController extends Controller
                 // allow flag column to make row shorter/longer — mapRow handles missing
                 $data = $this->mapRowToFields($row, $headerMap);
 
+                // Fee Reseller dihilangkan — paksa 0 agar tidak ada potongan dari harga grosir
+                // (CSV lama yang masih punya kolom fee tetap diabaikan nilainya)
+                $data['reseller_fee_percent'] = 0;
+
                 // flag: update | create | delete (hapus) — jika ada maka paksa aksi, jika kosong = upsert
                 $flag = strtolower(trim((string) ($data['flag'] ?? '')));
                 unset($data['flag']);
@@ -243,11 +248,13 @@ class ProductController extends Controller
                     $data['is_active'] = 1;
                     // bersihkan null agar saving hook tidak error
                     $data = array_filter($data, fn ($v) => $v !== null);
-                    foreach (['product_harga', 'product_harga_modal', 'product_stok', 'sort_order'] as $intField) {
-                        if (isset($data[$intField])) $data[$intField] = (int) $data[$intField];
+                    $data = $this->sanitizeNumericFields($data, $errors, $rowNum);
+                    try {
+                        Product::create($data);
+                        $added++;
+                    } catch (\Throwable $e) {
+                        $errors[] = "Baris {$rowNum}: gagal simpan — ".$e->getMessage();
                     }
-                    Product::create($data);
-                    $added++;
                     continue;
                 }
 
@@ -259,14 +266,13 @@ class ProductController extends Controller
                         continue;
                     }
                     $clean = array_filter($data, fn ($v) => $v !== null);
-                    foreach (['product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'] as $intField) {
-                        if (isset($clean[$intField])) $clean[$intField] = (int) $clean[$intField];
+                    $clean = $this->sanitizeNumericFields($clean, $errors, $rowNum);
+                    try {
+                        $product->update($clean);
+                        $updated++;
+                    } catch (\Throwable $e) {
+                        $errors[] = "Baris {$rowNum}: gagal simpan — ".$e->getMessage();
                     }
-                    foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $decField) {
-                        if (isset($clean[$decField])) $clean[$decField] = (float) $clean[$decField];
-                    }
-                    $product->update($clean);
-                    $updated++;
                     continue;
                 }
 
@@ -279,19 +285,24 @@ class ProductController extends Controller
 
                 if ($product) {
                     $clean = array_filter($data, fn ($v) => $v !== null);
-                    foreach (['product_harga', 'product_harga_modal', 'product_harga_grosir', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'] as $intField) {
-                        if (isset($clean[$intField])) $clean[$intField] = (int) $clean[$intField];
+                    $clean = $this->sanitizeNumericFields($clean, $errors, $rowNum);
+                    try {
+                        $product->update($clean);
+                        $updated++;
+                    } catch (\Throwable $e) {
+                        $errors[] = "Baris {$rowNum}: gagal simpan — ".$e->getMessage();
                     }
-                    foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $decField) {
-                        if (isset($clean[$decField])) $clean[$decField] = (float) $clean[$decField];
-                    }
-                    $product->update($clean);
-                    $updated++;
                 } else {
                     $data['product_status'] = 'active';
                     $data['is_active'] = 1;
-                    Product::create($data);
-                    $added++;
+                    $data = array_filter($data, fn ($v) => $v !== null);
+                    $data = $this->sanitizeNumericFields($data, $errors, $rowNum);
+                    try {
+                        Product::create($data);
+                        $added++;
+                    } catch (\Throwable $e) {
+                        $errors[] = "Baris {$rowNum}: gagal simpan — ".$e->getMessage();
+                    }
                 }
             }
 
@@ -325,6 +336,8 @@ class ProductController extends Controller
             'nama produk' => 'product_nama',
             'kode produk' => 'product_kode',
             'harga jual' => 'product_harga',
+            'harga grosir' => 'product_harga_grosir',
+            'harga reseller' => 'product_harga_grosir',
             'harga modal' => 'product_harga_modal',
             'stok' => 'product_stok',
             'stock' => 'product_stok',
@@ -364,6 +377,59 @@ class ProductController extends Controller
         }
 
         return $fields;
+    }
+
+    /**
+     * Sanitasi kolom angka dari CSV: buang format ribuan Indonesia
+     * ("24.000", "Rp 24.000", "24 000") dan clamp negatif ke 0 agar tidak
+     * error SQL out-of-range pada kolom unsigned. Nilai negatif dicatat
+     * sebagai warning di $errors tapi import tetap jalan.
+     */
+    private function sanitizeNumericFields(array $data, array &$errors, int $rowNum): array
+    {
+        $unsignedInt = ['product_harga', 'product_harga_grosir', 'product_harga_modal', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'];
+
+        foreach ($unsignedInt as $field) {
+            if (! isset($data[$field])) {
+                continue;
+            }
+            $raw = trim((string) $data[$field]);
+            $negative = str_starts_with(ltrim($raw), '-');
+            // buang prefix Rp/spasi, lalu pisahkan desimal vs ribuan:
+            // "10,5"/"10.5" = desimal → ambil bagian bulat; selain itu buang semua pemisah
+            $noRp = trim(str_ireplace('rp', '', $raw), " \t\n\r\0\x0B-");
+            if (preg_match('/^\d+[.,]\d{1,2}$/', $noRp)) {
+                $value = (int) preg_replace('/[.,]\d{1,2}$/', '', $noRp);
+            } else {
+                $digits = preg_replace('/[^0-9]/', '', $noRp);
+                $value = $digits === '' || $digits === null ? 0 : (int) $digits;
+            }
+            if ($negative || $value < 0) {
+                $errors[] = "Baris {$rowNum}: {$field} bernilai negatif ({$raw}) — dipakai 0.";
+                $value = 0;
+            }
+            $data[$field] = $value;
+        }
+
+        foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $field) {
+            if (! isset($data[$field])) {
+                continue;
+            }
+            $raw = trim(str_replace(['%', ' '], '', (string) $data[$field]));
+            // "10,5" atau "10.5" = desimal; "1.000" = ribuan
+            if (preg_match('/^-?\d+[.,]\d{1,2}$/', $raw)) {
+                $value = (float) str_replace(',', '.', $raw);
+            } else {
+                $digits = preg_replace('/[^0-9]/', '', $raw);
+                $value = $digits === '' || $digits === null ? 0 : (float) $digits;
+                if (str_starts_with(ltrim($raw), '-')) {
+                    $value = 0;
+                }
+            }
+            $data[$field] = max(0, min(100, $value));
+        }
+
+        return $data;
     }
 
     private function findProduct(array $data): ?Product

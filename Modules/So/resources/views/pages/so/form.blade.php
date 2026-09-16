@@ -25,7 +25,7 @@ use Modules\So\Models\So;
             </div>
             @bind($model ?? null)
                 <x-input col="4" name="so_tanggal" label="Tanggal" type="date" />
-                <x-select col="4" name="so_id_customer" label="Customer" :options="$customerOptions" class="search" placeholder="-- Pilih Customer --" />
+                <x-select col="4" name="so_id_customer" label="Customer / Reseller (Grosir)" :options="$customerOptions" class="search" placeholder="-- Pilih Customer / Reseller --" />
                 @if(!empty($resellerOptions))
                     <x-select col="6" name="so_id_reseller" label="Affiliator" :options="$resellerOptions" class="search" placeholder="-- User Login (Saya) --" helper="Kosongkan untuk memakai user login sebagai reseller" />
                 @endif
@@ -269,8 +269,9 @@ use Modules\So\Models\So;
 
         (() => {
          const SO_PRICES = {!! json_encode($productPrices ?? []) !!};
-        const SO_RESELLER_FEES = {!! json_encode($productResellerFees ?? []) !!};
+        const SO_GROSIR_PRICES = {!! json_encode($productGrosirPrices ?? []) !!};
         const SO_USER_TYPES = {!! json_encode($resellerTypes ?? []) !!};
+        const SO_CUSTOMER_TYPES = {!! json_encode($customerTypes ?? []) !!};
         const SO_CUSTOMER_OWNERS = {!! json_encode($customerOwners ?? []) !!};
         const AUTH_TYPE = '{{ auth()->user()?->type ?? '' }}';
         const SO_WAREHOUSE = {!! $warehouseJson !!};
@@ -280,8 +281,10 @@ use Modules\So\Models\So;
 
         function fmtRp(n){ return 'Rp ' + (Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 
-        // --- Harga otomatis per-role pemilik order (so_id_reseller) ---
-        // customer/user biasa: harga dasar; reseller: diskon reseller_fee_percent;
+        // --- Harga otomatis: customer reseller (grosir) ATAU pemilik reseller ---
+        // customer biasa: harga jual (product_harga);
+        // reseller/grosir: harga grosir (product_harga_grosir) langsung,
+        //   fallback ke harga jual jika grosir kosong;
         // affiliator: harga tetap (komisi di-snapshot server-side saat simpan).
         function currentRole(){
             const sel = document.querySelector('select[name="so_id_reseller"]');
@@ -289,12 +292,26 @@ use Modules\So\Models\So;
             return (AUTH_TYPE === 'reseller' || AUTH_TYPE === 'affiliator') ? AUTH_TYPE : 'customer';
         }
 
+        function selectedCustomerType(){
+            const sel = document.querySelector('select[name="so_id_customer"]');
+            if(sel && sel.value && SO_CUSTOMER_TYPES[sel.value]) return SO_CUSTOMER_TYPES[sel.value];
+            return null;
+        }
+
+        function isResellerOrder(){
+            if(selectedCustomerType() === 'reseller') return true;
+            return currentRole() === 'reseller';
+        }
+
         function autoPriceFor(pid){
             if(!pid || SO_PRICES[pid] == null) return null;
             const base = parseFloat(SO_PRICES[pid]);
-            if(currentRole() === 'reseller'){
-                const pct = parseFloat(SO_RESELLER_FEES[pid]);
-                if(!isNaN(pct) && pct > 0) return base * (1 - pct / 100);
+            if(isResellerOrder()){
+                // Harga grosir langsung dari CSV, bukan harga jual x persentase
+                if(SO_GROSIR_PRICES[pid] != null){
+                    const grosir = parseFloat(SO_GROSIR_PRICES[pid]);
+                    if(!isNaN(grosir) && grosir > 0) return grosir;
+                }
             }
             return base;
         }

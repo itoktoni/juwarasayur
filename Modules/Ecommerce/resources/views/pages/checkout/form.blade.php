@@ -177,13 +177,14 @@
                     @foreach($items as $item)
                         @php
                             $itemHarga = (float) ($item->has_product?->product_harga ?? 0);
-                            $itemResellerPct = $isReseller ? (float) ($item->has_product?->reseller_fee_percent ?? 0) : 0;
-                            $itemHargaEfektif = $itemResellerPct > 0 ? $itemHarga * (1 - $itemResellerPct / 100) : $itemHarga;
+                            $itemGrosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
+                            $itemHargaEfektif = ($isReseller && $itemGrosir > 0) ? $itemGrosir : $itemHarga;
+                            $itemIsGrosir = ($isReseller && $itemGrosir > 0);
                         @endphp
                         <div class="flex items-center justify-between py-2 gap-2">
                             <span class="truncate text-on-surface">{{ $item->has_product?->product_nama }} <span class="text-on-surface-variant">× {{ $item->qty }}</span></span>
                             <span class="font-mono shrink-0">
-                                @if($isReseller && $itemResellerPct > 0)
+                                @if($isReseller && $itemIsGrosir)
                                     <span class="line-through opacity-60 text-xs">{{ formatAngka((int) ($item->qty * $itemHarga), 'Rp') }}</span>
                                     <span class="text-primary font-semibold">{{ formatAngka((int) ($item->qty * $itemHargaEfektif), 'Rp') }}</span>
                                 @else
