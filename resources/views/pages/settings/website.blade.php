@@ -270,10 +270,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label class="block text-sm font-semibold text-on-surface mb-1">QRIS Expiry (menit)</label>
-                    <input type="number" min="1" max="60" name="qris_expiry"
+                    <input type="number" min="1" step="1" name="qris_expiry"
                         value="{{ $qrisExpiry }}"
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm" required>
-                    <p class="text-xs text-on-surface-variant mt-1">Batas waktu pembayaran QRIS sebelum expired. Default: 5 menit.</p>
+                    <p class="text-xs text-on-surface-variant mt-1">Batas waktu pembayaran QRIS sebelum expired, dalam menit. Isi angka berapa saja (mis. 120 = 2 jam). Default: 5 menit.</p>
                     @error('qris_expiry')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                 </div>
                 <div>

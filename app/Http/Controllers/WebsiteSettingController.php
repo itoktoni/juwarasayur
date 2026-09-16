@@ -58,7 +58,7 @@ class WebsiteSettingController extends Controller
             // Minimal pencairan komisi (Rp)
             'min_withdraw' => ['required', 'numeric', 'min:0'],
             // Payment settings
-            'qris_expiry' => ['required', 'integer', 'min:1', 'max:60'],
+            'qris_expiry' => ['required', 'integer', 'min:1'],
             'unique_digits' => ['required', 'integer', 'min:1', 'max:6'],
             'notifyhook_secret' => ['nullable', 'string', 'max:255'],
             // CSV import
