@@ -213,8 +213,11 @@ class DashboardController extends Controller
      */
     private function buildPriceData(bool $grosirOnly = false): array
     {
+        // Hanya produk aktif & tidak terhapus (soft-delete) yang masuk daftar harga
         $products = Product::with('has_category')
+            ->whereNull('catalog_products.deleted_at')
             ->where('is_active', true)
+            ->where('product_status', 'active')
             ->when($grosirOnly, fn ($q) => $q->where('is_grosir', true))
             ->orderBy('sort_order')
             ->orderBy('product_nama')

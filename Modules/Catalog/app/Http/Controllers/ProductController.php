@@ -92,12 +92,16 @@ class ProductController extends Controller
      */
     public function getExport()
     {
+        // Hanya produk aktif & tidak terhapus (soft-delete) yang ikut ter-download
         $products = Product::select([
             'product_nama', 'product_nama_grosir', 'product_kode', 'product_harga', 'product_harga_grosir', 'is_grosir',
             'product_harga_modal', 'product_stok',
             'affiliator_fee_percent',
             'sort_order',
-        ])->orderBy('sort_order')->orderBy('product_nama')->get();
+        ])->whereNull('catalog_products.deleted_at')
+            ->where('is_active', true)
+            ->where('product_status', 'active')
+            ->orderBy('sort_order')->orderBy('product_nama')->get();
 
         $filename = 'produk_'.date('Y-m-d_His').'.csv';
 
