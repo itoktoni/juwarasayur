@@ -21,7 +21,7 @@
             <div class="text-center py-10">
                 <span class="material-symbols-outlined text-6xl text-outline">inbox</span>
                 <p class="text-sm text-on-surface-variant mt-3">
-                    Tidak ada SO berstatus Paid/Confirmed pada tanggal {{ formatDate($tanggal) }}
+                    Tidak ada SO berstatus Pending/Paid/Confirmed pada tanggal {{ formatDate($tanggal) }}
                     yang masih ada item belum disiapkan.
                 </p>
             </div>

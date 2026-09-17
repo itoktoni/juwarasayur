@@ -24,7 +24,7 @@ use Modules\So\Models\So;
                 <div class="w-full h-12 px-4 bg-surface-container text-on-surface-variant border border-outline-variant rounded-lg flex items-center font-mono text-sm">{{ $model->so_code ?? 'Auto generate' }}</div>
             </div>
             @bind($model ?? null)
-                <x-input col="4" name="so_tanggal" label="Tanggal" type="date" />
+                <x-input col="4" name="so_tanggal" label="Tanggal" type="date" :value="old('so_tanggal', $model?->so_tanggal ? \Illuminate\Support\Carbon::parse($model->so_tanggal)->format('Y-m-d') : now()->addDay()->format('Y-m-d'))" />
                 <x-select col="4" name="so_id_customer" label="Customer / Reseller (Grosir)" :options="$customerOptions" class="search" placeholder="-- Pilih Customer / Reseller --" />
                 @if(!empty($resellerOptions))
                     <x-select col="6" name="so_id_reseller" label="Affiliator" :options="$resellerOptions" class="search" placeholder="-- User Login (Saya) --" helper="Kosongkan untuk memakai user login sebagai reseller" />

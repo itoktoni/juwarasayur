@@ -101,14 +101,15 @@ class SoController extends Controller
 
     /**
      * Shortcut dari tabel SO: masuk ke modul Prepare dengan SO ini sebagai target.
-     * Hanya untuk SO berstatus paid/confirmed (yang siap di-prepare dari gudang).
+     * Untuk SO berstatus pending/paid/confirmed (pending ikut agar pre-order
+     * baru bisa langsung disiapkan tanpa menunggu pembayaran).
      */
     public function getPrepare(GeneralRequest $request, $id)
     {
         $so = $this->model->findOrFail($id);
 
         // Validasi minimal: SO harus sudah punya detail & status relevan
-        if (! in_array($so->so_status, [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED], true)) {
+        if (! in_array($so->so_status, [SoStatusEnum::PENDING, SoStatusEnum::PAID, SoStatusEnum::CONFIRMED], true)) {
             flash()->error('SO ini belum siap di-prepare (status: '.$so->so_status.').');
 
             return redirect()->route('so-so.getTable');

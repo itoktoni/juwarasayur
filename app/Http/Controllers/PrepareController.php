@@ -23,16 +23,18 @@ use Modules\So\Models\SoDetail;
 class PrepareController extends Controller
 {
     /**
-     * Halaman utama: filter SO (paid/confirmed) yang siap di-prepare.
+     * Halaman utama: filter SO (pending/paid/confirmed) yang siap di-prepare.
+     * Pending ikut agar pre-order yang baru dibuat langsung bisa disiapkan
+     * tanpa menunggu pembayaran.
      */
     public function index(Request $request): View
     {
-        $tanggal = $request->query('tanggal', now()->toDateString());
+        $tanggal = $request->query('tanggal', now()->addDay()->toDateString());
 
         $sos = So::query()
             ->with(['has_customer', 'has_details.has_product', 'has_details.has_prepare_allocations'])
             ->whereDate('so_tanggal', $tanggal)
-            ->whereIn('so_status', [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED])
+            ->whereIn('so_status', [SoStatusEnum::PENDING, SoStatusEnum::PAID, SoStatusEnum::CONFIRMED])
             ->orderBy('id')
             ->get()
             // Filter SO yang masih ada item belum full prepared
@@ -188,14 +190,14 @@ class PrepareController extends Controller
         $filterStatus = $request->query('status', 'all'); // all | ready | partial | pending
         $search = trim((string) $request->query('q', ''));
 
-        // Ambil semua SO detail dari SO paid/confirmed/delivered (yang relevan untuk prepare)
+        // Ambil semua SO detail dari SO pending/paid/confirmed/delivered (yang relevan untuk prepare)
         $query = SoDetail::with([
             'has_so.has_customer',
             'has_product',
             'has_prepare_allocations.has_lokasi',
         ])
             ->whereHas('has_so', function ($q) {
-                $q->whereIn('so_status', [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED, SoStatusEnum::DELIVERED]);
+                $q->whereIn('so_status', [SoStatusEnum::PENDING, SoStatusEnum::PAID, SoStatusEnum::CONFIRMED, SoStatusEnum::DELIVERED]);
             })
             ->orderByDesc('id');
 
