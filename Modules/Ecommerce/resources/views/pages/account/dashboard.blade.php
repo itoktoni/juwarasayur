@@ -83,7 +83,7 @@
         </div>
 
         {{-- Stat cards --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="material-symbols-outlined text-primary text-3xl">today</span>
@@ -114,7 +114,15 @@
                     <span class="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Siap kirim</span>
                 </div>
                 <p class="text-2xl font-extrabold text-on-surface mt-2">{{ $stats['to_prepare'] }}</p>
-                <p class="text-xs text-on-surface-variant">Sedang diproses</p>
+                <p class="text-xs text-on-surface-variant">Dibayar & sedang diproses</p>
+            </div>
+            <div class="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="material-symbols-outlined text-success text-3xl">check_circle</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Diterima</span>
+                </div>
+                <p class="text-2xl font-extrabold text-on-surface mt-2">{{ $stats['delivered'] ?? 0 }}</p>
+                <p class="text-xs text-on-surface-variant">Order selesai</p>
             </div>
         </div>
 

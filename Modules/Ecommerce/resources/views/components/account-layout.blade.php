@@ -54,6 +54,11 @@
                             <a href="{{ route('dashboard.download-prices') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
                                 <span class="material-symbols-outlined text-xl text-on-surface-variant">download</span> Download Harga
                             </a>
+                            @if($user && ($user->isReseller() || in_array($user->role, ['admin', 'developer', 'editor'])))
+                            <a href="{{ route('dashboard.download-reseller-prices') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-xl text-on-surface-variant">storefront</span> Download Harga Reseller
+                            </a>
+                            @endif
                             @if($user?->isAffiliator())
                                 <a href="{{ route('account.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm {{ request()->routeIs('account.dashboard') ? 'text-primary font-bold bg-primary/5' : 'text-on-surface hover:bg-surface-container-low' }} transition-colors">
                                     <span class="material-symbols-outlined text-xl text-on-surface-variant">space_dashboard</span> Dashboard

@@ -41,9 +41,13 @@ class AccountController extends Controller
                 ->whereNot('so_status', SoStatusEnum::CANCELLED)
                 ->sum('so_grand_total'),
             'unpaid' => (clone $baseSo())->where('so_status', SoStatusEnum::PENDING)->count(),
+            // shipped = sudah dibayar & sedang dikirim, ikut dihitung sebagai
+            // order dalam proses (sebelumnya hanya paid+confirmed → shipped/
+            // delivered tidak muncul di kartu mana pun selain total).
             'to_prepare' => (clone $baseSo())
-                ->whereIn('so_status', [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED])
+                ->whereIn('so_status', [SoStatusEnum::PAID, SoStatusEnum::CONFIRMED, SoStatusEnum::SHIPPED])
                 ->count(),
+            'delivered' => (clone $baseSo())->where('so_status', SoStatusEnum::DELIVERED)->count(),
             'total_orders' => (clone $baseSo())->count(),
             'revenue_total' => (float) (clone $baseSo())
                 ->whereNot('so_status', SoStatusEnum::CANCELLED)

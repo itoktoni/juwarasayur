@@ -403,6 +403,10 @@ class CheckoutController extends Controller
 
             $seq = 1;
             $feeResolver = app(FeeResolver::class);
+            // Fee dihitung dari PEMILIK order (so_id_reseller), bukan buyer login —
+            // supaya order referral customer-login tetap dapat snapshot komisi affiliator.
+            $feeOwner = $soIdReseller ? User::find($soIdReseller) : null;
+            $feeApplies = $feeOwner && $feeOwner->type === UserTypeEnum::AFFILIATOR;
             foreach ($cartItems as $item) {
                 $harga = (float) ($item->has_product?->product_harga ?? 0);
                 $grosir = (float) ($item->has_product?->product_harga_grosir ?? 0);
@@ -411,7 +415,7 @@ class CheckoutController extends Controller
 
                 // Hitung fee snapshot per baris: reseller = harga grosir (fee=0),
                 // affiliator = komisi % dari harga produk, customer = tanpa fee.
-                $fee = $feeResolver->resolve($item->has_product, $user, $qty, $harga);
+                $fee = $feeResolver->resolve($item->has_product, $feeOwner, $qty, $harga);
 
                 SoDetail::create([
                     'so_detail_code' => sprintf('%s-%03d', $so->so_code, $seq),
@@ -419,8 +423,8 @@ class CheckoutController extends Controller
                     'so_detail_id_product' => $item->has_product->id,
                     'so_detail_qty' => $qty,
                     'so_detail_harga' => $hargaEfektif,
-                    'fee_percent' => $isAffiliator ? $fee->percent : null,
-                    'fee_amount' => $isAffiliator ? $fee->amount : 0,
+                    'fee_percent' => $feeApplies ? $fee->percent : null,
+                    'fee_amount' => $feeApplies ? $fee->amount : 0,
                     'fee_source' => $fee->source,
                     'applied_role' => $fee->role,
                 ]);

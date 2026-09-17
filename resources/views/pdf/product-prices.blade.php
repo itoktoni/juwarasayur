@@ -23,12 +23,12 @@
     </style>
 </head>
 <body>
+    @php($showGrosir = $showGrosir ?? $isAdmin ?? false)
+    @php($isReseller = $isReseller ?? $showGrosir ?? false)
     <div class="header">
         <h1>Daftar Harga Produk</h1>
         <div class="meta">
-            @if($isAdmin)
-                Daftar Harga Customer &amp; Reseller (Grosir)
-            @elseif($isReseller)
+            @if($showGrosir)
                 Harga Reseller (Grosir) — {{ $user->name }}
             @else
                 Harga Pelanggan — {{ $user->name }}
@@ -37,84 +37,36 @@
         </div>
     </div>
 
-    @if($isAdmin)
-        {{-- ===== 1. HARGA CUSTOMER ===== --}}
-        <div class="price-title">Harga Customer</div>
-        @forelse($grouped as $group)
-            <div class="category-title">{{ $group['name'] }}</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th class="no-col">No</th>
-                        <th>Produk</th>
-                        <th class="harga-col">Harga</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($group['items'] as $index => $item)
-                    <tr>
-                        <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $item['nama'] }}</td>
-                        <td class="harga-col">Rp {{ number_format($item['harga_normal'], 0, ',', '.') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @empty
-            <p style="text-align:center; padding:20px; color:#888;">Tidak ada produk aktif.</p>
-        @endforelse
-
-        {{-- ===== 2. HARGA RESELLER (GROSIR) — hanya flag is_grosir ===== --}}
+    @if($showGrosir)
+        {{-- ===== HARGA RESELLER (GROSIR) — hanya via download-reseller-prices ===== --}}
         <div class="price-title">Harga Reseller (Grosir)</div>
-        @forelse(($groupedGrosir ?? $grouped) as $group)
-            <div class="category-title">{{ $group['name'] }}</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th class="no-col">No</th>
-                        <th>Produk</th>
-                        <th class="harga-col">Harga</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($group['items'] as $index => $item)
-                    <tr>
-                        <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $item['nama_grosir'] ?? $item['nama'] }}</td>
-                        <td class="harga-col">Rp {{ number_format($item['harga_reseller'], 0, ',', '.') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @empty
-            <p style="text-align:center; padding:20px; color:#888;">Tidak ada produk aktif.</p>
-        @endforelse
     @else
-        {{-- Reseller / customer: satu daftar sesuai tipenya, header per kategori --}}
-        @forelse($grouped as $group)
-            <div class="category-title">{{ $group['name'] }}</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th class="no-col">No</th>
-                        <th>Produk</th>
-                        <th class="harga-col">Harga</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($group['items'] as $index => $item)
-                    <tr>
-                        <td class="no-col">{{ $index + 1 }}</td>
-                        <td>{{ $isReseller ? ($item['nama_grosir'] ?? $item['nama']) : $item['nama'] }}</td>
-                        <td class="harga-col">Rp {{ number_format($isReseller ? $item['harga_reseller'] : $item['harga_normal'], 0, ',', '.') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @empty
-            <p style="text-align:center; padding:20px; color:#888;">Tidak ada produk aktif.</p>
-        @endforelse
+        {{-- ===== HARGA CUSTOMER — via download-prices (semua role/type) ===== --}}
+        <div class="price-title">Harga Customer</div>
     @endif
+    @forelse($grouped as $group)
+        <div class="category-title">{{ $group['name'] }}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="no-col">No</th>
+                    <th>Produk</th>
+                    <th class="harga-col">Harga</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($group['items'] as $index => $item)
+                <tr>
+                    <td class="no-col">{{ $index + 1 }}</td>
+                    <td>{{ $isReseller ? ($item['nama_grosir'] ?? $item['nama']) : $item['nama'] }}</td>
+                    <td class="harga-col">Rp {{ number_format($isReseller ? $item['harga_reseller'] : $item['harga_normal'], 0, ',', '.') }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @empty
+        <p style="text-align:center; padding:20px; color:#888;">Tidak ada produk aktif.</p>
+    @endforelse
 
     <div class="footer">
         {{ config('app.name', 'Mayur') }} &mdash; {{ $date }}

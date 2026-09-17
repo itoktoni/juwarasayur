@@ -68,10 +68,13 @@
                         <span class="material-symbols-outlined text-xl">download</span>
                         <span class="font-body-sm text-body-sm">Download Harga</span>
                     </a>
+                    @php($headerUser = auth()->user())
+                    @if($headerUser && ($headerUser->isReseller() || in_array($headerUser->role, ['admin', 'developer', 'editor'])))
                     <a href="{{ route('dashboard.download-reseller-prices') }}" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-on-surface">
                         <span class="material-symbols-outlined text-xl">storefront</span>
                         <span class="font-body-sm text-body-sm">Download Harga Reseller</span>
                     </a>
+                    @endif
                     <a href="#" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-on-surface">
                         <span class="material-symbols-outlined text-xl">help</span>
                         <span class="font-body-sm text-body-sm">Help & Support</span>

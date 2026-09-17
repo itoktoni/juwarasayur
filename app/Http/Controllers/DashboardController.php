@@ -149,28 +149,23 @@ class DashboardController extends Controller
     }
 
     /**
-     * Download PDF daftar harga produk.
-     * - Admin/Editor/Developer: 2 daftar (harga customer + harga reseller grosir)
-     * - Reseller: 1 daftar (harga grosir)
-     * - Customer/Affiliator: 1 daftar (harga normal)
+     * Download PDF daftar harga produk — selalu harga customer (retail),
+     * apapun role/type user. Harga grosir hanya via downloadResellerPrices().
      */
     public function downloadPrices(Request $request)
     {
         $user = $request->user();
 
-        $isAdmin = in_array($user->role, ['admin', 'editor', 'developer']);
-        $isReseller = $user->isReseller();
-
         [$grouped, $items] = $this->buildPriceData();
-        [$groupedGrosir] = $this->buildPriceData(true);
 
         $pdf = Pdf::loadView('pdf.product-prices', [
             'user' => $user,
             'items' => $items,
             'grouped' => $grouped,
-            'groupedGrosir' => $groupedGrosir,
-            'isAdmin' => $isAdmin,
-            'isReseller' => $isReseller,
+            'groupedGrosir' => collect(),
+            'isAdmin' => false,
+            'isReseller' => false,
+            'showGrosir' => false,
             'date' => Carbon::now()->format('d M Y'),
         ]);
 
@@ -180,12 +175,16 @@ class DashboardController extends Controller
     }
 
     /**
-     * Download PDF khusus harga reseller (grosir) — semua role login.
-     * Selalu tampil sebagai daftar grosir regardless tipe user.
+     * Download PDF khusus harga reseller (grosir) — hanya type reseller
+     * + role operasional admin/developer/editor (opsi B). Type lain 403.
+     * Selalu tampil sebagai daftar grosir regardless role yang diizinkan.
      */
     public function downloadResellerPrices(Request $request)
     {
         $user = $request->user();
+
+        $allowed = $user->isReseller() || in_array($user->role, ['admin', 'developer', 'editor']);
+        abort_if(! $allowed, 403);
 
         [$grouped, $items] = $this->buildPriceData(true);
 
@@ -196,6 +195,7 @@ class DashboardController extends Controller
             'groupedGrosir' => $grouped,
             'isAdmin' => false,
             'isReseller' => true,
+            'showGrosir' => true,
             'date' => Carbon::now()->format('d M Y'),
         ]);
 

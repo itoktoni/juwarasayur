@@ -212,7 +212,7 @@ class So extends BaseModel
     public function rules(): array
     {
         return [
-            'so_tanggal' => ['required', 'date'],
+            'so_tanggal' => ['required', 'date', 'before_or_equal:today'],
             // Diisi otomatis dari user login di controller jika kosong
             'so_id_reseller' => ['nullable', 'exists:users,id'],
             'so_id_customer' => ['nullable', 'exists:users,id'],

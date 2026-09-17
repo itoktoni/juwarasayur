@@ -72,6 +72,12 @@
                                 <span class="material-symbols-outlined text-xl text-on-surface-variant">download</span>
                                 Download Harga
                             </a>
+                            @if(auth()->user() && (auth()->user()->isReseller() || in_array(auth()->user()->role, ['admin', 'developer', 'editor'])))
+                            <a href="{{ route('dashboard.download-reseller-prices') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-xl text-on-surface-variant">storefront</span>
+                                Download Harga Reseller
+                            </a>
+                            @endif
                             <div class="border-t border-outline-variant">
                                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                                     @csrf
