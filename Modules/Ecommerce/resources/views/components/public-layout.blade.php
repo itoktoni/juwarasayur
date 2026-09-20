@@ -13,6 +13,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} — {{ config('app.name', 'Mayur') }}</title>
+    @php $shareDescription = trim((string) ($description ?? config('frontend.footer.tagline', ''))); @endphp
+    <meta name="description" content="{{ $shareDescription }}">
+    <meta property="og:title" content="{{ $title }} — {{ config('app.name', 'Mayur') }}">
+    <meta property="og:description" content="{{ $shareDescription }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:description" content="{{ $shareDescription }}">
     @php $faviconUrl = \App\Models\WebsiteSetting::fileUrl(\App\Models\WebsiteSetting::merged()['favicon'] ?? null) ?? asset('favicon.ico'); @endphp
     <link rel="icon" href="{{ $faviconUrl }}" sizes="any">
     @vite(['resources/css/app.css', 'resources/js/app.js'])

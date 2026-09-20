@@ -4,13 +4,17 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    @php $shareDescription = trim((string) ($description ?? config('frontend.footer.tagline', ''))); @endphp
     <title>{{ $title ?? config('app.name', 'LARAVEL') }}</title>
-    <meta name="description" content="{{ $description ?? config('app.name', 'LARAVEL') }}">
+    <meta name="description" content="{{ $shareDescription }}">
     <meta name="author" content="{{ config('app.name', 'LARAVEL') }}">
     <meta property="og:title" content="{{ $title ?? config('app.name', 'LARAVEL') }}">
-    <meta property="og:description" content="{{ $description ?? '' }}">
+    <meta property="og:description" content="{{ $shareDescription }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $title ?? config('app.name', 'LARAVEL') }}">
+    <meta name="twitter:description" content="{{ $shareDescription }}">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
