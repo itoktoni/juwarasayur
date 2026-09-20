@@ -1,5 +1,7 @@
 @php
-    $siteName = config('app.name', 'Mayur');
+    $siteName = config('website.name', config('app.name', 'Mayur'));
+    $footerTagline = trim((string) config('frontend.footer.tagline', ''));
+    $shareTitle = $footerTagline !== '' ? $siteName.' — '.$footerTagline : $siteName;
     $cartCount = app(\Modules\Ecommerce\Services\CartService::class)->count();
 @endphp
 <!DOCTYPE html>
@@ -8,15 +10,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $siteName }} — Toko Sayur & Sembako Segar</title>
-    @php $shareDescription = trim((string) config('frontend.footer.tagline', '')); @endphp
+    <title>{{ $shareTitle }}</title>
+    @php $shareDescription = $footerTagline; @endphp
     <meta name="description" content="{{ $shareDescription }}">
-    <meta property="og:title" content="{{ $siteName }} — Toko Sayur & Sembako Segar">
+    <meta property="og:title" content="{{ $shareTitle }}">
     <meta property="og:description" content="{{ $shareDescription }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="{{ $siteName }} — Toko Sayur & Sembako Segar">
+    <meta name="twitter:title" content="{{ $shareTitle }}">
     <meta name="twitter:description" content="{{ $shareDescription }}">
     @php
         $rawFaviconHome = \App\Models\WebsiteSetting::merged()['favicon'] ?? null;
