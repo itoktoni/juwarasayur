@@ -322,6 +322,36 @@ class SoController extends Controller
         ]);
     }
 
+    /**
+     * Print invoice berdasarkan qty yang DI-PREPARE (prepare x harga),
+     * bukan qty order. 1 halaman per SO.
+     */
+    public function getPrepareInvoice(GeneralRequest $request)
+    {
+        $ids = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $query = $this->model->with([
+            'has_details.has_product',
+            'has_details.has_prepare_allocations',
+            'has_customer',
+            'has_reseller',
+        ]);
+
+        $list = $ids->isNotEmpty()
+            ? $query->whereIn('id', $ids)->orderBy('so_code')->get()
+            : $this->getData()->get();
+
+        abort_if($list->isEmpty(), 404, 'Tidak ada SO untuk dicetak.');
+
+        return response()->view('so::pages.so.prepare-invoice', [
+            'list' => $list,
+        ]);
+    }
+
     public function postCreate(GeneralRequest $request)
     {
         $data = $this->validatedWithShipping($request);

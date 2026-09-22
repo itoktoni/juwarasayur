@@ -49,7 +49,7 @@
                 @foreach($data as $table)
                 <tr>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
-                    <x-table-action :model="$model" :id="$table->field_primary">
+                    <x-table-action :model="$model" :id="$table->field_primary" :hide="['delete']">
                         <a href="{{ route('so-so.getPrintContinues', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Struk 80mm"
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">print</span>
@@ -58,16 +58,35 @@
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-600/10 text-sky-700 hover:bg-sky-600/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">local_shipping</span>
                         </a>
-                        <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}" title="Payment — QR & Link untuk customer"
-                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-700 hover:bg-emerald-600/20 transition-colors">
-                            <span class="material-symbols-outlined text-lg">qr_code_2</span>
-                        </a>
-                        @if(in_array($table->so_status, ['pending', 'paid', 'confirmed'], true))
-                            <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
-                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                                <span class="material-symbols-outlined text-lg">inventory_2</span>
-                            </a>
-                        @endif
+                        {{-- Maks 4 ikon sejajar, sisanya di dropdown ke bawah --}}
+                        <div class="relative so-more-wrap">
+                            <button type="button" onclick="toggleSoMore(this)" title="Aksi lainnya"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                                <span class="material-symbols-outlined text-lg">more_vert</span>
+                            </button>
+                            <div class="so-more-menu hidden absolute right-0 {{ $loop->remaining < 2 ? 'bottom-9' : 'top-9' }} z-30 w-48 rounded-xl border border-outline-variant bg-white shadow-lg p-1.5 space-y-0.5">
+                                <a href="{{ route('so-so.getPrepareInvoice', ['ids' => $table->field_primary]) }}" target="_blank"
+                                    class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container transition-colors">
+                                    <span class="material-symbols-outlined text-lg text-violet-700">receipt_long</span> Invoice Prepare
+                                </a>
+                                <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}"
+                                    class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container transition-colors">
+                                    <span class="material-symbols-outlined text-lg text-emerald-700">qr_code_2</span> Payment
+                                </a>
+                                @if(in_array($table->so_status, ['pending', 'paid', 'confirmed'], true))
+                                    <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}"
+                                        class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container transition-colors">
+                                        <span class="material-symbols-outlined text-lg text-primary">inventory_2</span> Prepare
+                                    </a>
+                                @endif
+                                @can('delete', $model ?? null)
+                                    <a onclick="return confirm('Are you sure you want to delete?')" href="{{ moduleRoute('getDelete', ['id' => $table->field_primary]) }}"
+                                        class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-error hover:bg-error/10 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">delete</span> Delete
+                                    </a>
+                                @endcan
+                            </div>
+                        </div>
                     </x-table-action>
                     <td>{{ $table->so_code }}</td>
                     <td>{{ formatDate($table->so_tanggal) }}</td>
@@ -115,6 +134,10 @@
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-600/10 text-sky-700 hover:bg-sky-600/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">local_shipping</span>
                                 </a>
+                                <a href="{{ route('so-so.getPrepareInvoice', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Invoice (qty prepare x harga)"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-violet-600/10 text-violet-700 hover:bg-violet-600/20 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">receipt_long</span>
+                                </a>
                                 <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}" title="Payment — QR & Link untuk customer"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-700 hover:bg-emerald-600/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">qr_code_2</span>
@@ -160,4 +183,18 @@
     <input type="hidden" class="module" value="{{ Str::beforeLast(request()->route()->uri(), '/') }}">
     <script src="/js/table.js"></script>
     <script>initTable('{{ $sortField }}', '{{ $sortDir }}');</script>
+    <script>
+        // ponytail: dropdown "aksi lainnya" per baris — satu terbuka dalam satu waktu.
+        function toggleSoMore(btn){
+            var menu = btn.closest('.so-more-wrap')?.querySelector('.so-more-menu');
+            var willOpen = menu?.classList.contains('hidden');
+            document.querySelectorAll('.so-more-menu').forEach(function(m){ m.classList.add('hidden'); });
+            if(menu && willOpen) menu.classList.remove('hidden');
+        }
+        document.addEventListener('click', function(e){
+            if(!e.target.closest('.so-more-wrap')) {
+                document.querySelectorAll('.so-more-menu').forEach(function(m){ m.classList.add('hidden'); });
+            }
+        });
+    </script>
 </x-layouts::app>
