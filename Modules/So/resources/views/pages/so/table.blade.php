@@ -54,11 +54,15 @@
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">print</span>
                         </a>
+                        <a href="{{ route('so-so.getDeliveryOrder', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Surat Jalan (Delivery Order A4)"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-600/10 text-sky-700 hover:bg-sky-600/20 transition-colors">
+                            <span class="material-symbols-outlined text-lg">local_shipping</span>
+                        </a>
                         <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}" title="Payment — QR & Link untuk customer"
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-700 hover:bg-emerald-600/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">qr_code_2</span>
                         </a>
-                        @if(in_array($table->so_status, ['paid', 'confirmed'], true))
+                        @if(in_array($table->so_status, ['pending', 'paid', 'confirmed'], true))
                             <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                                 <span class="material-symbols-outlined text-lg">inventory_2</span>
@@ -107,11 +111,15 @@
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">print</span>
                                 </a>
+                                <a href="{{ route('so-so.getDeliveryOrder', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Surat Jalan (Delivery Order A4)"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-600/10 text-sky-700 hover:bg-sky-600/20 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">local_shipping</span>
+                                </a>
                                 <a href="{{ route('so-so.getPayment', ['id' => $table->field_primary]) }}" title="Payment — QR & Link untuk customer"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600/10 text-emerald-700 hover:bg-emerald-600/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">qr_code_2</span>
                                 </a>
-                                @if(in_array($table->so_status, ['paid', 'confirmed'], true))
+                                @if(in_array($table->so_status, ['pending', 'paid', 'confirmed'], true))
                                     <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}" title="Siapkan barang dari gudang"
                                         class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                                         <span class="material-symbols-outlined text-lg">inventory_2</span>
@@ -128,7 +136,24 @@
         </x-table>
 
         <x-pagination :paginator="$data" />
-        <x-action :model="$model" :action="['create', 'delete']"/>
+        <x-action :model="$model" :action="['create', 'delete']">
+            <button type="button" onclick="prepareSelectedSo()" title="Prepare SO yang dicentang sekaligus"
+                class="inline-flex items-center justify-center gap-1 h-8 md:h-10 px-2.5 md:px-4 text-xs md:text-sm font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all active:scale-95 shrink-0">
+                <span class="material-symbols-outlined text-base md:text-xl">done_all</span>
+                <span class="hidden sm:inline">Prepare All</span>
+            </button>
+        </x-action>
+    <script>
+        // ponytail: kumpulkan checkbox tercentang (desktop) atau set mobile,
+        // lalu buka prepare.group dengan so_ids[] — pola mengikuti deleteSelected.
+        function prepareSelectedSo(){
+            var desktopIds = Array.from(document.querySelectorAll('tbody input[type="checkbox"]:checked')).map(function(c){ return c.value; });
+            var ids = desktopIds.length ? desktopIds : Array.from(window.mSelected || []);
+            if(!ids.length) return alert('Pilih minimal satu SO.');
+            var url = '{{ route('prepare.group') }}?' + ids.map(function(id){ return 'so_ids[]=' + encodeURIComponent(id); }).join('&');
+            window.location.href = url;
+        }
+    </script>
 
     </div>
 

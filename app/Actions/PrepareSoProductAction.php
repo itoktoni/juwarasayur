@@ -32,11 +32,14 @@ class PrepareSoProductAction
 
     /**
      * @param  array<int>  $soDetailIds  SO detail yang meminta produk ini
+     * @param  bool  $force  Lewati cek stock (bypass) — alokasi tetap dicatat,
+     *                       stock boleh minus. Untuk barang fisik ada tapi stock
+     *                       sistem belum diinput.
      * @return array<int, array{so_detail_id:int, qty:int, so_code:string, customer:string}> Distribusi per-SO
      */
-    public function handle(Product $product, Lokasi $lokasi, int $qtyTotal, array $soDetailIds, ?User $user = null, ?string $expiredDate = null): array
+    public function handle(Product $product, Lokasi $lokasi, int $qtyTotal, array $soDetailIds, ?User $user = null, ?string $expiredDate = null, bool $force = false): array
     {
-        return DB::transaction(function () use ($product, $lokasi, $qtyTotal, $soDetailIds, $user, $expiredDate) {
+        return DB::transaction(function () use ($product, $lokasi, $qtyTotal, $soDetailIds, $user, $expiredDate, $force) {
             $remaining = $qtyTotal;
             $distributions = [];
 
@@ -79,25 +82,27 @@ class PrepareSoProductAction
 
             $totalDistribusi = array_sum(array_column($distributions, 'qty'));
 
-            // 2. Validasi stok cukup
+            // 2. Validasi stok cukup (dilewati saat force/bypass)
             $stokTersedia = (int) Stock::where('stock_id_product', $product->id)
                 ->where('stock_id_lokasi', $lokasi->id)
                 ->where('stock_expired_date', $expiredDate ?: null)
                 ->sum('stock_qty');
 
-            if ($stokTersedia < $totalDistribusi) {
+            if (! $force && $stokTersedia < $totalDistribusi) {
                 throw new \RuntimeException("Stok tidak cukup. Tersedia: {$stokTersedia}, diminta: {$totalDistribusi}");
             }
 
-            // 3. Decrement stok di lokasi
-            $stock = Stock::where('stock_id_product', $product->id)
-                ->where('stock_id_lokasi', $lokasi->id)
-                ->where('stock_expired_date', $expiredDate ?: null)
-                ->first();
-
-            if ($stock) {
-                $stock->decrement('stock_qty', $totalDistribusi);
-            }
+            // 3. Decrement stok di lokasi (boleh minus saat force agar ledger konsisten)
+            $stock = Stock::firstOrCreate(
+                [
+                    'stock_id_product' => $product->id,
+                    'stock_id_lokasi' => $lokasi->id,
+                    'stock_expired_date' => $expiredDate ?: null,
+                    'stock_batch' => null,
+                ],
+                ['stock_code' => $this->generateStockCode(), 'stock_qty' => 0]
+            );
+            $stock->decrement('stock_qty', $totalDistribusi);
 
             // 4. Insert StockMovement OUT + prepare_allocations per distribusi
             foreach ($distributions as $dist) {
@@ -111,7 +116,7 @@ class PrepareSoProductAction
                     'movement_expired_date' => $expiredDate,
                     'movement_ref_type' => SoDetail::class,
                     'movement_ref_id' => $dist['so_detail_id'],
-                    'movement_note' => 'Prepare untuk '.$dist['so_code'],
+                    'movement_note' => 'Prepare untuk '.$dist['so_code'].($force ? ' (force bypass stock)' : ''),
                 ]);
 
                 // prepare_allocations — sumber kebenaran "siap untuk siapa"
@@ -135,6 +140,15 @@ class PrepareSoProductAction
         do {
             $code = 'MVT-OUT-'.strtoupper(Str::random(10));
         } while (StockMovement::where('movement_code', $code)->exists());
+
+        return $code;
+    }
+
+    protected function generateStockCode(): string
+    {
+        do {
+            $code = 'STK-'.strtoupper(Str::random(10));
+        } while (Stock::where('stock_code', $code)->exists());
 
         return $code;
     }

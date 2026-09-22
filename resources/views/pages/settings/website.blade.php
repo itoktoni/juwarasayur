@@ -168,7 +168,18 @@
                     <button type="button" onclick="window.useMyLocationWarehouse && window.useMyLocationWarehouse()" class="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
                         <span class="material-symbols-outlined text-base">my_location</span> Gunakan Lokasi Saya
                     </button>
-                    <p class="text-xs text-on-surface-variant mb-2">Klik peta atau geser pin untuk mengatur titik gudang utama. Jarak pengiriman dihitung dari titik ini.</p>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Cari Lokasi di Peta</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="warehouse-map-search" placeholder="cth: nama jalan, kota, atau tempat"
+                            class="flex-1 border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm"
+                            onkeydown="if(event.key === 'Enter'){ event.preventDefault(); window.searchWarehouseLocation && window.searchWarehouseLocation(); }">
+                        <button type="button" onclick="window.searchWarehouseLocation && window.searchWarehouseLocation()" id="warehouse-map-search-btn"
+                            class="shrink-0 inline-flex items-center gap-1 border border-outline-variant rounded-lg px-4 py-2 text-sm font-semibold text-on-surface hover:bg-surface-container">
+                            <span class="material-symbols-outlined text-base">search</span> Cari
+                        </button>
+                    </div>
+                    <div id="warehouse-search-results" class="hidden mb-2 max-h-44 overflow-y-auto rounded-lg border border-outline-variant divide-y divide-outline-variant bg-surface"></div>
+                    <p class="text-xs text-on-surface-variant mb-2">Ketik alamat lalu pilih hasil, atau klik peta / geser pin untuk mengatur titik gudang utama. Jarak pengiriman dihitung dari titik ini.</p>
                     <div id="warehouse-map" class="w-full h-80 rounded-lg border border-outline-variant z-0"></div>
                 </div>
             </div>
@@ -424,7 +435,10 @@
                 s.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
                 s.crossOrigin = '';
                 s.onload = cb;
-                s.onerror = () => console.error('Gagal memuat Leaflet.');
+                s.onerror = () => {
+                    const el = document.getElementById('warehouse-map');
+                    if (el) el.innerHTML = '<div class="h-full flex items-center justify-center text-sm text-error p-6 text-center">Peta gagal dimuat (CDN Leaflet tidak terjangkau). Isi Latitude/Longitude manual lalu Simpan.</div>';
+                };
                 document.head.appendChild(s);
             }
 
@@ -466,6 +480,77 @@
                         map.setView([pos.coords.latitude, pos.coords.longitude], 15);
                     }, err => alert('Tidak bisa mengambil lokasi: ' + err.message));
                 };
+
+                // ==== Cari lokasi (Nominatim) ====
+                let whSearchAbort = null;
+                let whSearchTimer = null;
+                const whSearchCache = new Map();
+
+                function hideWarehouseResults() {
+                    document.getElementById('warehouse-search-results')?.classList.add('hidden');
+                }
+
+                function renderWarehouseResults(items) {
+                    const box = document.getElementById('warehouse-search-results');
+                    if (!box) return;
+                    if (!items.length) {
+                        box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Lokasi tidak ditemukan. Coba kata kunci lain.</div>';
+                        box.classList.remove('hidden');
+                        return;
+                    }
+                    box.innerHTML = items.map((r) =>
+                        `<button type="button" data-lat="${r.lat}" data-lon="${r.lon}" class="flex gap-2 w-full text-left px-3 py-2.5 hover:bg-primary/5 cursor-pointer text-xs"><span class="material-symbols-outlined text-base text-primary shrink-0 mt-0.5">location_on</span><span><span class="block font-medium text-on-surface leading-tight">${r.display_name.split(',').slice(0, 3).join(',')}</span><span class="block text-xs text-on-surface-variant leading-tight">${r.display_name}</span></span></button>`
+                    ).join('');
+                    box.classList.remove('hidden');
+                    box.querySelectorAll('button[data-lat]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const lat = parseFloat(btn.dataset.lat), lon = parseFloat(btn.dataset.lon);
+                            syncInputs(lat, lon);
+                            marker.setLatLng([lat, lon]);
+                            map.setView([lat, lon], 15);
+                            hideWarehouseResults();
+                        });
+                    });
+                }
+
+                async function doWarehouseSearch(q) {
+                    const box = document.getElementById('warehouse-search-results');
+                    const btn = document.getElementById('warehouse-map-search-btn');
+                    q = (q || '').trim();
+                    if (q.length < 3) {
+                        if (box) { box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Ketik minimal 3 huruf.</div>'; box.classList.remove('hidden'); }
+                        return;
+                    }
+                    if (whSearchCache.has(q)) { renderWarehouseResults(whSearchCache.get(q)); return; }
+                    if (whSearchAbort) try { whSearchAbort.abort(); } catch (e) {}
+                    whSearchAbort = new AbortController();
+                    if (box) { box.innerHTML = '<div class="p-3 text-xs text-on-surface-variant">Mencari lokasi...</div>'; box.classList.remove('hidden'); }
+                    if (btn) btn.disabled = true;
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=id&addressdetails=1&q=${encodeURIComponent(q)}`, { signal: whSearchAbort.signal, headers: { 'Accept': 'application/json' } });
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        const data = await res.json();
+                        whSearchCache.set(q, data);
+                        renderWarehouseResults(data);
+                    } catch (e) {
+                        if (e.name === 'AbortError') return;
+                        if (box) box.innerHTML = '<div class="p-3 text-xs text-error">Gagal mencari lokasi. Coba lagi.</div>';
+                    } finally { if (btn) btn.disabled = false; }
+                }
+
+                window.searchWarehouseLocation = function () {
+                    doWarehouseSearch(document.getElementById('warehouse-map-search')?.value || '');
+                };
+
+                document.getElementById('warehouse-map-search')?.addEventListener('input', e => {
+                    clearTimeout(whSearchTimer);
+                    whSearchTimer = setTimeout(() => doWarehouseSearch(e.target.value), 400);
+                });
+                document.addEventListener('click', e => {
+                    if (!e.target.closest('#warehouse-search-results') && !e.target.closest('#warehouse-map-search') && !e.target.closest('#warehouse-map-search-btn')) {
+                        hideWarehouseResults();
+                    }
+                });
             }
 
             if (document.readyState === 'loading') {
@@ -473,6 +558,9 @@
             } else {
                 loadLeaflet(initWarehouseMap);
             }
+            // ponytail: halaman dikunjungi via wire:navigate tidak memicu
+            // DOMContentLoaded — init ulang peta di sini.
+            document.addEventListener('livewire:navigated', () => loadLeaflet(initWarehouseMap));
         })();
     </script>
     @endpush

@@ -4,10 +4,12 @@
         ['url' => '', 'label' => 'Group by Product'],
     ]" />
 
+    @php $totalSisa = $groups->sum('sisa'); @endphp
     <x-card label="Ringkasan Group" class="mt-5" icon="category" :noGrid="true">
         <p class="text-sm text-on-surface-variant">
-            Dari <strong>{{ count($soIds) }}</strong> SO yang dipilih, sistem mengelompokkan berdasarkan produk.
-            Klik <strong>Siapkan</strong> untuk memilih lokasi gudang & qty yang akan dikeluarkan.
+            Dari <strong>{{ count($soIds) }}</strong> SO yang dipilih, sistem mengelompokkan berdasarkan produk
+            (total sisa <strong>{{ $totalSisa }}</strong> unit).
+            Klik <strong>Siapkan</strong> per produk, atau isi 1 lokasi + <strong>Siapkan Semua</strong> di bawah.
         </p>
     </x-card>
 
@@ -80,6 +82,37 @@
             <p class="text-sm text-on-surface-variant text-center py-8">SO yang dipilih tidak memiliki detail produk.</p>
         </x-card>
     @endforelse
+
+    @if($totalSisa > 0)
+    <form action="{{ route('prepare.prepareAll') }}" method="POST" onsubmit="return confirm('Siapkan SELURUH sisa ({{ $totalSisa }} unit) dari 1 lokasi?');">
+        @csrf
+        @foreach($soIds as $sid)
+            <input type="hidden" name="so_ids[]" value="{{ $sid }}">
+        @endforeach
+        <x-card label="Siapkan Semua Qty" class="mt-5" icon="done_all">
+            <div class="col-span-12 md:col-span-8">
+                <label class="text-xs font-bold text-on-surface-variant block mb-1">Lokasi Gudang <span class="text-error">*</span></label>
+                <div class="flex flex-col md:flex-row gap-2">
+                    <select name="lokasi_id" class="flex-1 h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" required>
+                        <option value="">-- Pilih Lokasi --</option>
+                        @foreach($lokasiOptions as $lok)
+                            <option value="{{ $lok->id }}">{{ $lok->lokasi_nama }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-12 px-5 text-sm font-semibold rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-all active:scale-95 shrink-0">
+                        <span class="material-symbols-outlined text-xl">done_all</span> Siapkan Semua ({{ $totalSisa }} unit)
+                    </button>
+                </div>
+                <label class="mt-2 flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" name="force" value="1" class="mt-0.5 w-4 h-4 shrink-0 accent-red-600">
+                    <span class="text-xs text-on-surface-variant"><b class="text-error">Force prepare</b> — lewati cek stock (bypass). Alokasi + movement tetap dicatat, stock boleh minus. Pakai bila barang fisik ada tapi stock sistem belum diinput.</span>
+                </label>
+                @error('lokasi_id')<p class="text-error text-xs mt-2">{{ $message }}</p>@enderror
+                <p class="text-xs text-on-surface-variant mt-2">Seluruh sisa tiap produk dialokasikan FIFO per SO dari lokasi ini (expired kosong). Tanpa force: produk yang stok lokasinya kurang dilewati & dilaporkan, yang lain tetap tersimpan.</p>
+            </div>
+        </x-card>
+    </form>
+    @endif
 
     <div class="mt-5">
         <a href="{{ route('prepare.index') }}" class="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg text-sm font-semibold bg-surface-container-highest text-on-surface hover:bg-surface-container-low transition-all">

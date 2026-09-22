@@ -181,6 +181,84 @@ class PrepareController extends Controller
     }
 
     /**
+     * Siapkan SEMUA sisa qty sekaligus dari 1 lokasi (1 transaksi per produk,
+     * partial commit: produk yang stoknya kurang dilewati & dilaporkan).
+     */
+    public function storePrepareAll(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'lokasi_id' => ['required', 'exists:inv_lokasis,id'],
+            'so_ids' => ['required', 'array', 'min:1'],
+            'so_ids.*' => ['integer'],
+            'force' => ['nullable', 'boolean'],
+        ]);
+        $lokasi = Lokasi::findOrFail($validated['lokasi_id']);
+        $soIds = array_values(array_filter(array_map('intval', $validated['so_ids'])));
+        // Force prepare: lewati cek stock (bypass), stock boleh minus
+        $force = (bool) ($validated['force'] ?? false);
+
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        $groups = SoDetail::with(['has_product', 'has_prepare_allocations'])
+            ->whereIn('so_detail_id_so', $soIds)
+            ->orderBy('so_detail_id_product')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('so_detail_id_product');
+
+        $done = 0;
+        $pcs = 0;
+        $errors = [];
+
+        foreach ($groups as $productId => $items) {
+            $product = Product::find($productId);
+            if (! $product) {
+                $errors[] = "Produk #{$productId}: tidak ditemukan.";
+
+                continue;
+            }
+
+            $sisa = (int) $items->sum('so_detail_qty')
+                - (int) $items->sum(fn ($d) => $d->has_prepare_allocations->sum('qty'));
+            $sisa = max(0, $sisa);
+            if ($sisa <= 0) {
+                continue;
+            }
+
+            try {
+                $distributions = PrepareSoProductAction::run(
+                    $product,
+                    $lokasi,
+                    $sisa,
+                    $items->pluck('id')->all(),
+                    $user,
+                    null,
+                    $force
+                );
+                $done++;
+                $pcs += array_sum(array_column($distributions, 'qty'));
+            } catch (\Throwable $e) {
+                $errors[] = ($product->product_nama ?? "Produk #{$productId}").': '.$e->getMessage();
+            }
+        }
+
+        if ($done > 0) {
+            flash()->success("Siapkan Semua selesai: {$pcs} unit ({$done} produk) dari {$lokasi->lokasi_nama}.".($force ? ' (mode force bypass stock)' : ''));
+        }
+        if ($errors !== []) {
+            return redirect()->route('prepare.group', ['so_ids' => $soIds])
+                ->withErrors(['lokasi_id' => implode(' ', $errors)]);
+        }
+        if ($done === 0) {
+            return redirect()->route('prepare.group', ['so_ids' => $soIds])
+                ->withErrors(['lokasi_id' => 'Tidak ada sisa qty untuk disiapkan (atau stok lokasi kurang).']);
+        }
+
+        return redirect()->route('prepare.group', ['so_ids' => $soIds]);
+    }
+
+    /**
      * Halaman progress: list semua SO detail dengan status persiapan.
      * Tiap baris = 1 item (produk) dari 1 SO — admin bisa lihat sudah disiapkan
      * berapa, di lokasi mana, dan status badge (Siap / Sebagian / Belum).

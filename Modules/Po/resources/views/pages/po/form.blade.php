@@ -193,7 +193,10 @@
     </template>
 
     <script>
-        const PO_PRICES = {!! $productPricesJson !!};
+        // ponytail: tanpa const/var agar eval ulang Livewire navigate/prefetch
+        // tidak throw "Identifier PO_PRICES has already been declared".
+        // Referensi PO_PRICES di bawah resolve ke window.
+        window.PO_PRICES = {!! $productPricesJson !!};
         (function(){
             document.querySelectorAll('.po-harga').forEach(el=>{
                 const v = el.value;
@@ -258,18 +261,37 @@
             if(grandEl) grandEl.textContent = fmtRp(grand);
         }
         function calcGrand(){ updateSummary(); }
+        function initPoProductSelect(el){
+            if(!el || el.tomselect) return;
+            if(!window.TomSelect){
+                // Vite belum load, retry sebentar
+                setTimeout(function(){ initPoProductSelect(el); }, 200);
+                return;
+            }
+            try{ new TomSelect(el, {create:false, allowEmptyOption:true}); }catch(e){}
+        }
+        // ponytail: baris pertama punya class "search" sehingga auto-init via
+        // x-select; baris dinamis dari <template> tidak — init manual di sini.
+        document.querySelectorAll('.po-product-select').forEach(initPoProductSelect);
         function addPoRow(){
             const wrap = document.getElementById('po-details');
             const tpl = document.getElementById('po-row-template').innerHTML;
             const idx = wrap.querySelectorAll('.po-detail-row').length;
             const html = tpl.replaceAll('__IDX__', idx);
             wrap.insertAdjacentHTML('beforeend', html);
+            // TomSelect untuk row baru (product kedua dst sebelumnya tidak ter-init)
+            const newRow = wrap.querySelectorAll('.po-detail-row')[idx];
+            const sel = newRow ? newRow.querySelector('.po-product-select') : null;
+            initPoProductSelect(sel);
             updateSummary();
         }
         function removePoRow(btn){
             const wrap = document.getElementById('po-details');
             if(wrap.querySelectorAll('.po-detail-row').length <= 1){ alert('Minimal 1 produk'); return; }
-            btn.closest('.po-detail-row')?.remove();
+            const row = btn.closest('.po-detail-row');
+            const sel = row ? row.querySelector('.po-product-select') : null;
+            if(sel && sel.tomselect){ try{ sel.tomselect.destroy(); }catch(e){} }
+            row?.remove();
             wrap.querySelectorAll('.po-detail-row').forEach((row,i)=>{
                 row.dataset.index = i;
                 row.querySelectorAll('[name]').forEach(el=>{

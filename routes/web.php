@@ -82,6 +82,7 @@ Route::prefix('admin')->middleware(['auth', 'verified', 'access', 'admin'])->gro
     Route::prefix('prepare')->name('prepare.')->controller(PrepareController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::match(['get', 'post'], '/group', 'group')->name('group');
+        Route::post('/prepare-all', 'storePrepareAll')->name('prepareAll');
         Route::get('/{product}/prepare', 'prepareForm')->name('prepareForm');
         Route::post('/{product}/prepare', 'storePrepare')->name('storePrepare');
         Route::get('/progress', 'progress')->name('progress');

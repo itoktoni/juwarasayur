@@ -23,6 +23,10 @@
         </div>
     </x-card>
 
+    @php
+        $hasSisa = $model->has_details->contains(fn ($d) => $d->po_detail_sisa > 0);
+    @endphp
+
     <x-card label="Detail Produk" class="mt-5" :noGrid="true">
         <x-table :border="false">
             <x-slot:head>
@@ -31,6 +35,7 @@
                 <th class="text-center">Diminta SO</th>
                 <th class="text-center">Prepared</th>
                 <th class="text-center">Sisa</th>
+                <th class="text-center">Qty Prepare</th>
                 <th class="text-left">Progress</th>
                 <th class="text-right">Aksi</th>
             </x-slot:head>
@@ -61,6 +66,13 @@
                     </td>
                     <td class="text-center">
                         <span class="@if($sisa > 0) font-bold text-warning @else text-success @endif">{{ $sisa }}</span>
+                    </td>
+                    <td class="text-center">
+                        @if($sisa > 0)
+                        <input type="number" name="qty[{{ $detail->id }}]" value="{{ $sisa }}" min="0" max="{{ $sisa }}" form="po-prepare-all-form" class="w-20 h-10 px-2 text-center bg-white border border-outline-variant rounded-lg text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                        @else
+                        <span class="text-on-surface-variant text-xs">—</span>
+                        @endif
                     </td>
                     <td>
                         <div class="flex items-center gap-2">
@@ -128,6 +140,13 @@
                             <span class="text-label-caps text-on-surface-variant">{{ $percent }}%</span>
                         </div>
 
+                        @if($sisa > 0)
+                        <div class="mt-3">
+                            <label class="text-label-caps text-on-surface-variant block mb-1">Qty Prepare</label>
+                            <input type="number" name="qty[{{ $detail->id }}]" value="{{ $sisa }}" min="0" max="{{ $sisa }}" form="po-prepare-all-form" class="w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                        </div>
+                        @endif
+
                         <div class="mt-4 pt-3 border-t border-outline-variant/50">
                             @if($sisa > 0)
                             <a href="{{ route('po-po.getPrepareProduct', ['id' => $detail->id]) }}" class="inline-flex items-center justify-center gap-1.5 w-full h-10 text-sm font-semibold rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-colors">
@@ -145,6 +164,40 @@
             </x-slot:mobile>
         </x-table>
     </x-card>
+
+    @if($hasSisa)
+    <form id="po-prepare-all-form" action="{{ route('po-po.postPrepareAll', ['id' => $model->id]) }}" method="POST" onsubmit="return confirm('Simpan qty prepare ke lokasi ini?');">
+        @csrf
+    <x-card label="Prepare All ke Stock" class="mt-5" icon="inventory">
+        <div class="col-span-12 md:col-span-8">
+            <label class="text-xs font-bold text-on-surface-variant block mb-1">Lokasi Gudang <span class="text-error">*</span></label>
+            <div class="flex flex-col md:flex-row gap-2">
+                <select name="lokasi_id" class="flex-1 h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" required>
+                    <option value="">-- Pilih Lokasi --</option>
+                    @foreach($lokasiOptions as $lid => $lnama)
+                        <option value="{{ $lid }}" @selected((string) old('lokasi_id') === (string) $lid)>{{ $lnama }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="inline-flex items-center justify-center gap-1.5 h-12 px-5 text-sm font-semibold rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-all active:scale-95 shrink-0">
+                    <span class="material-symbols-outlined text-xl">done_all</span> Prepare All
+                </button>
+            </div>
+            @error('lokasi_id')<p class="text-error text-xs mt-2">{{ $message }}</p>@enderror
+            <p class="text-xs text-on-surface-variant mt-2">Atur <b>Qty Prepare</b> per produk di tabel atas (default = sisa), pilih 1 lokasi, klik Prepare All. Qty masuk stock sekaligus (expired kosong). Produk qty 0 / melebihi permintaan SO dilewati.</p>
+        </div>
+    </x-card>
+    </form>
+    <script>
+        // ponytail: input qty ada di tabel (di luar <form>, terhubung via atribut
+        // form="po-prepare-all-form"). Cari document-wide; nonaktifkan duplikat
+        // yang hidden (desktop vs mobile) agar tidak menimpa nilai yang diedit.
+        document.getElementById('po-prepare-all-form')?.addEventListener('submit', function () {
+            document.querySelectorAll('input[form="po-prepare-all-form"]').forEach(function (el) {
+                if (!el.offsetParent) el.disabled = true;
+            });
+        });
+    </script>
+    @endif
 
     {{-- Card Sumber SO: hanya tampil jika ada pivot po_detail_so_details --}}
     @php

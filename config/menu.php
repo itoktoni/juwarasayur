@@ -72,7 +72,8 @@ return [
             'label' => 'Purchase',
             'items' => [
                 ['route' => 'po-supplier.getTable', 'icon' => 'local_shipping', 'label' => 'Suppliers', 'match' => ['po-supplier.*']],
-                ['route' => 'po-po.getTable', 'icon' => 'shopping_cart', 'label' => 'Purchase Orders', 'match' => ['po-po.*', 'po-detail.*']],
+                ['route' => 'po-po.getTable', 'icon' => 'shopping_cart', 'label' => 'Purchase Orders', 'match' => ['po-po.getTable', 'po-po.getCreate', 'po-po.getUpdate', 'po-po.getShow', 'po-po.getPrepare*', 'po-po.post*', 'po-detail.*']],
+                ['route' => 'po-po.import', 'icon' => 'upload', 'label' => 'Import PO Excel', 'match' => ['po-po.import*', 'po-po.template*']],
                 ['route' => 'po-generate.preview', 'icon' => 'auto_awesome', 'label' => 'Generate PO dari SO', 'match' => ['po-generate.*']],
             ],
         ],

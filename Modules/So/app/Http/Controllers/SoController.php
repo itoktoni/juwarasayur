@@ -121,6 +121,9 @@ class SoController extends Controller
 
     /**
      * AJAX: hitung ongkir delivery berdasarkan jarak gudang → titik tujuan.
+     * Selalu 200 + harga (titik mana pun ada harganya); di luar radius hanya
+     * ditandai flag agar admin bisa sesuaikan manual. Endpoint ini hanya
+     * dipakai form admin — validasi radius storefront ada di Checkout.
      */
     public function getShippingCost(GeneralRequest $request)
     {
@@ -134,17 +137,14 @@ class SoController extends Controller
         $km = $distance->distanceFromWarehouse((float) $validated['lat'], (float) $validated['lng']);
 
         $maxRadius = (float) config('so.shipping.max_radius_km');
-        if ($maxRadius > 0 && $km > $maxRadius) {
-            return response()->json([
-                'status' => false,
-                'message' => "Lokasi di luar radius layanan kirim (maks {$maxRadius} km).",
-            ], 422);
-        }
+        $beyond = $maxRadius > 0 && $km > $maxRadius;
 
         return response()->json([
             'status' => true,
             'distance_km' => $km,
             'shipping_fee' => $distance->shippingFee($km),
+            'beyond_radius' => $beyond,
+            'message' => $beyond ? "Lokasi di luar radius layanan kirim (maks {$maxRadius} km) — harga dihitung normal, sesuaikan manual bila perlu." : null,
         ]);
     }
 
@@ -292,6 +292,36 @@ class SoController extends Controller
         ]);
     }
 
+    /**
+     * Print surat jalan / delivery order (A4, 1 halaman per SO).
+     * ids kosong → pakai data tabel saat ini (filter/halaman aktif).
+     */
+    public function getDeliveryOrder(GeneralRequest $request)
+    {
+        $ids = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $query = $this->model->with([
+            'has_details.has_product',
+            'has_details.has_prepare_allocations.has_lokasi',
+            'has_customer',
+            'has_reseller',
+        ]);
+
+        $list = $ids->isNotEmpty()
+            ? $query->whereIn('id', $ids)->orderBy('so_code')->get()
+            : $this->getData()->get();
+
+        abort_if($list->isEmpty(), 404, 'Tidak ada SO untuk dicetak.');
+
+        return response()->view('so::pages.so.delivery-order', [
+            'list' => $list,
+        ]);
+    }
+
     public function postCreate(GeneralRequest $request)
     {
         $data = $this->validatedWithShipping($request);
@@ -360,8 +390,9 @@ class SoController extends Controller
     }
 
     /**
-     * Validasi + set reseller dari user login & hitung ongkir server-side
-     * agar fee tidak bisa dimanipulasi dari client.
+     * Validasi + set reseller dari user login & hitung ongkir server-side.
+     * Ongkir manual dari form dihormati (auto-hitung sebagai default);
+     * harga produk tetap selalu dari DB agar tidak bisa dimanipulasi.
      */
     private function validatedWithShipping(GeneralRequest $request, ?So $so = null): array
     {
@@ -406,6 +437,11 @@ class SoController extends Controller
             abort_if((int) $customer->reference_id !== (int) $data['so_id_reseller'], 422, 'Customer bukan milik reseller ini.');
         }
 
+        // Ongkir manual dari form (inputan; auto-hitung hanya mengisi default).
+        // Diambil sebelum unset agar tidak hilang.
+        $manualFee = $data['so_shipping_fee'] ?? null;
+        $manualFee = $manualFee === null || $manualFee === '' ? null : max(0, (float) $manualFee);
+
         unset($data['so_code'], $data['so_shipping_fee'], $data['so_distance_km']);
 
         $data['so_shipping_fee'] = $so?->so_shipping_fee ?? 0;
@@ -433,16 +469,22 @@ class SoController extends Controller
             $data['so_cod_location'] = $location->location_name;
             $data['so_lat'] = $location->lat;
             $data['so_lng'] = $location->lng;
-            $data['so_shipping_fee'] = (float) ($location->fee ?? 0);
+            $data['so_shipping_fee'] = $manualFee ?? (float) ($location->fee ?? 0);
         } elseif ($method === ShippingMethodEnum::DELIVERY) {
             abort_if(empty($data['so_lat']) || empty($data['so_lng']), 422, 'Titik lokasi pengiriman wajib diisi.');
 
             $km = $service->distanceFromWarehouse((float) $data['so_lat'], (float) $data['so_lng']);
             $maxRadius = (float) config('so.shipping.max_radius_km');
-            abort_if($maxRadius > 0 && $km > $maxRadius, 422, "Lokasi di luar radius layanan kirim (maks {$maxRadius} km).");
-
             $data['so_distance_km'] = $km;
-            $data['so_shipping_fee'] = $service->shippingFee($km);
+
+            // Dalam radius & tanpa edit manual → ongkir otomatis.
+            // Di luar radius (atau ongkir diketik manual) → pakai inputan form
+            // agar admin tetap bisa simpan (mis. via ekspedisi / harga sepakat).
+            if ($manualFee !== null || ($maxRadius > 0 && $km > $maxRadius)) {
+                $data['so_shipping_fee'] = $manualFee ?? 0;
+            } else {
+                $data['so_shipping_fee'] = $service->shippingFee($km);
+            }
         } else {
             // pickup: tanpa lokasi & ongkir
             $data['so_cod_location'] = null;

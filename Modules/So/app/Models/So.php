@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Modules\So\Enums\ShippingMethodEnum;
 use Modules\So\Enums\SoStatusEnum;
 
-#[Fillable(['so_code', 'so_payment_token', 'so_tanggal', 'so_id_reseller', 'so_id_customer', 'so_customer_name', 'so_customer_phone', 'so_status', 'so_shipping_method', 'so_cod_location', 'so_shipping_fee', 'so_distance_km', 'so_address', 'so_lat', 'so_lng', 'so_keterangan', 'so_subtotal', 'so_discount', 'so_discount_type', 'so_discount_note', 'so_dpp', 'so_ppn', 'so_ppn_rate', 'so_pph', 'so_pph_rate', 'so_grand_total', 'so_unique_amount', 'so_po_generated_at'])]
+#[Fillable(['so_code', 'so_po_ref', 'so_payment_token', 'so_tanggal', 'so_id_reseller', 'so_id_customer', 'so_customer_name', 'so_customer_phone', 'so_status', 'so_shipping_method', 'so_cod_location', 'so_shipping_fee', 'so_distance_km', 'so_address', 'so_lat', 'so_lng', 'so_keterangan', 'so_subtotal', 'so_discount', 'so_discount_type', 'so_discount_note', 'so_dpp', 'so_ppn', 'so_ppn_rate', 'so_pph', 'so_pph_rate', 'so_grand_total', 'so_unique_amount', 'so_po_generated_at'])]
 class So extends BaseModel
 {
     protected $table = 'so_orders';
@@ -213,11 +213,13 @@ class So extends BaseModel
     {
         return [
             'so_tanggal' => ['required', 'date'],
+            'so_po_ref' => ['nullable', 'string', 'max:100'],
             // Diisi otomatis dari user login di controller jika kosong
             'so_id_reseller' => ['nullable', 'exists:users,id'],
             'so_id_customer' => ['nullable', 'exists:users,id'],
             'so_status' => ['nullable', 'string', 'in:'.implode(',', SoStatusEnum::getValues())],
             'so_shipping_method' => ['required', 'string', 'in:'.implode(',', ShippingMethodEnum::getValues())],
+            'so_shipping_fee' => ['nullable', 'numeric', 'min:0'],
             'so_cod_location' => ['nullable', 'required_if:so_shipping_method,'.ShippingMethodEnum::COD, 'string', 'max:255'],
             'so_address' => ['nullable', 'required_if:so_shipping_method,'.ShippingMethodEnum::DELIVERY, 'string'],
             'so_lat' => ['nullable', 'numeric', 'between:-90,90'],

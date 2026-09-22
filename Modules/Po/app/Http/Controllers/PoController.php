@@ -3,8 +3,11 @@
 namespace Modules\Po\Http\Controllers;
 
 use App\Http\Requests\GeneralRequest;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\ProductMaster;
 use Modules\Inventory\Models\Lokasi;
@@ -65,7 +68,86 @@ class PoController extends Controller
         return $this->views('po::pages.po.prepare', [
             'model' => $po,
             'soSources' => $soSources,
+            'lokasiOptions' => Lokasi::getOptions(),
         ]);
+    }
+
+    /**
+     * Prepare All: simpan qty prepare per produk langsung ke stock di 1 lokasi
+     * tanpa form prepare per produk. Qty default = sisa, bisa diedit di tabel.
+     * 1 transaksi per detail (partial commit: detail valid tetap masuk,
+     * yang gagal dilaporkan).
+     */
+    public function postPrepareAll(GeneralRequest $request, $id)
+    {
+        $po = Po::with(['has_details.has_so_details'])->findOrFail($id);
+
+        $validated = $request->validate([
+            'lokasi_id' => ['required', 'exists:inv_lokasis,id'],
+            'qty' => ['nullable', 'array'],
+            'qty.*' => ['nullable', 'integer', 'min:0'],
+        ]);
+        $lokasiId = (int) $validated['lokasi_id'];
+        $qtyMap = $validated['qty'] ?? [];
+
+        $done = 0;
+        $totalPcs = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($po->has_details as $detail) {
+            $sisa = (int) $detail->po_detail_sisa;
+            if ($sisa <= 0) {
+                continue;
+            }
+
+            // Qty dari input tabel (default sisa), clamp ke sisa
+            $wanted = array_key_exists($detail->id, $qtyMap) && $qtyMap[$detail->id] !== null
+                ? (int) $qtyMap[$detail->id]
+                : $sisa;
+            $qty = max(0, min($wanted, $sisa));
+            if ($qty <= 0) {
+                $skipped++;
+
+                continue;
+            }
+
+            // Cap mengikuti postPrepareProduct: prepared tidak boleh melebihi permintaan SO
+            $soRequested = (float) $detail->has_so_details->sum('pivot.qty');
+            if ($soRequested > 0) {
+                $allowed = (int) $soRequested - (int) $detail->po_detail_prepared;
+                if ($allowed <= 0) {
+                    $skipped++;
+
+                    continue;
+                }
+                $qty = min($qty, $allowed);
+            }
+
+            try {
+                PreparePoDetailAction::run($detail, [
+                    ['lokasi_id' => $lokasiId, 'qty' => $qty, 'expired_date' => null],
+                ]);
+                $done++;
+                $totalPcs += $qty;
+            } catch (\Throwable $th) {
+                $errors[] = ($detail->po_detail_code ?? '#'.$detail->id).': '.$th->getMessage();
+            }
+        }
+
+        if ($done > 0) {
+            flash()->success("Prepare All selesai: {$done} produk ({$totalPcs} pcs) masuk stock.");
+        }
+        if ($skipped > 0 || $errors !== []) {
+            $msg = trim($skipped > 0 ? "{$skipped} produk dilewati (qty 0 / melebihi permintaan SO). " : ''.implode(' ', $errors));
+
+            return redirect()->route('po-po.getPrepare', ['id' => $po->id])->withErrors(['lokasi_id' => $msg])->withInput();
+        }
+        if ($done === 0) {
+            return back()->withErrors(['lokasi_id' => 'Tidak ada sisa qty untuk di-prepare.'])->withInput();
+        }
+
+        return redirect()->route('po-po.getPrepare', ['id' => $po->id]);
     }
 
     public function getPrepareProduct(GeneralRequest $request, $id)
@@ -460,6 +542,350 @@ class PoController extends Controller
         }
 
         return [$groups, $warnings];
+    }
+
+    /**
+     * Download template CSV untuk import PO via Excel.
+     * Satu baris = satu detail produk. Baris dengan PO Ref + Supplier + Tanggal
+     * yang sama digabung jadi 1 PO. PO Ref kosong = tiap baris jadi PO sendiri.
+     */
+    public function getTemplate()
+    {
+        $delimiter = config('website.csv_delimiter', ';');
+        $filename = 'po_template_'.date('Y-m-d_His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($delimiter) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM agar Excel tampil benar
+
+            fputcsv($handle, ['PO Ref', 'Tanggal', 'Supplier Kode', 'Produk Kode', 'Qty', 'Harga', 'Keterangan PO'], $delimiter);
+
+            // Contoh: 2 baris ref sama = 1 PO dengan 2 detail, 1 baris ref kosong = 1 PO sendiri
+            fputcsv($handle, ['PO-1', date('Y-m-d'), 'SUP-001', 'PRD-001', '10', '', 'Contoh PO gabungan 2 produk'], $delimiter);
+            fputcsv($handle, ['PO-1', date('Y-m-d'), 'SUP-001', 'PRD-002', '5', '25000', ''], $delimiter);
+            fputcsv($handle, ['', date('Y-m-d'), 'SUP-001', 'PRD-003', '3', '', 'Ref kosong = PO sendiri'], $delimiter);
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Halaman upload CSV PO.
+     */
+    public function getImport()
+    {
+        return $this->views('po::pages.po.import');
+    }
+
+    /**
+     * Import PO dari CSV (diisi via Excel): parse → validasi per baris →
+     * grouping per PO Ref → 1 transaksi per PO (partial commit: grup valid
+     * tetap tersimpan, grup gagal dilaporkan).
+     */
+    public function postImport(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getPathname(), 'r');
+
+        if ($handle === false) {
+            return redirect()->back()->with('error', 'Gagal membuka file CSV.');
+        }
+
+        $bom = fread($handle, 3);
+        if ($bom !== "\xEF\xBB\xBF") {
+            rewind($handle);
+        }
+
+        $delimiter = config('website.csv_delimiter', ';');
+        $header = fgetcsv($handle, 0, $delimiter);
+
+        if ($header === false) {
+            fclose($handle);
+
+            return redirect()->back()->with('error', 'File CSV kosong atau format tidak valid.');
+        }
+
+        $headerMap = $this->mapImportHeader(array_map(fn ($v) => Str::lower(trim((string) $v)), $header));
+
+        if (! in_array('po_tanggal', $headerMap, true) || ! in_array('supplier_kode', $headerMap, true) || ! in_array('product_kode', $headerMap, true)) {
+            fclose($handle);
+
+            return redirect()->back()->with('error', 'Header wajib: Tanggal, Supplier Kode, Produk Kode. Download template dulu.');
+        }
+
+        $rows = [];
+        $rowNum = 1;
+
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $rowNum++;
+            if (count(array_filter($row, fn ($v) => trim((string) $v) !== '')) === 0) {
+                continue;
+            }
+            $data = [];
+            foreach ($headerMap as $idx => $field) {
+                $value = trim((string) ($row[$idx] ?? ''));
+                $data[$field] = $value === '' ? null : $value;
+            }
+            $data['_row'] = $rowNum;
+            $rows[] = $data;
+        }
+        fclose($handle);
+
+        if ($rows === []) {
+            return redirect()->back()->with('error', 'Tidak ada data di file CSV.');
+        }
+
+        // Validasi per baris: tanggal, supplier, produk, qty, harga
+        $errors = [];
+        $supplierCache = [];
+        $productCache = [];
+
+        foreach ($rows as &$r) {
+            $rn = $r['_row'];
+
+            // Tanggal: dukung Y-m-d, d/m/Y, d-m-Y
+            $tanggal = null;
+            if (! empty($r['po_tanggal'])) {
+                foreach (['Y-m-d', 'd/m/Y', 'd-m-Y', 'Y/m/d'] as $fmt) {
+                    try {
+                        $tanggal = Carbon::createFromFormat($fmt, trim((string) $r['po_tanggal']))->format('Y-m-d');
+                        break;
+                    } catch (\Throwable) {
+                        continue;
+                    }
+                }
+                if ($tanggal === null) {
+                    try {
+                        $tanggal = Carbon::parse($r['po_tanggal'])->format('Y-m-d');
+                    } catch (\Throwable) {
+                        $errors[] = "Baris {$rn}: tanggal '{$r['po_tanggal']}' tidak valid (pakai YYYY-MM-DD).";
+                    }
+                }
+            } else {
+                $errors[] = "Baris {$rn}: tanggal kosong.";
+            }
+            $r['_tanggal'] = $tanggal;
+
+            // Supplier: match kode dulu, fallback nama
+            $supplier = null;
+            if (! empty($r['supplier_kode'])) {
+                $key = Str::lower(trim((string) $r['supplier_kode']));
+                if (! array_key_exists($key, $supplierCache)) {
+                    $supplierCache[$key] = Supplier::where('supplier_kode', $r['supplier_kode'])->first()
+                        ?? Supplier::where('supplier_nama', $r['supplier_kode'])->first();
+                }
+                $supplier = $supplierCache[$key];
+                if (! $supplier) {
+                    $errors[] = "Baris {$rn}: supplier '{$r['supplier_kode']}' tidak ditemukan.";
+                }
+            } else {
+                $errors[] = "Baris {$rn}: supplier kode kosong.";
+            }
+            $r['_supplier'] = $supplier;
+
+            // Produk: match kode dulu, fallback nama
+            $product = null;
+            if (! empty($r['product_kode'])) {
+                $key = Str::lower(trim((string) $r['product_kode']));
+                if (! array_key_exists($key, $productCache)) {
+                    $productCache[$key] = Product::where('product_kode', $r['product_kode'])->first()
+                        ?? Product::where('product_nama', $r['product_kode'])->first();
+                }
+                $product = $productCache[$key];
+                if (! $product) {
+                    $errors[] = "Baris {$rn}: produk '{$r['product_kode']}' tidak ditemukan.";
+                }
+            } else {
+                $errors[] = "Baris {$rn}: produk kode kosong.";
+            }
+            $r['_product'] = $product;
+
+            // Qty wajib >= 1, dukung format ribuan Indonesia
+            $qty = $this->parseAngka($r['qty'] ?? null);
+            if ($qty === null || $qty < 1) {
+                $errors[] = "Baris {$rn}: qty harus angka >= 1.";
+                $r['_qty'] = null;
+            } else {
+                $r['_qty'] = (int) $qty;
+            }
+
+            // Harga opsional: kosong = harga modal produk; explicit 0 = gratis
+            $hargaRaw = $r['harga'] ?? null;
+            if ($hargaRaw === null) {
+                $r['_harga'] = $product ? (float) ($product->product_harga_modal ?? $product->product_harga ?? 0) : 0;
+            } else {
+                $harga = $this->parseAngka($hargaRaw);
+                if ($harga === null || $harga < 0) {
+                    $errors[] = "Baris {$rn}: harga '{$hargaRaw}' tidak valid.";
+                    $r['_harga'] = null;
+                } else {
+                    $r['_harga'] = (float) $harga;
+                }
+            }
+
+            $r['_valid'] = $r['_tanggal'] && $r['_supplier'] && $r['_product'] && $r['_qty'] !== null && $r['_harga'] !== null;
+        }
+        unset($r);
+
+        // Grouping: ref sama = 1 PO. Ref kosong = tiap baris PO sendiri.
+        $groups = [];
+        foreach ($rows as $r) {
+            $ref = trim((string) ($r['po_ref'] ?? ''));
+            $key = $ref !== '' ? 'ref:'.$ref : 'row:'.$r['_row'];
+            $groups[$key] ??= ['ref' => $ref, 'rows' => []];
+            $groups[$key]['rows'][] = $r;
+        }
+
+        $created = [];
+        $failedGroups = 0;
+
+        foreach ($groups as $key => $group) {
+            $grows = $group['rows'];
+            $firstNums = implode(', ', array_column($grows, '_row'));
+
+            // Baris invalid → grup gagal tanpa insert
+            if (collect($grows)->contains(fn ($x) => ! $x['_valid'])) {
+                $failedGroups++;
+
+                continue;
+            }
+
+            // Konsistensi dalam grup: tanggal & supplier harus sama
+            $tanggalSet = collect($grows)->pluck('_tanggal')->unique()->values();
+            $supplierSet = collect($grows)->pluck('_supplier.id')->unique()->values();
+            if ($tanggalSet->count() > 1 || $supplierSet->count() > 1) {
+                $errors[] = "Baris {$firstNums}: PO Ref '{$group['ref']}' harus 1 tanggal + 1 supplier yang sama.";
+                $failedGroups++;
+
+                continue;
+            }
+
+            $first = $grows[0];
+
+            try {
+                $po = DB::transaction(function () use ($grows, $first) {
+                    $po = Po::create([
+                        'po_tanggal' => $first['_tanggal'],
+                        'po_id_supplier' => $first['_supplier']->id,
+                        'po_keterangan' => $first['keterangan'] ?? ('Import Excel ref '.($first['po_ref'] ?: 'baris '.$first['_row'])),
+                    ]);
+
+                    $seq = 1;
+                    foreach ($grows as $line) {
+                        PoDetail::create([
+                            'po_detail_id_po' => $po->id,
+                            'po_detail_id_product' => $line['_product']->id,
+                            'po_detail_code' => $this->nextDetailCode($po->po_code, $seq++),
+                            'po_detail_qty' => $line['_qty'],
+                            'po_detail_harga' => $line['_harga'],
+                            'po_detail_keterangan' => null,
+                        ]);
+                    }
+
+                    $po->recalculateTotals();
+
+                    return $po;
+                });
+                $created[] = $po->po_code;
+            } catch (\Throwable $th) {
+                $errors[] = "Baris {$firstNums}: gagal simpan — ".$th->getMessage();
+                $failedGroups++;
+            }
+        }
+
+        $parts = [];
+        if (count($created)) {
+            $parts[] = count($created).' PO dibuat ('.implode(', ', array_slice($created, 0, 5)).(count($created) > 5 ? ', ...' : '').')';
+        }
+        if ($failedGroups) {
+            $parts[] = $failedGroups.' grup gagal';
+        }
+        $summary = 'Import selesai: '.(empty($parts) ? 'tidak ada perubahan' : implode(', ', $parts)).'.';
+        if ($errors !== []) {
+            $summary .= ' '.count($errors).' error (lihat detail).';
+        }
+
+        return redirect()->route('po-po.getTable')
+            ->with('success', $summary)
+            ->with('import_errors', $errors);
+    }
+
+    private function mapImportHeader(array $header): array
+    {
+        $map = [
+            'po ref' => 'po_ref',
+            'ref' => 'po_ref',
+            'kode po' => 'po_ref',
+            'grup' => 'po_ref',
+            'group' => 'po_ref',
+            'tanggal' => 'po_tanggal',
+            'tgl' => 'po_tanggal',
+            'po tanggal' => 'po_tanggal',
+            'supplier kode' => 'supplier_kode',
+            'kode supplier' => 'supplier_kode',
+            'supplier' => 'supplier_kode',
+            'produk kode' => 'product_kode',
+            'kode produk' => 'product_kode',
+            'product kode' => 'product_kode',
+            'produk' => 'product_kode',
+            'product' => 'product_kode',
+            'qty' => 'qty',
+            'jumlah' => 'qty',
+            'harga' => 'harga',
+            'keterangan po' => 'keterangan',
+            'keterangan' => 'keterangan',
+        ];
+
+        $result = [];
+        foreach ($header as $idx => $col) {
+            $result[$idx] = $map[trim($col)] ?? trim($col);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Parse angka Indonesia: "24.000", "Rp 24.000", "10,5" → int/float.
+     */
+    private function parseAngka(mixed $raw): float|int|null
+    {
+        if ($raw === null) {
+            return null;
+        }
+        $s = trim((string) $raw);
+        if ($s === '') {
+            return null;
+        }
+        $negative = str_starts_with(ltrim($s), '-');
+        $noRp = trim(str_ireplace('rp', '', $s), " \t\n\r\0\x0B-");
+        if (preg_match('/^\d+[.,]\d{1,2}$/', $noRp)) {
+            $value = (float) str_replace(',', '.', $noRp);
+        } else {
+            $digits = preg_replace('/[^0-9]/', '', $noRp);
+            if ($digits === '' || $digits === null) {
+                return null;
+            }
+            $value = (int) $digits;
+        }
+        if ($negative) {
+            $value = -$value;
+        }
+
+        return $value;
     }
 
     private function syncDetails(Po $po, array $details): void

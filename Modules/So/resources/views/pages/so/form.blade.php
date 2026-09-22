@@ -25,11 +25,12 @@ use Modules\So\Models\So;
             </div>
             @bind($model ?? null)
                 <x-input col="4" name="so_tanggal" label="Tanggal" type="date" :value="old('so_tanggal', $model?->so_tanggal ? \Illuminate\Support\Carbon::parse($model->so_tanggal)->format('Y-m-d') : now()->addDay()->format('Y-m-d'))" />
+                <x-input col="4" name="so_po_ref" label="No. PO / Ref" placeholder="No. PO customer (opsional)" helper="Tampil di surat jalan sebagai No. PO / Ref" />
                 <x-select col="4" name="so_id_customer" label="Customer / Reseller (Grosir)" :options="$customerOptions" class="search" placeholder="-- Pilih Customer / Reseller --" />
                 @if(!empty($resellerOptions))
-                    <x-select col="6" name="so_id_reseller" label="Affiliator" :options="$resellerOptions" class="search" placeholder="-- User Login (Saya) --" helper="Kosongkan untuk memakai user login sebagai reseller" />
+                    <x-select col="4" name="so_id_reseller" label="Affiliator" :options="$resellerOptions" class="search" placeholder="-- User Login (Saya) --" helper="Kosongkan untuk memakai user login sebagai reseller" />
                 @endif
-                <x-select col="6" name="so_status" label="Status" :options="$statusOptions" />
+                <x-select col="4" name="so_status" label="Status" :options="$statusOptions" />
                 <x-textarea col="12" name="so_keterangan" label="Keterangan" />
             @endbind
         </x-card>
@@ -161,12 +162,16 @@ use Modules\So\Models\So;
                     @error('so_cod_location')<span class="font-label-caps text-label-caps text-error mt-1 block">{{ $message }}</span>@enderror
                 </div>
                 <div class="col-span-12 md:col-span-6 shipping-pane hidden" data-method="cod">
-                    <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">Ongkir COD</label>
-                    <div id="so-cod-fee" class="w-full h-12 px-4 bg-surface-container text-on-surface-variant border border-outline-variant rounded-lg flex items-center font-mono text-sm">{{ formatAngka((int) ($model?->so_shipping_method === 'cod' ? $shippingFeeVal : 0), 'Rp') }}</div>
+                    <label class="font-body-sm text-body-sm font-bold text-on-surface-variant block mb-1">Ongkir COD (Rp)</label>
+                    <input type="number" id="so-cod-fee-input" value="{{ $trimVal($shippingFeeVal) ?: 0 }}" min="0" step="1" placeholder="0 = gratis" class="w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                    <p class="text-xs text-on-surface-variant mt-1">Otomatis dari lokasi COD, bisa diketik manual.</p>
                 </div>
 
                 {{-- Delivery --}}
                 <div class="col-span-12 shipping-pane hidden" data-method="delivery">
+                    <div class="p-3 mb-2 rounded-lg border border-outline-variant bg-surface-container-low/50 text-sm text-on-surface-variant">
+                        Dikirim dari gudang: <strong>{{ $warehouse['name'] ?? '-' }}</strong>{{ !empty($warehouse['address']) ? ' — '.$warehouse['address'] : '' }}. Jarak & ongkir dihitung dari titik ini.
+                    </div>
                     <x-textarea name="so_address" label="Alamat Pengiriman" rows="2" />
                     <div class="grid grid-cols-2 gap-2 mt-2">
                         <div>
@@ -200,6 +205,11 @@ use Modules\So\Models\So;
                     <div id="so-map" class="w-full h-80 rounded-lg border border-outline-variant mt-3 z-0"></div>
                     <p class="text-xs text-on-surface-variant mt-1">Klik peta atau geser pin untuk menentukan titik pengiriman.</p>
                     <div class="mt-2 text-xs font-mono text-on-surface-variant" id="so-delivery-info">Pilih titik lokasi untuk hitung ongkir.</div>
+                    <div class="mt-2">
+                        <label class="text-xs font-bold text-on-surface-variant block mb-1">Ongkir (Rp)</label>
+                        <input type="number" id="so-delivery-fee-input" value="{{ $trimVal($shippingFeeVal) ?: 0 }}" min="0" step="1" placeholder="0 = gratis" class="w-full h-12 px-3 bg-white border border-outline-variant rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                        <p class="text-xs text-on-surface-variant mt-1">Otomatis dari jarak, bisa diketik manual (0 = gratis ongkir).</p>
+                    </div>
                 </div>
             @endbind
 
@@ -278,6 +288,7 @@ use Modules\So\Models\So;
         const SO_COD_LOCATIONS = {!! $codLocationsJson !!};
         const SO_SHIPPING_COST_URL = '{{ route("so-so.getShippingCost") }}';
         const SO_COD_FEE_URL = '{{ route("so-so.getCodFee") }}';
+        const SO_IS_EDIT = {{ !empty($isEdit) ? 'true' : 'false' }};
 
         function fmtRp(n){ return 'Rp ' + (Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 
@@ -398,7 +409,25 @@ use Modules\So\Models\So;
             updateSummary();
         }
 
-        async function fetchShippingCost(lat, lng){
+        // ponytail: ongkir dikirim sebagai hidden so-shipping-fee, tapi nilainya
+        // selalu dicerminkan ke input manual (delivery/COD) agar bisa diedit.
+        // soFeeTouched = user sudah ketik manual → auto-hitung awal (lambat)
+        // tidak boleh menimpa ketikan (race fetch vs ketik).
+        let soFeeTouched = false;
+
+        function setShippingFee(v, onlyIfUntouched){
+            if(onlyIfUntouched && soFeeTouched){ updateSummary(); return; }
+            const fee = Math.max(0, Math.round(parseFloat(v) || 0));
+            const hidden = document.getElementById('so-shipping-fee');
+            if(hidden) hidden.value = fee;
+            const dIn = document.getElementById('so-delivery-fee-input');
+            if(dIn) dIn.value = fee;
+            const cIn = document.getElementById('so-cod-fee-input');
+            if(cIn) cIn.value = fee;
+            updateSummary();
+        }
+
+        async function fetchShippingCost(lat, lng, onlyIfUntouched){
             const info = document.getElementById('so-delivery-info');
             if(info) info.textContent = 'Menghitung jarak & ongkir...';
             try {
@@ -406,27 +435,24 @@ use Modules\So\Models\So;
                 const json = await res.json();
                 if(!json.status){
                     if(info) info.textContent = json.message || 'Gagal menghitung ongkir.';
-                    document.getElementById('so-shipping-fee').value = '0';
+                    setShippingFee(0, onlyIfUntouched);
                 } else {
-                    document.getElementById('so-shipping-fee').value = Math.round(json.shipping_fee);
-                    if(info) info.textContent = `Jarak: ${json.distance_km} km — Ongkir: ${fmtRp(json.shipping_fee)}`;
+                    setShippingFee(json.shipping_fee, onlyIfUntouched);
+                    if(info) info.textContent = (json.beyond_radius ? 'PERHATIAN: ' + (json.message || 'di luar radius. ') : '') + `Jarak: ${json.distance_km} km — Ongkir: ${fmtRp(json.shipping_fee)}`;
                 }
             } catch(e){
                 if(info) info.textContent = 'Gagal menghubungi server ongkir.';
-                document.getElementById('so-shipping-fee').value = '0';
+                setShippingFee(0, onlyIfUntouched);
             }
             updateSummary();
         }
 
         async function fetchCodFee(location){
-            const el = document.getElementById('so-cod-fee');
             try {
                 const res = await fetch(`${SO_COD_FEE_URL}?location=${encodeURIComponent(location)}`);
                 const json = await res.json();
-                const fee = json.status ? json.shipping_fee : 0;
-                document.getElementById('so-shipping-fee').value = Math.round(fee);
-                if(el) el.textContent = fmtRp(fee);
-            } catch(e){ if(el) el.textContent = 'Rp 0'; }
+                setShippingFee(json.status ? json.shipping_fee : 0);
+            } catch(e){ setShippingFee(0); }
             updateSummary();
         }
 
@@ -471,8 +497,12 @@ use Modules\So\Models\So;
                 setSoPoint(pos.lat, pos.lng, true);
             });
 
-            if (document.getElementById('so-lat').value && document.getElementById('so-lng').value) {
-                fetchShippingCost(startLat, startLng);
+            // ponytail: saat edit, ongkir tersimpan adalah kebenaran — jangan
+            // auto-hitung saat load agar tidak menimpa (mis. 0 yang disimpan
+            // kembali jadi harga auto). Hitung ulang hanya saat user
+            // memindah pin / mengetik koordinat / ganti lokasi COD.
+            if (!SO_IS_EDIT && document.getElementById('so-lat').value && document.getElementById('so-lng').value) {
+                fetchShippingCost(startLat, startLng, true);
             }
         }
 
@@ -653,7 +683,13 @@ use Modules\So\Models\So;
                     }
                 }
             }
-            if(e.target.name === 'so_shipping_method'){ renderShippingPanes(); }
+            if(e.target.name === 'so_shipping_method'){
+                // Ganti metode = niat baru → auto boleh isi lagi
+                soFeeTouched = false;
+                // Pickup tanpa biaya: reset ongkir saat pindah ke pickup
+                if(e.target.value === 'pickup') setShippingFee(0);
+                renderShippingPanes();
+            }
             if(e.target.classList.contains('so-product-select')){
                 const row = e.target.closest('.so-detail-row');
                 const hargaInput = row?.querySelector('.so-harga');
@@ -679,6 +715,14 @@ use Modules\So\Models\So;
             }
             if(e.target.closest('.so-detail-row')) updateSummary();
             if(['so-discount', 'so-discount-type', 'so-ppn-rate', 'so-pph-rate'].includes(e.target.id)) updateSummary();
+            // Ongkir diketik manual → pakai nilai input, ringkasan ikut update.
+            // Tandai touched agar auto-hitung awal tidak menimpanya.
+            if(['so-delivery-fee-input', 'so-cod-fee-input'].includes(e.target.id)){
+                soFeeTouched = true;
+                const hidden = document.getElementById('so-shipping-fee');
+                if(hidden) hidden.value = Math.max(0, Math.round(parseFloat(e.target.value) || 0));
+                updateSummary();
+            }
             if(['so-lat','so-lng'].includes(e.target.id)){
                 clearTimeout(window.__soGeoTimer);
                 window.__soGeoTimer = setTimeout(() => {
