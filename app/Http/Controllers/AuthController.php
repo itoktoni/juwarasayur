@@ -16,6 +16,8 @@ class AuthController extends Controller
             'email' => $user->email,
             'phone' => $user->phone,
             'role' => $user->role,
+            'type' => $user->type,
+            'reference_id' => $user->reference_id,
             'created_at' => $user->created_at?->toIso8601String(),
         ];
     }

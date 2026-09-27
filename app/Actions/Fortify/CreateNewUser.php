@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Enums\RoleEnum;
 use App\Enums\UserTypeEnum;
 use App\Http\Middleware\CaptureAffiliateRef;
 use App\Models\User;
@@ -46,13 +47,14 @@ class CreateNewUser implements CreatesNewUsers
             'email' => $input['email'],
             'password' => $input['password'],
             'phone' => $input['phone'] ?? null,
-            'type' => $isAffiliateType ? $as : 'user',
+            'role' => RoleEnum::USER,
+            'type' => $isAffiliateType ? $as : UserTypeEnum::CUSTOMER,
             // Fee komisi awal dari konfigurasi global; hanya admin yang bisa adjust per-reseller/affiliator
             'fee' => $isAffiliateType ? (float) config('commission.rate', 2) : null,
             'reference_id' => $referenceId,
         ]);
 
-        // Register biasa (type=user) langsung terverifikasi — tanpa Verify Email.
+        // Register biasa (type=customer, role=user) langsung terverifikasi — tanpa Verify Email.
         // Affiliator/reseller tetap harus verifikasi email + approval admin (verified_at).
         if (! $isAffiliateType) {
             $user->forceFill(['email_verified_at' => now()])->save();
