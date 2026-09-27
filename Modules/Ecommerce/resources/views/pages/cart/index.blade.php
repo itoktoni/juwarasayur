@@ -100,8 +100,8 @@
                 </div>
             </form>
 
-            {{-- Total + Checkout --}}
-            <div class="mt-6">
+            {{-- Total + Checkout (sticky di atas nav mobile, kiri: total, kanan: aksi) --}}
+            <div class="mt-6 sticky bottom-[76px] md:static z-30">
                 <div class="bg-white border border-outline-variant rounded-2xl shadow-sm p-4">
                     <div class="flex items-center justify-between gap-4">
                         <div class="min-w-0">
@@ -109,11 +109,11 @@
                             <p class="text-lg font-bold font-mono text-primary truncate" id="cart-total">{{ formatAngka((int) $subtotal, 'Rp') }}</p>
                             <p class="text-[11px] text-on-surface-variant hidden md:block">belum termasuk ongkir</p>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <button type="submit" form="cart-update-form" class="btn btn-soft btn-sm hidden md:inline-flex">
+                        <div class="flex flex-col items-stretch gap-2 shrink-0">
+                            <button type="submit" form="cart-update-form" class="btn btn-soft btn-sm hidden md:inline-flex justify-center">
                                 <span class="material-symbols-outlined text-base">refresh</span> Update
                             </button>
-                            <a href="{{ route('checkout.show') }}" class="btn bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-1.5">
+                            <a href="{{ route('checkout.show') }}" class="btn bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5">
                                 Checkout <span class="material-symbols-outlined text-base">arrow_forward</span>
                             </a>
                         </div>
