@@ -34,6 +34,14 @@
                 <tr>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
                     <x-table-action :model="$model" :id="$table->field_primary">
+                        <a href="{{ route('po-po.getPrintPdf', ['id' => $table->field_primary]) }}" target="_blank" title="PDF Kantor (A4)"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-600/10 text-red-700 hover:bg-red-600/20 transition-colors">
+                            <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                        </a>
+                        <a href="{{ route('po-po.getPrintStrukPdf', ['id' => $table->field_primary]) }}" target="_blank" title="PDF Struk (80mm)"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
+                            <span class="material-symbols-outlined text-lg">receipt_long</span>
+                        </a>
                         @can('prepare', $model)
                         <a href="{{ route('po-po.getPrepare', ['id' => $table->field_primary]) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-info/10 text-info hover:bg-info/20 transition-colors" title="Prepare">
                             <span class="material-symbols-outlined text-lg">inventory_2</span>
@@ -79,6 +87,14 @@
                         </div>
                         <x-table-mobile-footer :label="'#' . $table->field_primary">
                             <x-table-action :model="$model" :id="$table->field_primary">
+                                <a href="{{ route('po-po.getPrintPdf', ['id' => $table->field_primary]) }}" target="_blank" title="PDF Kantor (A4)"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-600/10 text-red-700 hover:bg-red-600/20 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                </a>
+                                <a href="{{ route('po-po.getPrintStrukPdf', ['id' => $table->field_primary]) }}" target="_blank" title="PDF Struk (80mm)"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
+                                    <span class="material-symbols-outlined text-lg">receipt_long</span>
+                                </a>
                                 @can('prepare', $model)
                                 <a href="{{ route('po-po.getPrepare', ['id' => $table->field_primary]) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-info/10 text-info hover:bg-info/20 transition-colors" title="Prepare">
                                     <span class="material-symbols-outlined text-lg">inventory_2</span>

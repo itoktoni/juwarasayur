@@ -237,6 +237,47 @@ class PoController extends Controller
         ]);
     }
 
+    /**
+     * PDF Purchase Order A4 per PO — dokumen order ke supplier
+     * (kop + info PO/supplier + rincian barang + ringkasan total + tanda tangan).
+     */
+    public function getPrintPdf(GeneralRequest $request, $id)
+    {
+        $po = $this->model->with(['has_details.has_product', 'has_supplier'])->findOrFail($id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('po::pages.po.print-pdf', [
+            'po' => $po,
+            'site' => \App\Models\WebsiteSetting::merged(),
+        ]);
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOption('isRemoteEnabled', true);
+        $pdf->setOption('isHtml5ParserEnabled', true);
+
+        return $pdf->download('PO-'.$po->po_code.'.pdf');
+    }
+
+    /**
+     * PDF struk 80mm per PO — format struk seperti print-continues tapi file PDF,
+     * enak dibaca & dibagikan via HP (lebar pas layar, tinggal scroll).
+     */
+    public function getPrintStrukPdf(GeneralRequest $request, $id)
+    {
+        $po = $this->model->with(['has_details.has_product', 'has_supplier'])->findOrFail($id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('po::pages.po.print-struk-pdf', [
+            'po' => $po,
+            'site' => \App\Models\WebsiteSetting::merged(),
+        ]);
+        // Kertas struk 80mm (±226.77pt) x tinggi longgar agar 1 PO = 1 halaman
+        $pdf->setPaper([0, 0, 226.77, 1400], 'portrait');
+        $pdf->setOption('isRemoteEnabled', true);
+        $pdf->setOption('isHtml5ParserEnabled', true);
+        // Subset font monospace agar file kecil (rinngan dibuka/dibagikan via HP)
+        $pdf->setOption('isFontSubsettingEnabled', true);
+
+        return $pdf->download('STRUK-'.$po->po_code.'.pdf');
+    }
+
     public function postCreate(GeneralRequest $request)
     {
         $data = $request->validate((new Po)->rules());

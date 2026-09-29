@@ -33,4 +33,16 @@ class PoPolicy extends BasePolicy
     {
         return $this->table($user);
     }
+
+    // PDF Purchase Order A4 per PO (GET /po/po/print-pdf/{id})
+    public function printpdf(User $user): Response
+    {
+        return $this->table($user);
+    }
+
+    // PDF struk PO 80mm per PO (GET /po/po/print-struk-pdf/{id})
+    public function printstrukpdf(User $user): Response
+    {
+        return $this->table($user);
+    }
 }
