@@ -398,7 +398,7 @@ class ProductController extends Controller
      */
     private function sanitizeNumericFields(array $data, array &$errors, int $rowNum): array
     {
-        $unsignedInt = ['product_harga', 'product_harga_grosir', 'product_harga_modal', 'product_berat', 'product_panjang', 'product_lebar', 'product_tinggi', 'product_stok', 'product_stok_minimum', 'sort_order'];
+        $unsignedInt = ['product_harga', 'product_harga_grosir', 'product_harga_modal', 'product_stok', 'product_stok_minimum', 'sort_order'];
 
         foreach ($unsignedInt as $field) {
             if (! isset($data[$field])) {
@@ -420,6 +420,29 @@ class ProductController extends Controller
                 $value = 0;
             }
             $data[$field] = $value;
+        }
+
+        // Berat & dimensi decimal (kg / cm): "0,5"/"0.5" = setengah, bukan ribuan.
+        // Dipisah dari unsignedInt agar 0.5 kg tidak terpotong jadi 0.
+        foreach (['product_berat', 'product_panjang', 'product_lebar', 'product_tinggi'] as $field) {
+            if (! isset($data[$field])) {
+                continue;
+            }
+            $raw = trim(str_replace(['kg', 'KG', 'g', 'cm', ' '], '', (string) $data[$field]));
+            if (preg_match('/^-?\d+[.,]\d+$/', $raw)) {
+                $value = (float) str_replace(',', '.', $raw);
+            } else {
+                $digits = preg_replace('/[^0-9]/', '', $raw);
+                $value = $digits === '' || $digits === null ? 0 : (float) $digits;
+                if (str_starts_with(ltrim((string) $data[$field]), '-')) {
+                    $value = 0;
+                }
+            }
+            if ($value < 0) {
+                $errors[] = "Baris {$rowNum}: {$field} bernilai negatif ({$data[$field]}) — dipakai 0.";
+                $value = 0;
+            }
+            $data[$field] = round($value, 2);
         }
 
         foreach (['reseller_fee_percent', 'affiliator_fee_percent'] as $field) {

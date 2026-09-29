@@ -492,9 +492,9 @@ class PoController extends Controller
                 'so_code' => $d->has_so->so_code,
                 'product_id' => $d->so_detail_id_product,
                 'product_nama' => $d->has_product?->product_nama,
-                'berat' => (float) ($d->has_product?->product_berat ?? 0),
+                'berat' => $this->resolveBerat($d->has_product),
                 'qty' => (int) $d->so_detail_qty,
-                'total_berat' => (float) ($d->has_product?->product_berat ?? 0) * (int) $d->so_detail_qty,
+                'total_berat' => $this->resolveBerat($d->has_product) * (int) $d->so_detail_qty,
                 'harga' => (float) ($d->has_product?->product_harga ?? 0),
                 'harga_modal' => $d->has_product?->product_harga_modal,
             ])->values();
@@ -542,6 +542,36 @@ class PoController extends Controller
         }
 
         return [$groups, $warnings];
+    }
+
+    /**
+     * Berat per unit (kg) untuk preview generate PO.
+     * Prioritas: kolom product_berat. Fallback: parse dari nama produk
+     * ("500 gr" → 0.5, "1 KG"/"1000 gr" → 1) karena banyak produk lama
+     * yang kolom beratnya masih kosong — tanpa fallback preview tampil 0 kg.
+     * "1 PCS"/"1 IKET" tanpa satuan berat → 0.
+     */
+    private function resolveBerat($product): float
+    {
+        $berat = (float) ($product?->product_berat ?? 0);
+        if ($berat > 0) {
+            return $berat;
+        }
+
+        $nama = (string) ($product?->product_nama ?? '');
+        if ($nama === '') {
+            return 0;
+        }
+
+        // Cari angka + satuan berat di akhir/isi nama: "UBI MERAH 500 gr", "JAGUNG MANIS 1 KG"
+        if (preg_match('/(\d+(?:[.,]\d+)?)\s*(kg|kilogram|g|gr|gram)s?\b/i', $nama, $m)) {
+            $angka = (float) str_replace(',', '.', $m[1]);
+            $satuan = strtolower($m[2]);
+
+            return $satuan === 'kg' || $satuan === 'kilogram' ? round($angka, 3) : round($angka / 1000, 3);
+        }
+
+        return 0;
     }
 
     /**

@@ -41,10 +41,10 @@ use Modules\Catalog\Models\Product;
 
         <x-card label="Dimensi & Berat" class="mt-5">
             @bind($model ?? null)
-                <x-input col="3" name="product_berat" label="Berat (kg)" type="number" step="1" />
-                <x-input col="3" name="product_panjang" label="Panjang (cm)" type="number" step="1" />
-                <x-input col="3" name="product_lebar" label="Lebar (cm)" type="number" step="1" />
-                <x-input col="3" name="product_tinggi" label="Tinggi (cm)" type="number" step="1" />
+                <x-input col="3" name="product_berat" label="Berat (kg)" type="number" step="0.01" min="0" />
+                <x-input col="3" name="product_panjang" label="Panjang (cm)" type="number" step="0.01" min="0" />
+                <x-input col="3" name="product_lebar" label="Lebar (cm)" type="number" step="0.01" min="0" />
+                <x-input col="3" name="product_tinggi" label="Tinggi (cm)" type="number" step="0.01" min="0" />
             @endbind
         </x-card>
 
