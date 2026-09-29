@@ -35,7 +35,15 @@
                 {{-- Pengiriman --}}
                 <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
                     <h3 class="font-bold text-on-surface mb-1">Pengiriman</h3>
-                    <p class="text-xs text-on-surface-variant mb-4">Pilih cara penerimaan pesanan.</p>
+                    <p class="text-xs text-on-surface-variant mb-3">Pilih cara penerimaan pesanan.</p>
+
+                    @php $shippingNotice = config('frontend.checkout.shipping_notice', 'Pesan hari ini dikirim besok.'); @endphp
+                    @if(!empty(trim((string) $shippingNotice)))
+                    <div class="mb-4 flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+                        <span class="material-symbols-outlined text-base mt-0.5 shrink-0">schedule</span>
+                        <span>{{ $shippingNotice }}</span>
+                    </div>
+                    @endif
 
                     {{-- Accordion: 1. Pickup, 2. COD, 3. Diantar ke Rumah --}}
                     @php $shippingCfg = config('frontend.shipping', ['pickup'=>true,'cod'=>true,'delivery'=>true]); @endphp

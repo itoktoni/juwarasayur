@@ -85,6 +85,8 @@ class WebsiteSettingController extends Controller
             'delivery_free_km' => ['required', 'numeric', 'min:0', 'max:100'],
             'delivery_price_per_km' => ['required', 'numeric', 'min:0'],
             'delivery_min_fee' => ['required', 'numeric', 'min:0'],
+            // Checkout shipping notice (info "pesan hari ini dikirim besok")
+            'checkout_shipping_notice' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $existing = WebsiteSetting::raw();
@@ -154,12 +156,16 @@ class WebsiteSettingController extends Controller
             'price_per_km' => (float) ($validated['delivery_price_per_km'] ?? 2500),
             'min_fee' => (float) ($validated['delivery_min_fee'] ?? 10000),
         ];
+        $frontend['checkout'] = array_merge($frontend['checkout'] ?? [], [
+            'shipping_notice' => $validated['checkout_shipping_notice'] ?? ($frontend['checkout']['shipping_notice'] ?? 'Pesan hari ini dikirim besok.'),
+        ]);
         unset($validated['hero_title'], $validated['hero_subtitle'], $validated['hero_cta_text'],
             $validated['flash_sale_title'], $validated['flash_sale_count'], $validated['flash_sale_hours'],
             $validated['show_latest'], $validated['latest_title'],
             $validated['footer_tagline'], $validated['footer_alamat'], $validated['footer_telepon'], $validated['footer_email'],
             $validated['shipping_pickup'], $validated['shipping_cod'], $validated['shipping_delivery'],
-            $validated['delivery_free_km'], $validated['delivery_price_per_km'], $validated['delivery_min_fee']);
+            $validated['delivery_free_km'], $validated['delivery_price_per_km'], $validated['delivery_min_fee'],
+            $validated['checkout_shipping_notice']);
 
         $merged = array_merge($existing, $validated, ['colors' => $colors, 'frontend' => $frontend]);
 
@@ -183,6 +189,7 @@ class WebsiteSettingController extends Controller
             'FRONTEND_DELIVERY_FREE_KM' => $frontend['delivery']['free_km'] ?? 10,
             'FRONTEND_DELIVERY_PRICE_PER_KM' => $frontend['delivery']['price_per_km'] ?? 2500,
             'FRONTEND_DELIVERY_MIN_FEE' => $frontend['delivery']['min_fee'] ?? 10000,
+            'FRONTEND_CHECKOUT_SHIPPING_NOTICE' => $frontend['checkout']['shipping_notice'] ?? 'Pesan hari ini dikirim besok.',
         ];
         $this->updateEnv($envMap);
 

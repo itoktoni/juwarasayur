@@ -31,4 +31,7 @@ return [
         'price_per_km' => (float) env('FRONTEND_DELIVERY_PRICE_PER_KM', 2500),
         'min_fee' => (float) env('FRONTEND_DELIVERY_MIN_FEE', 10000),
     ],
+    'checkout' => [
+        'shipping_notice' => env('FRONTEND_CHECKOUT_SHIPPING_NOTICE', 'Pesan hari ini dikirim besok.'),
+    ],
 ];

@@ -350,6 +350,7 @@
 
             {{-- Delivery Pricing --}}
             @php $delCfg = config('frontend.delivery', ['free_km'=>10,'price_per_km'=>2500,'min_fee'=>10000]); @endphp
+            @php $checkoutCfg = config('frontend.checkout', ['shipping_notice' => 'Pesan hari ini dikirim besok.']); @endphp
             <h4 class="text-sm font-bold text-on-surface mb-3">Biaya Delivery (per km)</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
@@ -372,6 +373,19 @@
                         value="{{ old('delivery_min_fee', $frontend['delivery']['min_fee'] ?? $delCfg['min_fee']) }}"
                         class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">
                     <p class="text-xs text-on-surface-variant mt-1">Ongkir minimal jika melebihi batas gratis.</p>
+                </div>
+            </div>
+
+            {{-- Checkout Notice --}}
+            <h4 class="text-sm font-bold text-on-surface mb-3">Info Pengiriman di Checkout</h4>
+            <div class="grid grid-cols-1 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-on-surface mb-1">Pesan Info Pengiriman</label>
+                    <textarea name="checkout_shipping_notice" rows="2"
+                        placeholder="cth: Pesan hari ini dikirim besok."
+                        class="w-full border border-outline-variant rounded-lg px-3 py-2 bg-surface text-on-surface focus:border-primary focus:ring-1 focus:ring-primary text-sm">{{ old('checkout_shipping_notice', $frontend['checkout']['shipping_notice'] ?? $checkoutCfg['shipping_notice'] ?? 'Pesan hari ini dikirim besok.') }}</textarea>
+                    <p class="text-xs text-on-surface-variant mt-1">Tampil sebagai banner info di blok Pengiriman halaman checkout. Kosongkan untuk menyembunyikan. Tersimpan ke .env: FRONTEND_CHECKOUT_SHIPPING_NOTICE.</p>
+                    @error('checkout_shipping_notice')<span class="text-xs text-error block mt-1">{{ $message }}</span>@enderror
                 </div>
             </div>
 
