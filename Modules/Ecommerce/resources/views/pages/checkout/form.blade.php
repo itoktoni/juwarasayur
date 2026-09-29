@@ -39,9 +39,9 @@
 
                     @php $shippingNotice = config('frontend.checkout.shipping_notice', 'Pesan hari ini dikirim besok.'); @endphp
                     @if(!empty(trim((string) $shippingNotice)))
-                    <div class="mb-4 flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
-                        <span class="material-symbols-outlined text-base mt-0.5 shrink-0">schedule</span>
-                        <span>{{ $shippingNotice }}</span>
+                    <div class="mb-4 flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+                        <span class="material-symbols-outlined text-lg leading-none shrink-0">schedule</span>
+                        <span class="leading-snug">{{ $shippingNotice }}</span>
                     </div>
                     @endif
 
