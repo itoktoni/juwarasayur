@@ -28,7 +28,7 @@ class Product extends BaseModel
 
     public static $sortColumns = ['product_nama', 'product_kode', 'product_harga', 'product_stok', 'product_status', 'is_grosir', 'sort_order'];
 
-    public static $filterColumns = ['product_nama', 'product_nama_grosir', 'product_kode', 'product_sku', 'product_status', 'is_active', 'is_featured', 'is_grosir'];
+    public static $filterColumns = ['product_nama', 'product_nama_grosir', 'product_kode', 'product_sku', 'product_status', 'is_featured', 'is_grosir'];
 
     public static function field_name(): string
     {
@@ -122,8 +122,11 @@ class Product extends BaseModel
                 $model->product_status = 'active';
             }
 
+            // Single source of truth = product_status. is_active hanya mirror
+            // untuk kompatibilitas query lama (SO, PO, chatbot, dsb).
+            $model->is_active = ($model->product_status === 'active');
+
             $model->is_featured = (bool) $model->is_featured;
-            $model->is_active = ($model->is_active === null || $model->is_active === '') ? true : (bool) $model->is_active;
         });
     }
 
@@ -169,7 +172,7 @@ class Product extends BaseModel
             'product_galeri' => ['nullable', 'array'],
             'product_status' => ['required', 'string', 'in:active,inactive,draft,archived'],
             'is_featured' => ['nullable', 'boolean'],
-            'is_active' => ['nullable', 'boolean'],
+            // is_active tidak divalidasi dari request — di-derive dari product_status di saving hook.
             'sort_order' => ['nullable', 'integer'],
             'product_id_product_master' => ['nullable', 'exists:catalog_product_masters,id'],
             'product_id_brand' => ['nullable', 'exists:catalog_brands,id'],

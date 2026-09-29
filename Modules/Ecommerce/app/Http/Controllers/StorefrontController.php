@@ -83,6 +83,7 @@ class StorefrontController extends Controller
     {
         $product = Product::where('product_slug', $slug)
             ->where('is_active', true)
+            ->where('product_status', 'active')
             ->with(['has_brand', 'has_category', 'has_satuan', 'has_tags'])
             ->firstOrFail();
 

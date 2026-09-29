@@ -28,6 +28,7 @@ class SoController extends Controller
     protected function share($data = [])
     {
         $products = Product::where('is_active', true)
+            ->where('product_status', 'active')
             ->orderBy('product_nama')
             ->get(['id', 'product_nama', 'product_harga', 'product_harga_grosir']);
         $trim = fn ($v) => $v === null || $v === '' ? $v : rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.');

@@ -93,13 +93,13 @@ class ProductController extends Controller
     public function getExport()
     {
         // Hanya produk aktif & tidak terhapus (soft-delete) yang ikut ter-download
+        // Single source = product_status (is_active ikut tersinkron otomatis via model hook)
         $products = Product::select([
             'product_nama', 'product_nama_grosir', 'product_kode', 'product_harga', 'product_harga_grosir', 'is_grosir',
             'product_harga_modal', 'product_stok',
             'affiliator_fee_percent',
             'sort_order',
         ])->whereNull('catalog_products.deleted_at')
-            ->where('is_active', true)
             ->where('product_status', 'active')
             ->orderBy('sort_order')->orderBy('product_nama')->get();
 
@@ -252,7 +252,7 @@ class ProductController extends Controller
                         continue;
                     }
                     $data['product_status'] = 'active';
-                    $data['is_active'] = 1;
+                    // is_active tersinkron otomatis via model saving hook
                     // bersihkan null agar saving hook tidak error
                     $data = array_filter($data, fn ($v) => $v !== null);
                     $data = $this->sanitizeNumericFields($data, $errors, $rowNum);
@@ -301,7 +301,7 @@ class ProductController extends Controller
                     }
                 } else {
                     $data['product_status'] = 'active';
-                    $data['is_active'] = 1;
+                    // is_active tersinkron otomatis via model saving hook
                     $data = array_filter($data, fn ($v) => $v !== null);
                     $data = $this->sanitizeNumericFields($data, $errors, $rowNum);
                     try {
@@ -489,7 +489,8 @@ class ProductController extends Controller
      */
     private function normalizeBooleans(GeneralRequest $request): void
     {
-        foreach (['is_featured', 'is_active', 'is_grosir'] as $field) {
+        // Single source = product_status; is_active di-derive otomatis di model saving hook.
+        foreach (['is_featured', 'is_grosir'] as $field) {
             if ($request->has($field)) {
                 $request->merge([
                     $field => (int) filter_var($request->input($field), FILTER_VALIDATE_BOOLEAN),

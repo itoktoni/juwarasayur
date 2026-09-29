@@ -51,9 +51,8 @@ use Modules\Catalog\Models\Product;
         <x-card label="Media & Lainnya" class="mt-5">
             @bind($model ?? null)
                 <x-file col="12" name="product_gambar" label="Gambar Utama" accept="image/*" :preview="true" :value="$model?->product_gambar_url" helper="Upload gambar utama produk" />
-                <x-select col="4" name="is_featured" label="Featured" :options="['0' => 'Tidak', '1' => 'Ya']" />
-                <x-select col="4" name="is_active" label="Aktif" :options="['1' => 'Aktif', '0' => 'Nonaktif']" />
-                <x-input col="4" name="sort_order" label="Urutan" type="number" />
+                <x-select col="6" name="is_featured" label="Featured" :options="['0' => 'Tidak', '1' => 'Ya']" />
+                <x-input col="6" name="sort_order" label="Urutan" type="number" />
                 <x-select col="12" name="tag_ids" label="Tags" :options="$tagOptions" :multiple="true" class="search"
                     :default="$model?->exists ? $model->has_tags->pluck('id')->toArray() : null" />
             @endbind

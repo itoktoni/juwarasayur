@@ -24,7 +24,7 @@ class ConsignmentController extends Controller
 
     protected function share($data = [])
     {
-        $products = Product::where('is_active', true)->orderBy('product_nama')->get(['id', 'product_nama', 'product_harga']);
+        $products = Product::where('is_active', true)->where('product_status', 'active')->orderBy('product_nama')->get(['id', 'product_nama', 'product_harga']);
 
         return array_merge([
             'model' => $this->model,
