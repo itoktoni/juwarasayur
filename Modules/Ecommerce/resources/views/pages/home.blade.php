@@ -125,6 +125,12 @@
             <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">{{ $settings['hero_title'] }}</h1>
             <p class="mt-4 text-sm md:text-base opacity-90 max-w-2xl mx-auto">{{ $settings['hero_subtitle'] }}</p>
 
+            @if(!empty(trim((string) ($settings['shipping_notice'] ?? ''))))
+            <p class="mt-3 inline-flex items-center gap-1.5 text-xs md:text-sm font-medium bg-white/15 border border-white/30 rounded-full px-4 py-1.5">
+                <span class="material-symbols-outlined text-base">schedule</span> {{ $settings['shipping_notice'] }}
+            </p>
+            @endif
+
             <div class="mt-7 flex flex-wrap justify-center gap-3">
                 <a href="{{ route('shop.index') }}" class="inline-flex items-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-lg hover:opacity-90 transition-opacity">
                     <span class="material-symbols-outlined text-base">storefront</span> {{ $settings['hero_cta_text'] }}

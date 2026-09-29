@@ -113,6 +113,7 @@ class HomeController extends Controller
             'show_latest' => $latest['show'] ?? true,
             'latest_title' => $latest['title'] ?? 'Produk Terbaru',
             'best_selling_title' => 'Paling Laris',
+            'shipping_notice' => $env['checkout']['shipping_notice'] ?? 'Pesan hari ini dikirim besok.',
         ];
 
         $entry = Content::query()
