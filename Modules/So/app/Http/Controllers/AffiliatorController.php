@@ -114,6 +114,7 @@ class AffiliatorController extends Controller
             'rate' => $affiliator->effectiveFee(),
             'omzet' => $omzet,
             'orderCount' => (clone $orders)->whereIn('so_status', $statuses)->count(),
+            'pendingOrderCount' => (clone $orders)->where('so_status', SoStatusEnum::PENDING)->count(),
             'customerCount' => $affiliator->hasCustomers()->count(),
             'recentOrders' => (clone $orders)
                 ->whereIn('so_status', $statuses)
