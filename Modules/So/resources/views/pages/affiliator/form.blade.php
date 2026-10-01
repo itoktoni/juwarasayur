@@ -3,6 +3,154 @@
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => moduleRoute('getTable'), 'label' => 'Affiliator'], ['url' => '', 'label' => isset($model) && $model->exists ? 'Update' : 'Create']]" />
 
+    @if(isset($model) && $model->exists && isset($commission))
+    @php $pendingCounted = $commission['includePending'] ?? true; @endphp
+    <x-card label="Dashboard Affiliator" icon="insights">
+        <div class="col-span-12 space-y-4">
+            {{-- Toggle hitung pending --}}
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-outline-variant/60">
+                <p class="text-xs text-on-surface-variant max-w-xl">
+                    @if($pendingCounted)
+                        Menghitung <b>semua order kecuali Cancelled</b> — order pending ikut dihitung.
+                    @else
+                        Menghitung <b>hanya order yang sudah terbayar</b> — pending dikecualikan.
+                    @endif
+                </p>
+                <a href="{{ request()->fullUrlWithQuery(['include_pending' => $pendingCounted ? 0 : null]) }}"
+                    class="inline-flex items-center gap-2 h-9 px-3 rounded-lg text-xs font-semibold transition-all active:scale-95 {{ $pendingCounted ? 'bg-primary text-on-primary shadow-sm hover:bg-primary/90' : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container' }}"
+                    title="{{ $pendingCounted ? 'Klik untuk hanya menghitung order terbayar' : 'Klik agar order pending ikut dihitung' }}">
+                    <span class="material-symbols-outlined text-lg">{{ $pendingCounted ? 'toggle_on' : 'toggle_off' }}</span>
+                    {{ $pendingCounted ? 'Pending Dihitung' : 'Hitung Pending' }}
+                </a>
+            </div>
+
+            <x-stat-widget :items="[
+                ['icon_name' => 'account_balance_wallet', 'bg_color' => 'bg-primary/10', 'icon_color' => 'text-primary', 'value' => formatAngka((int) $commission['balance'], 'Rp'), 'label' => 'Saldo Komisi'.($pendingCounted ? ' (termasuk pending)' : ' Bisa Dicairkan')],
+                ['icon_name' => 'savings', 'bg_color' => 'bg-success/10', 'icon_color' => 'text-success', 'value' => formatAngka((int) $commission['earned'], 'Rp'), 'label' => 'Total Komisi'.($pendingCounted ? ' (termasuk pending)' : ' Terhasil')],
+                ['icon_name' => 'hourglass_top', 'bg_color' => 'bg-warning/10', 'icon_color' => 'text-warning', 'value' => formatAngka((int) $commission['pending'], 'Rp'), 'label' => 'Komisi Pending'.($pendingCounted ? ' — sudah termasuk di atas' : ' (Order Belum Dibayar)')],
+                ['icon_name' => 'payments', 'bg_color' => 'bg-neutral-800/10', 'icon_color' => 'text-neutral-800', 'value' => formatAngka((int) $commission['withdrawn'], 'Rp'), 'label' => 'Sudah Dicairkan'],
+            ]" />
+
+            @php
+                $infos = [
+                    ['label' => 'Fee Komisi', 'value' => formatQty($commission['rate']).'%', 'icon' => 'percent'],
+                    ['label' => 'Jumlah Customer', 'value' => $commission['customerCount'], 'icon' => 'group'],
+                    ['label' => 'Jumlah SO', 'value' => $commission['orderCount'], 'icon' => 'receipt_long'],
+                    ['label' => 'Omzet'.($pendingCounted ? ' (kecuali Cancelled)' : ' (Order Terbayar)'), 'value' => formatAngka((int) $commission['omzet'], 'Rp'), 'icon' => 'trending_up'],
+                ];
+            @endphp
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                @foreach($infos as $info)
+                <div class="p-3 rounded-xl border border-outline-variant bg-surface-container-low/50">
+                    <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">{{ $info['icon'] }}</span>{{ $info['label'] }}
+                    </p>
+                    <p class="text-sm font-bold text-on-surface font-mono">{{ $info['value'] }}</p>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Chart komisi per bulan --}}
+            @if(isset($commissionChart))
+            <div class="p-4 rounded-xl border border-outline-variant bg-surface-container-lowest">
+                <p class="text-sm font-bold text-on-surface mb-3 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-primary">bar_chart</span> Komisi per Bulan (6 Bulan Terakhir){{ $pendingCounted ? ' — termasuk pending' : '' }}
+                </p>
+                {!! $commissionChart->container() !!}
+                {!! $commissionChart->script() !!}
+            </div>
+            @endif
+
+            {{-- Pesanan terbaru + komisi per order --}}
+            <div>
+                <p class="text-sm font-bold text-on-surface mb-2 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-primary">history</span> Pesanan Terbaru &amp; Komisi
+                </p>
+                @if($commission['recentOrders']->isEmpty())
+                    <p class="text-sm text-on-surface-variant py-4 text-center border border-dashed border-outline-variant rounded-lg">Belum ada pesanan dari affiliator ini.</p>
+                @else
+                <div class="overflow-auto rounded-lg border border-outline-variant">
+                    <table class="w-full text-sm">
+                        <thead class="bg-surface-container text-on-surface-variant text-xs uppercase">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Kode</th>
+                                <th class="px-3 py-2 text-left">Tanggal</th>
+                                <th class="px-3 py-2 text-left">Status</th>
+                                <th class="px-3 py-2 text-right">Item</th>
+                                <th class="px-3 py-2 text-right">Total</th>
+                                <th class="px-3 py-2 text-right">Komisi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/50">
+                            @foreach($commission['recentOrders'] as $order)
+                            @php
+                                $badgeType = match ($order->so_status) {
+                                    \Modules\So\Enums\SoStatusEnum::PENDING => 'warning',
+                                    \Modules\So\Enums\SoStatusEnum::DELIVERED => 'success',
+                                    \Modules\So\Enums\SoStatusEnum::CANCELLED => 'error',
+                                    default => 'info',
+                                };
+                            @endphp
+                            <tr>
+                                <td class="px-3 py-2 font-mono text-xs">
+                                    <a href="{{ route('so-so.getUpdate', ['id' => $order->id]) }}" class="text-primary hover:underline">{{ $order->so_code }}</a>
+                                </td>
+                                <td class="px-3 py-2 text-on-surface-variant">{{ formatDate($order->so_tanggal) }}</td>
+                                <td class="px-3 py-2">
+                                    <x-badge :type="$badgeType" :label="\Modules\So\Enums\SoStatusEnum::getDescription($order->so_status)" />
+                                </td>
+                                <td class="px-3 py-2 text-right font-mono">{{ $order->has_details_count }}</td>
+                                <td class="px-3 py-2 text-right font-mono">{{ formatAngka((int) $order->so_grand_total, 'Rp') }}</td>
+                                <td class="px-3 py-2 text-right font-mono font-bold {{ (float) $order->commission_total > 0 ? 'text-success' : 'text-on-surface-variant' }}">
+                                    {{ formatAngka((int) $order->commission_total, 'Rp') }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+            </div>
+
+            {{-- Pengajuan pencairan terakhir --}}
+            @if($commission['withdrawals']->isNotEmpty())
+            <div>
+                <p class="text-sm font-bold text-on-surface mb-2 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-primary">receipt</span> Pengajuan Pencairan Terakhir
+                </p>
+                <div class="overflow-auto rounded-lg border border-outline-variant">
+                    <table class="w-full text-sm">
+                        <thead class="bg-surface-container text-on-surface-variant text-xs uppercase">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Tanggal</th>
+                                <th class="px-3 py-2 text-left">Status</th>
+                                <th class="px-3 py-2 text-right">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/50">
+                            @foreach($commission['withdrawals'] as $withdrawal)
+                            @php
+                                $wdBadgeType = match ($withdrawal->status) {
+                                    \App\Models\Withdrawal::STATUS_PAID => 'success',
+                                    \App\Models\Withdrawal::STATUS_REJECTED => 'error',
+                                    default => 'warning',
+                                };
+                            @endphp
+                            <tr>
+                                <td class="px-3 py-2 text-on-surface-variant">{{ formatDate($withdrawal->created_at, 'd/m/Y H:i') }}</td>
+                                <td class="px-3 py-2"><x-badge :type="$wdBadgeType" :label="ucfirst($withdrawal->status)" /></td>
+                                <td class="px-3 py-2 text-right font-mono">{{ formatAngka((int) $withdrawal->amount, 'Rp') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+        </div>
+    </x-card>
+    @endif
+
     <x-form :model="$model">
         <x-card :label="moduleLabel()">
             @bind($model ?? null)

@@ -91,6 +91,12 @@
                                     class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container transition-colors">
                                     <span class="material-symbols-outlined text-lg text-emerald-700">qr_code_2</span> Payment
                                 </a>
+                                @if($table->has_reseller?->isAffiliator())
+                                    <a href="{{ route('so-affiliator.getUpdate', ['id' => $table->so_id_reseller]) }}"
+                                        class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container transition-colors">
+                                        <span class="material-symbols-outlined text-lg text-amber-600">insights</span> Dashboard Affiliator
+                                    </a>
+                                @endif
                                 @if(in_array($table->so_status, ['pending', 'paid', 'confirmed'], true))
                                     <a href="{{ route('so-so.getPrepare', ['id' => $table->field_primary]) }}"
                                         class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container transition-colors">
@@ -108,7 +114,17 @@
                     </x-table-action>
                     <td>{{ $table->so_code }}</td>
                     <td>{{ formatDate($table->so_tanggal) }}</td>
-                    <td>{{ $table->has_reseller?->name ?? '-' }}</td>
+                    <td>
+                        @if($table->has_reseller?->isAffiliator())
+                            <a href="{{ route('so-affiliator.getUpdate', ['id' => $table->so_id_reseller]) }}" title="Lihat dashboard & komisi affiliator ini"
+                                class="inline-flex items-center gap-1 text-primary font-medium hover:underline">
+                                {{ $table->has_reseller->name }}
+                                <span class="material-symbols-outlined text-sm">insights</span>
+                            </a>
+                        @else
+                            {{ $table->has_reseller?->name ?? '-' }}
+                        @endif
+                    </td>
                     <td>{{ $table->so_customer_name ?: ($table->has_customer?->name ?? '-') }}</td>
                     <td><span class="badge badge-soft">{{ \Modules\So\Enums\SoStatusEnum::getDescription($table->so_status) }}</span></td>
                     <td>{{ \Modules\So\Enums\ShippingMethodEnum::getDescription($table->so_shipping_method) }}{{ $table->so_cod_location ? ' ('.$table->so_cod_location.')' : '' }}</td>
@@ -139,6 +155,19 @@
                             <div class="text-right">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Total</p>
                                 <p class="text-xs font-mono font-medium text-on-surface">{{ formatAngka((int) $table->so_grand_total, 'Rp') }}</p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Affiliator</p>
+                                @if($table->has_reseller?->isAffiliator())
+                                    <a href="{{ route('so-affiliator.getUpdate', ['id' => $table->so_id_reseller]) }}" onclick="event.stopPropagation()"
+                                        title="Lihat dashboard & komisi affiliator ini"
+                                        class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                                        {{ $table->has_reseller->name }}
+                                        <span class="material-symbols-outlined text-sm">insights</span>
+                                    </a>
+                                @else
+                                    <p class="text-xs font-medium text-on-surface">{{ $table->has_reseller?->name ?? '-' }}</p>
+                                @endif
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">

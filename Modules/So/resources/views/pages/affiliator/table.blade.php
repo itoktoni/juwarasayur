@@ -39,6 +39,11 @@
                 <tr>
                     <x-table-row-checkbox :model="$model" :value="$table->field_primary" />
                     <x-table-action :model="$model" :id="$table->field_primary">
+                        <a href="{{ route('so-affiliator.getUpdate', ['id' => $table->field_primary]) }}"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-violet-600/10 text-violet-700 hover:bg-violet-600/20 transition-colors"
+                            title="Dashboard & komisi affiliator">
+                            <span class="material-symbols-outlined text-lg">insights</span>
+                        </a>
                         <a href="{{ url('/admin/so/customer/table') }}?filter[reference_id]={{ $table->id }}"
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                             title="Lihat customer milik affiliator ini">
@@ -99,6 +104,10 @@
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">
                             <span class="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">{{ $table->field_primary }}</span>
                             <div class="flex gap-1" onclick="event.stopPropagation()">
+                                <a href="{{ route('so-affiliator.getUpdate', ['id' => $table->field_primary]) }}"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-violet-600/10 text-violet-700 hover:bg-violet-600/20" title="Dashboard & komisi affiliator">
+                                    <span class="material-symbols-outlined text-base">insights</span>
+                                </a>
                                 <a href="{{ url('/admin/so/customer/table') }}?filter[reference_id]={{ $table->id }}"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Lihat customer">
                                     <span class="material-symbols-outlined text-base">group</span>

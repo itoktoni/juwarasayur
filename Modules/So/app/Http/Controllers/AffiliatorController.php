@@ -5,7 +5,13 @@ namespace Modules\So\Http\Controllers;
 use App\Enums\UserTypeEnum;
 use App\Http\Requests\GeneralRequest;
 use App\Models\User;
+use App\Models\Withdrawal;
+use ArielMejiaDev\LarapexCharts\LarapexChart;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
+use Modules\So\Enums\SoStatusEnum;
+use Modules\So\Models\So;
+use Modules\So\Models\SoDetail;
 
 /**
  * Admin: kelola user bertipe affiliator (mirror ResellerController).
@@ -20,21 +26,146 @@ class AffiliatorController extends Controller
 
     protected function share($data = [])
     {
-        $extras = [];
-        if ($this->model->exists) {
-            $extras['customerOptions'] = $this->customerOptions();
+        // Model yang sedang diedit datang lewat $data['model'] — $this->model
+        // tetap instance kosong (ControllerTrait::getUpdate tidak mengisinya).
+        $record = $data['model'] ?? null;
+        $extras = ['customerOptions' => $this->customerOptions()];
+
+        if ($record instanceof User && $record->exists) {
             $extras['selectedCustomerIds'] = User::where('type', UserTypeEnum::CUSTOMER)
-                ->where('reference_id', $this->model->id)
+                ->where('reference_id', $record->id)
                 ->pluck('id')
                 ->all();
+
+            $summary = $this->commissionSummary($record, $this->includePendingOrders());
+            $extras['commission'] = $summary;
+            $extras['commissionChart'] = $this->commissionChart($summary['trend']);
         } else {
-            $extras['customerOptions'] = $this->customerOptions();
             $extras['selectedCustomerIds'] = old('customer_ids', []);
         }
 
         return array_merge([
             'model' => $this->model,
         ], $extras, $data);
+    }
+
+    /**
+     * Status yang dihitung untuk komisi/omzet.
+     * Default ($includePending = true): semua status KECUALI Cancelled, jadi
+     * order pending ikut terhitung. Mode "hanya terbayar" membuang pending.
+     */
+    private function countedStatuses(bool $includePending): array
+    {
+        $paid = [
+            SoStatusEnum::PAID,
+            SoStatusEnum::CONFIRMED,
+            SoStatusEnum::SHIPPED,
+            SoStatusEnum::DELIVERED,
+        ];
+
+        return $includePending ? array_merge([SoStatusEnum::PENDING], $paid) : $paid;
+    }
+
+    /**
+     * Default dashboard: order pending ikut dihitung, hanya Cancelled yang
+     * dikecualikan. Tombol di dashboard mengirim include_pending=0 untuk
+     * membalik ke mode "hanya order terbayar".
+     */
+    private function includePendingOrders(): bool
+    {
+        return request()->boolean('include_pending', true);
+    }
+
+    /**
+     * Total komisi (snapshot fee_amount) untuk sekumpulan status order.
+     */
+    private function commissionFor(User $affiliator, array $statuses): float
+    {
+        return (float) SoDetail::query()
+            ->whereHas('has_so', fn ($q) => $q->where('so_id_reseller', $affiliator->id)->whereIn('so_status', $statuses))
+            ->sum('fee_amount');
+    }
+
+    /**
+     * Ringkasan komisi & performa affiliator untuk dashboard di halaman update.
+     * Komisi dihitung dari snapshot so_order_details.fee_amount milik SO yang
+     * dimiliki affiliator ini (so_id_reseller), sama seperti Withdrawal::earned().
+     */
+    private function commissionSummary(User $affiliator, bool $includePending = true): array
+    {
+        $statuses = $this->countedStatuses($includePending);
+
+        $orders = So::where('so_id_reseller', $affiliator->id);
+
+        $omzet = (float) (clone $orders)->whereIn('so_status', $statuses)->sum('so_grand_total');
+
+        // Saat pending tidak dihitung, ambil dari Withdrawal::earned() agar
+        // angkanya identik dengan sumber komisi yang dipakai untuk pencairan.
+        $earned = $includePending
+            ? $this->commissionFor($affiliator, $statuses)
+            : Withdrawal::earned($affiliator);
+        $withdrawn = Withdrawal::withdrawn($affiliator);
+
+        return [
+            'includePending' => $includePending,
+            'earned' => $earned,
+            'withdrawn' => $withdrawn,
+            'balance' => max(0, $earned - $withdrawn),
+            'pending' => $this->commissionFor($affiliator, [SoStatusEnum::PENDING]),
+            'rate' => $affiliator->effectiveFee(),
+            'omzet' => $omzet,
+            'orderCount' => (clone $orders)->whereIn('so_status', $statuses)->count(),
+            'customerCount' => $affiliator->hasCustomers()->count(),
+            'recentOrders' => (clone $orders)
+                ->whereIn('so_status', $statuses)
+                ->withCount('has_details')
+                ->withSum('has_details as commission_total', 'fee_amount')
+                ->orderByDesc('so_tanggal')
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get(),
+            'withdrawals' => $affiliator->has_withdrawals()->orderByDesc('id')->limit(5)->get(),
+            'trend' => $this->commissionTrend($affiliator, $statuses),
+        ];
+    }
+
+    /**
+     * Komisi per bulan untuk 6 bulan terakhir (termasuk bulan berjalan).
+     * Bulan tanpa order tetap dikirim dengan nilai 0 agar sumbu chart konsisten.
+     */
+    private function commissionTrend(User $affiliator, array $earnedStatuses): Collection
+    {
+        $since = now()->startOfMonth()->subMonths(5);
+
+        $komisiPerBulan = SoDetail::query()
+            ->join('so_orders', 'so_orders.id', '=', 'so_order_details.so_detail_id_so')
+            ->where('so_orders.so_id_reseller', $affiliator->id)
+            ->whereIn('so_orders.so_status', $earnedStatuses)
+            ->where('so_orders.so_tanggal', '>=', $since)
+            ->selectRaw("DATE_FORMAT(so_orders.so_tanggal, '%Y-%m') as ym, SUM(so_order_details.fee_amount) as total")
+            ->groupBy('ym')
+            ->get()
+            ->pluck('total', 'ym');
+
+        return collect(range(5, 0))->map(function (int $i) use ($komisiPerBulan) {
+            $month = now()->startOfMonth()->subMonths($i);
+
+            return [
+                'label' => $month->format('M Y'),
+                'komisi' => (float) ($komisiPerBulan[$month->format('Y-m')] ?? 0),
+            ];
+        })->values();
+    }
+
+    private function commissionChart(Collection $trend): LarapexChart
+    {
+        return (new LarapexChart)->barChart()
+            ->addData($trend->pluck('komisi')->map(fn ($v) => (int) round($v))->all(), 'Komisi')
+            ->setXAxis($trend->pluck('label')->all())
+            ->setColors(['#388e3c'])
+            ->setDataLabels(false)
+            ->setGrid()
+            ->setHeight(300);
     }
 
     private function customerOptions(): array
