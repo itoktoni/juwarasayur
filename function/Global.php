@@ -73,6 +73,60 @@ function formatQty($value): string
     return $formatted;
 }
 
+/**
+ * Parse ekor nama produk → [berat_gram, master_nama].
+ * Satuan disamakan: gram untuk berat, jumlah unit untuk hitungan.
+ * "KENTANG DIENG 1000 gr" → [1000, "KENTANG DIENG"]
+ * "JAGUNG MANIS 1 KG" → [1000, "JAGUNG MANIS"]
+ * "BAYAM 1 IKET" / "PETAI 1 PAPAN" → [1, "BAYAM" / "PETAI"]
+ * "DAUN SINGKONG" (tanpa satuan) → [1, "DAUN SINGKONG"]
+ *
+ * @return array{0: int, 1: string}
+ */
+function parseBeratMaster(string $nama): array
+{
+    $nama = trim((string) preg_replace('/\s+/', ' ', $nama));
+    $gram = 1;
+    $master = $nama;
+
+    if (preg_match('/^(.*?)\s+(\d+(?:[.,]\d+)?)\s*(kilogram|kg|gram|gr|g)s?\s*(\(.*\))?$/i', $nama, $m)) {
+        $angka = (float) str_replace(',', '.', $m[2]);
+        $satuan = strtolower($m[3]);
+        $gram = ($satuan === 'kg' || $satuan === 'kilogram') ? (int) round($angka * 1000) : (int) round($angka);
+        $master = trim($m[1]);
+    } elseif (preg_match('/^(.*?)\s+(\d+(?:[.,]\d+)?)\s*(pcs|iket|papan)(\s*\(.*\))?$/i', $nama, $m)) {
+        $gram = max(1, (int) round((float) str_replace(',', '.', $m[2])));
+        $master = trim($m[1]);
+    }
+
+    if ($master === '') {
+        $master = $nama;
+    }
+
+    return [$gram, $master];
+}
+
+/**
+ * Format berat gram → "250 gr", "1,25 Kg".
+ * $panjang = true → "1.250 gr / 1,25 Kg" untuk total.
+ */
+function formatBerat(int|float $gram, bool $panjang = false): string
+{
+    $gram = (int) round((float) $gram);
+
+    if ($gram < 1000) {
+        return number_format($gram, 0, ',', '.').' gr';
+    }
+
+    $kg = rtrim(rtrim(number_format($gram / 1000, 3, ',', '.'), '0'), ',');
+
+    if ($panjang) {
+        return number_format($gram, 0, ',', '.').' gr / '.$kg.' Kg';
+    }
+
+    return $kg.' Kg';
+}
+
 function formatLabel($value)
 {
     $label = Str::of($value);
@@ -143,6 +197,60 @@ function moduleRoute($action = null, $params = [])
     $route = route(modules($action), $params);
 
     return $route;
+}
+
+/**
+ * Normalisasi nomor HP Indonesia ke format internasional (62...).
+ * "0812-3456-7890" / "+62 812..." / "8123..." → "6281234567890".
+ */
+function waNumber(?string $phone): ?string
+{
+    $digits = preg_replace("/\D+/", "", (string) $phone);
+
+    if ($digits === "") {
+        return null;
+    }
+
+    if (str_starts_with($digits, "0")) {
+        $digits = "62".substr($digits, 1);
+    } elseif (str_starts_with($digits, "8")) {
+        $digits = "62".$digits;
+    }
+
+    return $digits;
+}
+
+/**
+ * Link chat WhatsApp (wa.me) dengan pesan opsional. Null jika nomor kosong/tidak valid.
+ */
+function waLink(?string $phone, string $text = ""): ?string
+{
+    $number = waNumber($phone);
+
+    if ($number === null) {
+        return null;
+    }
+
+    return "https://wa.me/".$number.($text !== "" ? "?text=".rawurlencode($text) : "");
+}
+
+/**
+ * Link rute Google Maps ke titik tujuan, opsional dari titik asal (gudang).
+ * Null jika koordinat tujuan tidak lengkap.
+ */
+function mapsRouteUrl($lat, $lng, $originLat = null, $originLng = null): ?string
+{
+    if ($lat === null || $lat === "" || $lng === null || $lng === "") {
+        return null;
+    }
+
+    $url = "https://www.google.com/maps/dir/?api=1&destination=".rawurlencode($lat.",".$lng);
+
+    if ($originLat !== null && $originLat !== "" && $originLng !== null && $originLng !== "") {
+        $url .= "&origin=".rawurlencode($originLat.",".$originLng);
+    }
+
+    return $url;
 }
 
 function nominalQRIS($qris_data, $amount)

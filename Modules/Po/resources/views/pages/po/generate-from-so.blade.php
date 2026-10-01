@@ -3,8 +3,6 @@
 /** @var string|null $tanggal */
 /** @var Illuminate\Support\Collection $groups */
 /** @var Illuminate\Support\Collection $warnings */
-
-$fmtKg = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.');
 ?>
 <x-layouts::app>
     <x-breadcrumb :items="[['url' => route('po-po.getTable'), 'label' => 'Purchase Orders'], ['url' => '', 'label' => 'Generate dari SO']]" />
@@ -29,7 +27,7 @@ $fmtKg = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.'
                     <li>
                         <strong class="text-on-surface">{{ $group['nama'] }}</strong>
                         ({{ $group['reason'] }})
-                        — total {{ $fmtKg($group['total_berat']) }} kg, {{ $group['items']->count() }} baris SO.
+                        — total {{ formatBerat($group['total_berat'], true) }}, {{ $group['items']->count() }} varian.
                         @if ($group['reason'] === 'Tanpa Product Master')
                             Set product master dulu di menu Product Masters.
                         @else
@@ -48,17 +46,17 @@ $fmtKg = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.'
                 <div class="col-span-12 mb-4 rounded-lg bg-primary-container/30 px-4 py-3 flex flex-wrap justify-between items-center gap-2">
                     <span class="font-semibold text-on-surface">
                         {{ $group['supplier']->supplier_nama }}
-                        <span class="text-on-surface-variant font-normal">· {{ $group['items']->count() }} produk</span>
+                        <span class="text-on-surface-variant font-normal">· {{ $group['masters']->count() }} master</span>
                     </span>
                     <div class="flex items-center gap-3">
-                        <span class="text-lg font-bold text-on-surface">{{ $fmtKg($group['total_berat']) }} kg</span>
+                        <span class="text-lg font-bold text-on-surface">{{ formatBerat($group['total_berat'], true) }}</span>
                         {{-- Generate PO per supplier: 1 PO dengan semua produk di card ini --}}
                         {{-- (form terpisah, bukan membungkus card — hindari nested form) --}}
                         <form action="{{ route('po-generate.generate') }}" method="POST" class="shrink-0">
                             @csrf
                             <input type="hidden" name="tanggal" value="{{ $tanggal }}" />
                             <input type="hidden" name="suppliers[]" value="{{ $group['supplier']->id }}" />
-                            <button type="submit" title="Generate 1 PO untuk {{ $group['supplier']->supplier_nama }} dengan {{ $group['items']->count() }} produk"
+                            <button type="submit" title="Generate 1 PO untuk {{ $group['supplier']->supplier_nama }} dengan {{ $group['masters']->count() }} master"
                                 class="inline-flex items-center justify-center gap-1 h-8 px-3 text-xs font-semibold rounded-lg bg-primary text-on-primary hover:bg-primary/90 shadow-sm transition-all active:scale-95 shrink-0">
                                 <span class="material-symbols-outlined text-base">shopping_cart</span>
                                 <span>Generate PO</span>
@@ -70,52 +68,53 @@ $fmtKg = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.'
                 <x-table :border="false">
                     <x-slot:head>
                         <th>SO</th>
-                        <th>Produk</th>
-                        <th class="text-center">Berat/unit</th>
-                        <th class="text-center">Qty</th>
+                        <th>Product Master</th>
+                        <th class="text-center">Varian</th>
                         <th class="text-right">Total Berat</th>
                     </x-slot:head>
                     <x-slot:body>
-                        @foreach ($group['items'] as $item)
-                            @php $soCount = count($item['so_codes']); @endphp
+                        @foreach ($group['masters'] as $master)
+                            @php
+                                $soCount = count($master['so_codes']);
+                                $rincian = $master['varian']->map(fn ($v) => formatBerat($v['berat']).' ×'.$v['qty'])->implode(' · ');
+                            @endphp
                             <tr>
                                 <td class="font-data-mono text-data-mono text-on-surface-variant">
-                                    {{ implode(', ', $item['so_codes']) }}
+                                    {{ implode(', ', $master['so_codes']) }}
                                     @if ($soCount > 1)
                                         <span class="ml-1 inline-block text-[10px] font-semibold text-primary bg-primary/10 rounded px-1.5 py-0.5 align-middle">{{ $soCount }} SO</span>
                                     @endif
                                 </td>
-                                <td class="font-medium text-on-surface">{{ $item['product_nama'] }}</td>
-                                <td class="text-center">{{ $fmtKg($item['berat']) }} kg</td>
-                                <td class="text-center">× {{ $item['qty'] }}</td>
-                                <td class="text-right font-medium">= {{ $fmtKg($item['total_berat']) }} kg</td>
+                                <td>
+                                    <span class="font-medium text-on-surface">{{ $master['nama'] }}</span>
+                                    <span class="block text-xs text-on-surface-variant">{{ $rincian }}</span>
+                                </td>
+                                <td class="text-center">{{ $master['varian']->count() }} varian · ×{{ $master['total_qty'] }}</td>
+                                <td class="text-right font-medium">= {{ formatBerat($master['total_berat'], true) }}</td>
                             </tr>
                         @endforeach
                     </x-slot:body>
                     <x-slot:mobile>
-                        {{-- Tampilan mobile: kartu per barang (tabel disembunyikan di bawah lg) --}}
+                        {{-- Tampilan mobile: kartu per master (tabel disembunyikan di bawah lg) --}}
                         <div class="p-3 space-y-3">
-                            @foreach ($group['items'] as $item)
+                            @foreach ($group['masters'] as $master)
                             <div class="border border-outline-variant rounded-xl p-4 bg-surface-container-lowest shadow-sm">
-                                <p class="text-sm font-bold text-on-surface truncate mb-0.5">{{ $item['product_nama'] }}</p>
+                                <p class="text-sm font-bold text-on-surface truncate mb-0.5">{{ $master['nama'] }}</p>
                                 <p class="text-[11px] font-data-mono text-data-mono text-on-surface-variant break-all mb-3">
-                                    {{ implode(', ', $item['so_codes']) }}
-                                    @if (count($item['so_codes']) > 1)
-                                        <span class="ml-1 inline-block text-[10px] font-semibold text-primary bg-primary/10 rounded px-1.5 py-0.5 align-middle">{{ count($item['so_codes']) }} SO</span>
+                                    {{ implode(', ', $master['so_codes']) }}
+                                    @if (count($master['so_codes']) > 1)
+                                        <span class="ml-1 inline-block text-[10px] font-semibold text-primary bg-primary/10 rounded px-1.5 py-0.5 align-middle">{{ count($master['so_codes']) }} SO</span>
                                     @endif
                                 </p>
-                                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/50">
+                                <p class="text-[11px] text-on-surface-variant mb-2">{{ $master['varian']->map(fn ($v) => formatBerat($v['berat']).' ×'.$v['qty'])->implode(' · ') }}</p>
+                                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-outline-variant/50">
                                     <div>
-                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Berat/unit</p>
-                                        <p class="text-xs font-medium text-on-surface">{{ $fmtKg($item['berat']) }} kg</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Qty</p>
-                                        <p class="text-xs font-medium text-on-surface">× {{ $item['qty'] }}</p>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Varian / Qty</p>
+                                        <p class="text-xs font-medium text-on-surface">{{ $master['varian']->count() }} varian · ×{{ $master['total_qty'] }}</p>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-[10px] text-on-surface-variant uppercase tracking-wide mb-0.5">Total</p>
-                                        <p class="text-xs font-mono font-medium text-on-surface">{{ $fmtKg($item['total_berat']) }} kg</p>
+                                        <p class="text-xs font-mono font-medium text-on-surface">{{ formatBerat($master['total_berat'], true) }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -130,14 +129,14 @@ $fmtKg = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, '.', ''), '0'), '.'
              supplier diambil dari rekomendasi master, hasilnya 1 PO per supplier multi produk --}}
         @php
             $supplierCount = $groups->unique(fn ($g) => $g['supplier']->id)->count();
-            $totalItems = $groups->sum(fn ($g) => $g['items']->count());
+            $totalItems = $groups->sum(fn ($g) => $g['masters']->count());
             $totalBerat = $groups->sum('total_berat');
         @endphp
         <x-form :action="route('po-generate.generate')">
             <input type="hidden" name="tanggal" value="{{ $tanggal }}" />
             <div class="mt-6 rounded-xl border border-primary/30 bg-primary-container/30 p-4 flex flex-wrap items-center justify-between gap-3">
                 <div class="text-sm text-on-surface">
-                    <p class="font-semibold">Total: {{ $totalItems }} barang → {{ $supplierCount }} supplier ({{ $fmtKg($totalBerat) }} kg)</p>
+                    <p class="font-semibold">Total: {{ $totalItems }} master → {{ $supplierCount }} supplier ({{ formatBerat($totalBerat, true) }})</p>
                     <p class="text-on-surface-variant text-xs mt-0.5">
                         Dikelompokkan per product master, supplier dipilih dari rekomendasi master — 1 PO per supplier dengan multiple product.
                     </p>

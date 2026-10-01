@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Po\Enums\PoStatusEnum;
+use Modules\So\Models\So;
+use Modules\So\Models\SoDetail;
 
 #[Fillable(['po_code', 'po_tanggal', 'po_id_supplier', 'po_status', 'po_keterangan', 'po_subtotal', 'po_discount', 'po_discount_type', 'po_discount_note', 'po_dpp', 'po_ppn', 'po_ppn_rate', 'po_pph', 'po_pph_rate', 'po_grand_total'])]
 class Po extends BaseModel
@@ -73,6 +76,56 @@ class Po extends BaseModel
                 $model->po_pph_rate = (float) config('po.pph_rate', 2);
             }
         });
+
+        // Hapus PO = lepas mapping prepare PO ↔ SO agar SO bisa digenerate ulang:
+        // pivot dilepas, flag so_detail yang yatim di-null-kan, flag SO direcompute.
+        // Idempoten — aman dipanggil ulang / dari bulk delete per-model.
+        static::deleting(function (self $model) {
+            $model->releaseSoCoverage();
+        });
+    }
+
+    /**
+     * Lepas coverage generate PO atas SO: hapus pivot + detail milik PO ini,
+     * null-kan SoDetail.po_generated_at yang tak lagi direferensi PO aktif,
+     * dan null-kan So.so_po_generated_at bila ada detail yang belum ter-generate.
+     */
+    public function releaseSoCoverage(): void
+    {
+        $detailIds = $this->has_details()->pluck('po_details.id');
+        if ($detailIds->isEmpty()) {
+            return;
+        }
+
+        $soDetailIds = DB::table('po_detail_so_details')
+            ->whereIn('po_detail_id', $detailIds)
+            ->pluck('so_detail_id')
+            ->unique()
+            ->values();
+        $soIds = SoDetail::whereIn('id', $soDetailIds)->pluck('so_detail_id_so')->unique()->values();
+
+        DB::table('po_detail_so_details')->whereIn('po_detail_id', $detailIds)->delete();
+        $this->has_details()->delete();
+
+        foreach ($soDetailIds as $soDetailId) {
+            $stillCovered = DB::table('po_detail_so_details')
+                ->where('po_detail_so_details.so_detail_id', $soDetailId)
+                ->join('po_details', 'po_details.id', '=', 'po_detail_so_details.po_detail_id')
+                ->join('po_pos', 'po_pos.id', '=', 'po_details.po_detail_id_po')
+                ->whereNull('po_pos.deleted_at')
+                ->exists();
+
+            if (! $stillCovered) {
+                SoDetail::whereKey($soDetailId)->update(['po_generated_at' => null]);
+            }
+        }
+
+        foreach ($soIds as $soId) {
+            $hasUncovered = SoDetail::where('so_detail_id_so', $soId)->whereNull('po_generated_at')->exists();
+            if ($hasUncovered) {
+                So::whereKey($soId)->update(['so_po_generated_at' => null]);
+            }
+        }
     }
 
     public static function generateCode(): string

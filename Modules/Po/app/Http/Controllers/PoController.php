@@ -49,6 +49,88 @@ class PoController extends Controller
         return $this->model->with(['has_supplier', 'has_details.has_product'])->filter()->sort();
     }
 
+    /**
+     * Hapus PO single: mapping prepare PO ↔ SO dilepas via Po::deleting hook.
+     * Ditolak bila ada detail yang sudah di-prepare (batalkan prepare dulu).
+     */
+    public function getDelete(GeneralRequest $request, $id)
+    {
+        $po = $this->model->findOrFail($id);
+
+        if ($this->poDeleteBlockedReason($po, $reason)) {
+            return $this->response($this->payload(TOAST_FAILED, $reason));
+        }
+
+        try {
+            DB::transaction(fn () => $po->delete());
+
+            return $this->response($this->payload(TOAST_SUCCESS, ['id' => $id]));
+        } catch (\Throwable $th) {
+            return $this->response($this->payload(TOAST_FAILED, $th->getMessage()));
+        }
+    }
+
+    /**
+     * Hapus PO bulk: loop per-model (bukan mass whereIn->delete) agar
+     * Po::deleting hook melepas mapping SO per PO. PO yang sudah
+     * di-prepare dilewati dan dilaporkan.
+     */
+    public function postDelete(GeneralRequest $request)
+    {
+        $data = $request->validate(['ids' => 'required|array']);
+
+        $deleted = [];
+        $skipped = [];
+
+        try {
+            DB::transaction(function () use ($data, &$deleted, &$skipped) {
+                foreach ($data['ids'] as $id) {
+                    $po = $this->model->find($id);
+                    if (! $po) {
+                        continue;
+                    }
+                    if ($this->poDeleteBlockedReason($po, $reason)) {
+                        $skipped[] = $po->po_code.' ('.$reason.')';
+
+                        continue;
+                    }
+                    $po->delete();
+                    $deleted[] = $id;
+                }
+            });
+
+            if ($deleted === []) {
+                return $this->response($this->payload(TOAST_FAILED, 'Tidak ada PO yang dihapus. Dilewati: '.implode(', ', $skipped)));
+            }
+
+            $message = TOAST_SUCCESS;
+            if ($skipped !== []) {
+                $message .= ' Dilewati: '.implode(', ', $skipped);
+            }
+
+            return $this->response($this->payload($message, $deleted));
+        } catch (\Throwable $th) {
+            return $this->response($this->payload(TOAST_FAILED, $th->getMessage()));
+        }
+    }
+
+    /**
+     * PO tak boleh dihapus bila ada detail yang sudah di-prepare —
+     * melepas mapping akan mengkorupsi stok prepare.
+     */
+    private function poDeleteBlockedReason(Po $po, ?string &$reason): bool
+    {
+        if ($po->has_details()->where('po_detail_prepared', '>', 0)->exists()) {
+            $reason = 'PO '.$po->po_code.' sudah ada barang di-prepare — batalkan prepare dulu sebelum hapus.';
+
+            return true;
+        }
+
+        $reason = null;
+
+        return false;
+    }
+
     public function getPrepare(GeneralRequest $request, $id)
     {
         $po = Po::with([
@@ -264,6 +346,14 @@ class PoController extends Controller
     {
         $po = $this->model->with(['has_details.has_product', 'has_supplier'])->findOrFail($id);
 
+        // Sort items by product name (natural, case-insensitive) + id tie-breaker
+        // agar struk mudah dibaca saat packing & hasil print deterministik.
+        $po->setRelation('has_details', $po->has_details->sort(function ($a, $b) {
+            $cmp = strnatcasecmp($a->has_product?->product_nama ?? '', $b->has_product?->product_nama ?? '');
+
+            return $cmp !== 0 ? $cmp : $a->getKey() <=> $b->getKey();
+        })->values());
+
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('po::pages.po.print-struk-pdf', [
             'po' => $po,
             'site' => \App\Models\WebsiteSetting::merged(),
@@ -333,13 +423,22 @@ class PoController extends Controller
         if ($tanggal) {
             [$groups, $warnings] = $this->buildSoGroups($tanggal);
 
-            // Preview dikelompokkan per SUPPLIER (bukan per master): 1 card = 1 calon PO
-            // dengan multiple product — sama seperti hasil generate (1 PO per supplier).
+            // Preview dikelompokkan per SUPPLIER (1 card = 1 calon PO), dan di dalam
+            // card diringkas per PRODUCT MASTER (bukan per varian produk):
+            // "KENTANG DIENG — 1,25 Kg" dengan rincian varian 250gr/1000gr.
+            // PO yang digenerate tetap per varian (harga akurat) via doGenerateFromSo.
             $groups = $groups
                 ->groupBy(fn ($g) => $g['supplier']->id)
                 ->map(fn ($masterGroups) => [
                     'supplier' => $masterGroups->first()['supplier'],
-                    'items' => $masterGroups->flatMap(fn ($g) => $g['items'])->values(),
+                    'masters' => $masterGroups->map(fn ($g) => [
+                        'master' => $g['master'],
+                        'nama' => $g['nama'],
+                        'varian' => $g['items'],
+                        'total_qty' => $g['items']->sum('qty'),
+                        'total_berat' => $g['total_berat'],
+                        'so_codes' => $g['items']->flatMap(fn ($i) => $i['so_codes'])->unique()->values()->all(),
+                    ])->sortBy('nama')->values(),
                     'total_berat' => $masterGroups->sum('total_berat'),
                 ])
                 ->values();
@@ -541,8 +640,8 @@ class PoController extends Controller
             ])->values();
 
             // Gabungkan barang yang sama dari beberapa SO jadi satu baris:
-            // qty & total berat dijumlah, sumber so_detail dicatat untuk pivot PO ↔ SO.
-            // Contoh: Pakcoy dari 3 SO @ 3kg+4kg+3kg → 1 baris 10kg.
+            // qty & total berat (gram) dijumlah, sumber so_detail dicatat untuk pivot PO ↔ SO.
+            // Contoh: Pakcoy dari 3 SO @ 3000+4000+3000 gr → 1 baris 10000 gr.
             $rows = $rows
                 ->groupBy('product_id')
                 ->map(function ($productRows) {
@@ -553,7 +652,7 @@ class PoController extends Controller
                         'product_nama' => $first['product_nama'],
                         'berat' => $first['berat'],
                         'qty' => $productRows->sum('qty'),
-                        'total_berat' => round($productRows->sum('total_berat'), 3),
+                        'total_berat' => (int) $productRows->sum('total_berat'),
                         'harga' => $first['harga'],
                         'harga_modal' => $first['harga_modal'],
                         'so_codes' => $productRows->pluck('so_code')->unique()->values()->all(),
@@ -586,15 +685,15 @@ class PoController extends Controller
     }
 
     /**
-     * Berat per unit (kg) untuk preview generate PO.
-     * Prioritas: kolom product_berat. Fallback: parse dari nama produk
-     * ("500 gr" → 0.5, "1 KG"/"1000 gr" → 1) karena banyak produk lama
-     * yang kolom beratnya masih kosong — tanpa fallback preview tampil 0 kg.
-     * "1 PCS"/"1 IKET" tanpa satuan berat → 0.
+     * Berat per unit (gram) untuk preview generate PO.
+     * Prioritas: kolom product_berat (gram). Fallback: parse dari nama produk
+     * via parseBeratMaster() karena produk lama yang kolom beratnya masih
+     * kosong — tanpa fallback preview tampil 0.
+     * "1 PCS"/"1 IKET" tanpa satuan berat → jumlah unit (1).
      */
-    private function resolveBerat($product): float
+    private function resolveBerat($product): int
     {
-        $berat = (float) ($product?->product_berat ?? 0);
+        $berat = (int) ($product?->product_berat ?? 0);
         if ($berat > 0) {
             return $berat;
         }
@@ -604,15 +703,7 @@ class PoController extends Controller
             return 0;
         }
 
-        // Cari angka + satuan berat di akhir/isi nama: "UBI MERAH 500 gr", "JAGUNG MANIS 1 KG"
-        if (preg_match('/(\d+(?:[.,]\d+)?)\s*(kg|kilogram|g|gr|gram)s?\b/i', $nama, $m)) {
-            $angka = (float) str_replace(',', '.', $m[1]);
-            $satuan = strtolower($m[2]);
-
-            return $satuan === 'kg' || $satuan === 'kilogram' ? round($angka, 3) : round($angka / 1000, 3);
-        }
-
-        return 0;
+        return parseBeratMaster($nama)[0];
     }
 
     /**

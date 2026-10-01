@@ -58,6 +58,24 @@
                             class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-600/10 text-sky-700 hover:bg-sky-600/20 transition-colors">
                             <span class="material-symbols-outlined text-lg">local_shipping</span>
                         </a>
+                        @php
+                            $customerName = $table->so_customer_name ?: ($table->has_customer?->name ?? 'Kak');
+                            $customerPhone = $table->so_customer_phone ?: ($table->has_customer?->phone ?? null);
+                            $waUrl = waLink($customerPhone, "Halo ".$customerName.", terima kasih sudah order di Mayur Sayur. Pesanan ".$table->so_code." dengan total ".formatAngka((int) $table->so_grand_total, "Rp").". ");
+                            $mapsUrl = mapsRouteUrl($table->so_lat, $table->so_lng, $warehouse['lat'] ?? null, $warehouse['lng'] ?? null);
+                        @endphp
+                        @if($waUrl)
+                            <a href="{{ $waUrl }}" target="_blank" rel="noopener" title="Chat WhatsApp {{ $customerPhone }}"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#25D366]/15 text-[#128C7E] hover:bg-[#25D366]/25 transition-colors">
+                                <span class="material-symbols-outlined text-lg">chat</span>
+                            </a>
+                        @endif
+                        @if($mapsUrl)
+                            <a href="{{ $mapsUrl }}" target="_blank" rel="noopener" title="Rute Google Maps ke lokasi pengiriman"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600/10 text-blue-700 hover:bg-blue-600/20 transition-colors">
+                                <span class="material-symbols-outlined text-lg">directions</span>
+                            </a>
+                        @endif
                         {{-- Maks 4 ikon sejajar, sisanya di dropdown ke bawah --}}
                         <div class="relative so-more-wrap">
                             <button type="button" onclick="toggleSoMore(this)" title="Aksi lainnya"
@@ -125,7 +143,7 @@
                         </div>
                         <div class="flex items-center justify-between pt-2 border-t border-outline-variant/50">
                             <span class="text-[9px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">{{ $table->field_primary }}</span>
-                            <div class="flex gap-1" onclick="event.stopPropagation()">
+                            <div class="flex flex-wrap gap-1 justify-end" onclick="event.stopPropagation()">
                                 <a href="{{ route('so-so.getPrintContinues', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Struk 80mm"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/10 text-neutral-800 hover:bg-neutral-800/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">print</span>
@@ -134,6 +152,24 @@
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-600/10 text-sky-700 hover:bg-sky-600/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">local_shipping</span>
                                 </a>
+                                @php
+                                    $customerName = $table->so_customer_name ?: ($table->has_customer?->name ?? 'Kak');
+                                    $customerPhone = $table->so_customer_phone ?: ($table->has_customer?->phone ?? null);
+                                    $waUrl = waLink($customerPhone, "Halo ".$customerName.", terima kasih sudah order di Mayur Sayur. Pesanan ".$table->so_code." dengan total ".formatAngka((int) $table->so_grand_total, "Rp").". ");
+                                    $mapsUrl = mapsRouteUrl($table->so_lat, $table->so_lng, $warehouse['lat'] ?? null, $warehouse['lng'] ?? null);
+                                @endphp
+                                @if($waUrl)
+                                    <a href="{{ $waUrl }}" target="_blank" rel="noopener" title="Chat WhatsApp {{ $customerPhone }}"
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#25D366]/15 text-[#128C7E] hover:bg-[#25D366]/25 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">chat</span>
+                                    </a>
+                                @endif
+                                @if($mapsUrl)
+                                    <a href="{{ $mapsUrl }}" target="_blank" rel="noopener" title="Rute Google Maps ke lokasi pengiriman"
+                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600/10 text-blue-700 hover:bg-blue-600/20 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">directions</span>
+                                    </a>
+                                @endif
                                 <a href="{{ route('so-so.getPrepareInvoice', ['ids' => $table->field_primary]) }}" target="_blank" title="Print Invoice (qty prepare x harga)"
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-violet-600/10 text-violet-700 hover:bg-violet-600/20 transition-colors">
                                     <span class="material-symbols-outlined text-lg">receipt_long</span>

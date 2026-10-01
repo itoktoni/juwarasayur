@@ -8,7 +8,9 @@ use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase {
+        refreshTestDatabase as traitRefreshTestDatabase;
+    }
 
     /**
      * Pengaman: RefreshDatabase (migrate:fresh) hanya boleh jalan di DB testing.
@@ -26,6 +28,6 @@ abstract class TestCase extends BaseTestCase
             );
         }
 
-        parent::refreshTestDatabase();
+        $this->traitRefreshTestDatabase();
     }
 }
