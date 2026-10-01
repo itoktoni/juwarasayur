@@ -108,7 +108,6 @@ class AffiliatorController extends Controller
 
         return [
             'includePending' => $includePending,
-            'earned' => $earned,
             'withdrawn' => $withdrawn,
             'balance' => max(0, $earned - $withdrawn),
             'pending' => $this->commissionFor($affiliator, [SoStatusEnum::PENDING]),

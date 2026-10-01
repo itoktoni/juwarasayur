@@ -25,9 +25,8 @@
             </div>
 
             <x-stat-widget :items="[
-                ['icon_name' => 'account_balance_wallet', 'bg_color' => 'bg-primary/10', 'icon_color' => 'text-primary', 'value' => formatAngka((int) $commission['balance'], 'Rp'), 'label' => 'Saldo Komisi'.($pendingCounted ? ' (termasuk pending)' : ' Bisa Dicairkan')],
-                ['icon_name' => 'savings', 'bg_color' => 'bg-success/10', 'icon_color' => 'text-success', 'value' => formatAngka((int) $commission['earned'], 'Rp'), 'label' => 'Total Komisi'.($pendingCounted ? ' (termasuk pending)' : ' Terhasil')],
-                ['icon_name' => 'hourglass_top', 'bg_color' => 'bg-warning/10', 'icon_color' => 'text-warning', 'value' => formatAngka((int) $commission['pending'], 'Rp'), 'label' => 'Komisi Pending'.($pendingCounted ? ' — sudah termasuk di atas' : ' (Order Belum Dibayar)')],
+                ['icon_name' => 'account_balance_wallet', 'bg_color' => 'bg-primary/10', 'icon_color' => 'text-primary', 'value' => formatAngka((int) $commission['balance'], 'Rp'), 'label' => 'Saldo Komisi'],
+                ['icon_name' => 'hourglass_top', 'bg_color' => 'bg-warning/10', 'icon_color' => 'text-warning', 'value' => formatAngka((int) $commission['pending'], 'Rp'), 'label' => 'Komisi Pending'],
                 ['icon_name' => 'payments', 'bg_color' => 'bg-neutral-800/10', 'icon_color' => 'text-neutral-800', 'value' => formatAngka((int) $commission['withdrawn'], 'Rp'), 'label' => 'Sudah Dicairkan'],
             ]" />
 
@@ -36,7 +35,7 @@
                     ['label' => 'Fee Komisi', 'value' => formatQty($commission['rate']).'%', 'icon' => 'percent'],
                     ['label' => 'Jumlah Customer', 'value' => $commission['customerCount'], 'icon' => 'group'],
                     ['label' => 'Jumlah SO', 'value' => $commission['orderCount'], 'icon' => 'receipt_long'],
-                    ['label' => 'Omzet'.($pendingCounted ? ' (kecuali Cancelled)' : ' (Order Terbayar)'), 'value' => formatAngka((int) $commission['omzet'], 'Rp'), 'icon' => 'trending_up'],
+                    ['label' => 'Omzet', 'value' => formatAngka((int) $commission['omzet'], 'Rp'), 'icon' => 'trending_up'],
                 ];
             @endphp
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
